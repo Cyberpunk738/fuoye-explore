@@ -1,0 +1,26 @@
+{
+  "name": "fuoye-campus-explorer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "data": "python scripts/prepare_data.py",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test:browser": "node scripts/explorer-smoke.cjs",
+    "data:campus": "python scripts/prepare_campus.py"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.20",
+    "@types/three": "^0.180.0",
+    "playwright": "^1.64.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
+  }
+}
