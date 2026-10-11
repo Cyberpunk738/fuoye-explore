@@ -15,7 +15,8 @@
     "test:routes": "node scripts/courier-routes.cjs",
     "test:entrance": "node scripts/entrance-smoke.cjs",
     "test:walk-start": "node scripts/walk-start-smoke.cjs",
-    "test:transitions": "node scripts/mode-transitions-smoke.cjs"
+    "test:transitions": "node scripts/mode-transitions-smoke.cjs",
+    "test:landscape": "node scripts/landscape-smoke.cjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
