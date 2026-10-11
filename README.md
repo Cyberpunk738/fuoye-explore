@@ -29,13 +29,17 @@ The current main-campus extract includes 108 building polygons across Phases 1, 
 
 OSM/Microsoft outlines establish most geometry. The new Senate and eight unnamed roofs use explicitly recorded approximate satellite traces. Management Sciences, the four-storey boys' hostel and Administration have photo-informed facade profiles. Reviewed contributor photos date from 2021–2022; satellite acquisition dates are unavailable. Unobserved heights, dimensions, entrances and facade details remain estimates.
 
-ESA WorldCover **2021** guides vegetation coverage, not individual tree positions. Recorded forecourts, paths and the park beside Administration follow inspected imagery. Roads/terrain use real DEM elevations without vertical exaggeration; foundation grading is estimated. Ground patches are clipped to the rendered terrain triangles. The Phase 1 gate follows satellite alignment and a wide entrance photo; dimensions, terrain grading and sculpture details are approximate. See [entrance evidence](research/entrance-and-identification.md). Wema Bank is user-confirmed in Phase 1, but its exact footprint is still unresolved. This remains a reconstruction in progress, not a finished digital twin.
+ESA WorldCover **2021** guides vegetation coverage, not individual tree positions. Recorded forecourts, paths and the park beside Administration follow inspected imagery. Roads/terrain use real DEM elevations without vertical exaggeration; foundation grading is estimated. Ground patches are clipped to the rendered terrain triangles. The Phase 1 gate follows satellite alignment and a wide entrance photo; dimensions, terrain grading and sculpture details are approximate. See [entrance evidence](research/entrance-and-identification.md). This remains a reconstruction in progress, not a finished digital twin.
 
 See [source metadata](public/data/scene-sources.json), [campus research](research/oye-campus-research.md) and [reference comparison](research/reference-parity.md). Reference photos and downloaded reference source are not redistributed in the app.
+
+The first visual pilot covers the Phase 1 auditorium and its grounds: taller hall windows, facade trim, a proportionate canopy/sign, separate lawn patches, low planting and a northern tree row. Planting extents follow saved satellite observations; facade details, species, hedge placement and kerbs remain estimates. See [pilot evidence and limits](research/phase1-visual-pass.md). The wider pass refines Management Sciences columns, upper glazing and paired doors; hostel louvre windows, recessed bays and balcony rails; and Administration projecting orange frames. Named buildings gain window reveals and ground-contact aprons, while the observed park and paved paths gain restrained edging. Unphotographed facades remain estimates; no new garden areas are invented. See [campus refinement evidence](research/campus-visual-pass.md).
 
 ## Performance
 
 Low-power WebGL, Lambert materials, shared textures, spatially chunked tree instances, a 1280 × 720 resolution ceiling and a 24 fps navigation cap. Idle, hidden and offscreen scenes stop rendering. Reduced-motion preferences shorten flights and remove walking bob. A slow-frame fallback reduces resolution and disables shadows.
+
+Up to 480 nearby broadleaf trees use grouped crowns and branches; distant views use simpler shapes. Both share a small original foliage texture. Detail changes refresh the cached shadow only when necessary.
 
 The static world uses one cached 1024² shadow map, fitted more closely when focusing a building. Buildings cast onto the ground without facade self-shadowing. The terrain has 96 × 96 cells; at most 3200 trees share small crowns and trunks. Night uses emissive surfaces, lamp sprites and one unshadowed headlight. No ambient occlusion, post-processing, animated crowds or background traffic. Actual speed depends on the device.
 
@@ -50,6 +54,7 @@ npm run test:routes
 npm run test:entrance
 npm run test:walk-start
 npm run test:transitions
+npm run test:landscape
 ```
 
 The browser check expects installed Chrome and a dev server on port 5173; set `BASE_URL` for a different origin. Headless software WebGL checks directory selection, courier start, free driving, reset, walking/jumping, night/day, mobile layout/touch movement, review routing, a geometry budget and idle rendering. Reports/screenshots go to ignored `output/`. Unit tests cover notes, geometry, elevation, the scheduler, car/jump physics, delivery rules and source provenance.
@@ -57,6 +62,8 @@ The browser check expects installed Chrome and a dev server on port 5173; set `B
 The review check verifies visible outlines, source links, note persistence and zero external requests by default. The route check builds the actual collision world without WebGL, verifies access to all 11 roadside drop-offs and exercises scoring/bonus/next-target rules at each. It permits off-road travel and does not replace a keyboard-driven delivery run.
 
 The transition regression checks a real mouse journey to the toolbar after pinning ground, exact walk/car placement, Courier/Free drive position preservation, obstacle adjustment, nearby exit cameras, hover shortcuts, touch actions, mobile bounds and idle rendering.
+
+The landscape check captures matching gate, auditorium, Science, Management Sciences, hostel, Administration, Senate and Full views, checks geometry/draw-call limits, confirms bounded near-tree detail and the simpler distant view, and checks walking, night/day and idle rendering.
 
 The reference inspection script is a research aid; its heavy renderer can time out under software graphics. It is not a required application test.
 

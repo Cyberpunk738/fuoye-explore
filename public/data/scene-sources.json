@@ -63,7 +63,7 @@
     "doi": "https://doi.org/10.5281/zenodo.7254221",
     "license": "CC BY 4.0",
     "year": 2021,
-    "processing": "Oye window read from public cloud-optimized GeoTIFF. Class 10 drives tree placement and other classes tint terrain. Shared, spatially chunked instances, maximum 3200 trees.",
+    "processing": "Oye window read from public cloud-optimized GeoTIFF. Class 10 drives background tree placement and other classes tint terrain. Shared, spatially chunked instances, maximum 3200 trees; at most 480 nearby broadleaf trees use detailed crowns and branches. Phase 1 planting overrides follow approximate satellite observations.",
     "estimated": [
       "individual tree positions",
       "tree heights",
@@ -71,7 +71,7 @@
       "cars",
       "street lamps"
     ],
-    "limitations": "ESA 2021 classification, not a current tree survey. Individual trees, species, vehicles and lamps are estimated. Five ground areas and seven path/access observations follow the inspected imagery; their edges/materials are approximate."
+    "limitations": "ESA 2021 classification, not a current tree survey. Individual trees, species, heights, vehicles and lamps are estimated. Eight ground areas and seven path/access observations follow the inspected imagery; their edges/materials are approximate. Phase 1 hedge runs and kerbs are illustrative treatments within visible planted areas."
   },
   "textures": "Locally generated canvas textures; no third-party texture assets",
   "retrievedOn": "2026-10-10",
@@ -94,6 +94,18 @@
   "identification": {
     "nameplates": "Inventory-backed primary buildings; generated signs, not transcriptions of every real facade sign.",
     "phaseMarkers": "App-added campus guide signs; locations approximate.",
-    "wemaBank": "User confirms Wema Bank in Phase 1. Exact building footprint awaits a pin/landmark; no arbitrary footprint has been assigned."
+    "wemaBank": "Excluded from this work at the user's request; no footprint assigned."
+  },
+  "phase1VisualPass": {
+    "checkedOn": "2026-10-11",
+    "satellite": "https://www.google.com/maps/@7.7792,5.3221,18z/data=!3m1!1e3",
+    "changes": "Separate southern lawn, eastern garden and northern tree verge; tall hall windows and facade trim; grouped nearby tree crowns and shared procedural foliage texture.",
+    "limitations": "Saved May 2022 interior photo supports a tall single-storey hall. Exterior detailing, window dimensions and roof construction remain inferred. Saved satellite capture date unknown. Official exterior image could not be accessed and was not used."
+  },
+  "campusVisualPass": {
+    "checkedOn": "2026-10-11",
+    "evidence": "Existing saved Maps contributor photos: Management Sciences (November 2021), boys hostel (November 2022), Administration (October 2021); existing traced park and paths. No new imagery downloaded.",
+    "changes": "Management frontage glazing, columns and paired doors; hostel louvres, recessed bays and balcony rails; Administration projecting orange frames and wide louvre windows; named-building reveals and aprons; park/path edging.",
+    "limitations": "Dimensions and detailed window placement inferred from single views. Unphotographed facades, including Senate, retain estimated profiles and mapped outlines. Kerbs and aprons are illustrative. No invented park areas or surveyed tree positions."
   }
 }
