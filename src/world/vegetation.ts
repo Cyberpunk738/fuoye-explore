@@ -31,8 +31,9 @@ export function buildVegetation(cover:LandCover|undefined,center:Position,height
   }
   // Spread a bounded sample across the full area rather than filling one corner.
   for(let i=candidates.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
+  // 480m cells bound full-view draw calls while retaining spatial culling nearby.
   const points=candidates.slice(0,3200),clusters=new Map<string,Point[]>();
-  for(const p of points){const key=`${Math.floor(p.x/240)},${Math.floor(p.z/240)}`;const group=clusters.get(key)??[];group.push(p);clusters.set(key,group);}
+  for(const p of points){const key=`${Math.floor(p.x/480)},${Math.floor(p.z/480)}`;const group=clusters.get(key)??[];group.push(p);clusters.set(key,group);}
   // 32 triangles per broadleaf tree; palms share a 28-triangle alpha-cutout crown.
   const crown=new THREE.IcosahedronGeometry(1,0);crown.scale(1.7,.95,1.7);crown.translate(0,1.65,0);
   const trunk=new THREE.CylinderGeometry(.07,.12,1.5,3);trunk.translate(0,.75,0);

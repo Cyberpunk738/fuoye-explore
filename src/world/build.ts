@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Feature, Notes, Position } from '../data';
-import { compoundRoof, groundPolygon } from './architecture';
+import { sectionedRoof, groundPolygon } from './architecture';
 import { GeometryBatch } from './batch';
 import { makeMaterials } from './materials';
 import { buildVegetation, sampleCover } from './vegetation';
@@ -73,7 +73,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
     if(rectangular&&roofType!=='terrace'){const rise=Math.min(d*.28,5);const vertex=(x:number,z:number,yy:number)=>{const p=edge.clone().multiplyScalar(mU+x).addScaledVector(perpendicular,mV+z);return[p.x,y+yy,p.y];};const cs=[vertex(-w/2-.7,-d/2-.7,h),vertex(w/2+.7,-d/2-.7,h),vertex(w/2+.7,d/2+.7,h),vertex(-w/2-.7,d/2+.7,h)];const inset=roofType==='hip'?Math.min(d/2,w/2):0;const r1=vertex(-w/2+inset,0,h+rise),r2=vertex(w/2-inset,0,h+rise);const vertices=[...cs[0],...cs[1],...r2,...cs[0],...r2,...r1,...cs[1],...cs[2],...r2,...cs[2],...cs[3],...r1,...cs[2],...r1,...r2,...cs[3],...cs[0],...r1];const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.computeVertexNormals();batch.add(g,roof);
       const ridge=edge.clone().multiplyScalar(mU).addScaledVector(perpendicular,mV);box(Math.max(.4,w-inset*2),.18,.2,ridge.x,y+h+rise+.04,ridge.y,m.trim,-Math.atan2(edge.y,edge.x));
       if(roofType==='gable'){for(const s of[-1,1]){const verts=[...vertex(s*w/2,-d/2,h),...vertex(s*w/2,d/2,h),...vertex(s*w/2,0,h+rise)];const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.computeVertexNormals();wall.side=THREE.DoubleSide;batch.add(g,wall);}}
-    }else if(roofType==='compound'){const rings=f.geometry.coordinates.map(r=>r.slice(0,-1).map(project));batch.add(compoundRoof(rings,y+h+.12,Math.min(4.5,Math.max(1.4,d*.25))),roof);
+    }else if(roofType==='compound'){const rings=f.geometry.coordinates.map(r=>r.slice(0,-1).map(project));batch.add(sectionedRoof(rings,y+h+.12,Math.min(4.5,Math.max(1.4,d*.25))),roof);
     }else{const g=new THREE.ShapeGeometry(shape);g.rotateX(-Math.PI/2);g.translate(0,y+h+.18,0);batch.add(g,m.roofs[1]);if(f.properties.area>400){box(5,1.3,4,b.position.x,y+h+.65,b.position.z,m.walls[1]);box(5.4,.15,4.4,b.position.x,y+h+1.4,b.position.z,m.roofs[1]);}}
     for(let i=0;i<b.ring.length;i++){
       const a=b.ring[i],c=b.ring[(i+1)%b.ring.length],dx=c.x-a.x,dz=c.z-a.z,length=Math.hypot(dx,dz);if(length<2)continue;const direction=new THREE.Vector2(dx,dz).normalize(),angle=-Math.atan2(dz,dx),midEdge=new THREE.Vector2((a.x+c.x)/2,(a.z+c.z)/2);let n=new THREE.Vector2(-direction.y,direction.x);if(pointInRing({x:midEdge.x+n.x*.3,z:midEdge.y+n.y*.3},b.ring))n.negate();

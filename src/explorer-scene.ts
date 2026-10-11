@@ -4,7 +4,7 @@ import { escapeHtml } from './data';
 import type { Feature, Notes, Position } from './data';
 import { buildWorld } from './world/build';
 import type { BuildingAsset } from './world/build';
-import { nearestPoint } from './world/math';
+import { nearestDriveRoad, campusDeliveryStops } from './world/routes';
 import type { Point, TerrainGrid } from './world/math';
 import type { LandCover } from './world/vegetation';
 import { makeVehicle } from './world/actors';
@@ -40,6 +40,9 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   const shadowRadius=Math.max(extent.x,extent.y)*.58;
   Object.assign(sun.shadow.camera,{left:-shadowRadius,right:shadowRadius,top:shadowRadius,bottom:-shadowRadius,near:1,far:2200});
   sun.target.position.set(mid.x,0,mid.y);sun.position.set(mid.x-500,900,mid.y+350);scene.add(sun,sun.target);
+  function fitShadow(target:THREE.Vector3,radius:number){
+    const r=THREE.MathUtils.clamp(radius,160,shadowRadius);sun.target.position.copy(target);sun.position.copy(target).add(new THREE.Vector3(-500,900,350));Object.assign(sun.shadow.camera,{left:-r,right:r,top:r,bottom:-r});sun.shadow.camera.updateProjectionMatrix();renderer.shadowMap.needsUpdate=true;
+  }
   const starPositions:number[]=[];
   for(let i=0;i<600;i++){const a=i*2.399963,y=.1+(i%80)/90,r=Math.sqrt(1-y*y)*3300;starPositions.push(Math.cos(a)*r,y*3300,Math.sin(a)*r);}
   const stars=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3)),new THREE.PointsMaterial({color:'#d8e4ff',size:1.6,sizeAttenuation:false,depthWrite:false}));stars.visible=false;scene.add(stars);
@@ -80,10 +83,10 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   function highlight(id?:string){const mesh=world.pickables.find(m=>m.userData.id===id);if(mesh===hovered)return;if(hovered){hovered.material=(hovered.userData.originalMaterial as THREE.Material);delete hovered.userData.originalMaterial;}hovered=mesh;if(mesh){mesh.userData.originalMaterial=mesh.material;mesh.material=highlightMaterial;}request();}
   const highlightMaterial=new THREE.MeshLambertMaterial({color:'#f0dfae'});
   function orbit(){mode='orbit';delete app.dataset.mode;speed=lateral=0;keys.clear();stickInput.set(0,0);vehicle.visible=false;headlights.visible=false;beacon.visible=arrow.visible=false;driveHud.hidden=walkHud.hidden=true;controls.enabled=true;camera.fov=38;camera.near=.15;camera.updateProjectionMatrix();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();resize();onSelect('');}
-  function reset(){orbit();highlight();tip.hidden=true;const target=new THREE.Vector3(mid.x,world.height(mid.x,mid.y)+5,mid.y),size=Math.max(extent.x,extent.y);fly(target.clone().add(new THREE.Vector3(size*.32,size*.55,size*.57)),target);}
-  function focusFeature(id:string){const b=world.buildings.find(b=>b.id===id);if(!b)return;orbit();onSelect(id);const size=b.bounds.getSize(new THREE.Vector2()),d=Math.max(45,Math.max(size.x,size.y)*1.45);const front=b.entrance.clone().sub(b.position).setY(0).normalize(),side=new THREE.Vector3(-front.z,0,front.x);fly(b.position.clone().addScaledVector(front,d).addScaledVector(side,d*.45).add(new THREE.Vector3(0,d*.6,0)),b.position.clone().add(new THREE.Vector3(0,b.height/2,0)));}
-  function closestRoad(p:Point,minWidth=4){let best:Point|undefined,distance=Infinity,heading=0;for(const r of world.roads){if(r.width<minWidth)continue;const q=nearestPoint(p,r.a,r.b),d=Math.hypot(q.x-p.x,q.z-p.z);if(d<distance&&!world.blocked(q,2)){best=q;distance=d;heading=Math.atan2(r.b.x-r.a.x,r.b.z-r.a.z);}}return {point:best??{x:world.focus?.entrance.x??mid.x,z:world.focus?.entrance.z??mid.y},distance,heading};}
-  const stops:DeliveryStop[]=world.buildings.filter(b=>b.named&&b.directory).flatMap(b=>{const q=closestRoad({x:b.position.x,z:b.position.z});return q.distance<150?[{id:b.id,name:b.name,...q.point}]:[];});
+  function reset(){orbit();highlight();tip.hidden=true;fitShadow(new THREE.Vector3(mid.x,0,mid.y),shadowRadius);const target=new THREE.Vector3(mid.x,world.height(mid.x,mid.y)+5,mid.y),size=Math.max(extent.x,extent.y);fly(target.clone().add(new THREE.Vector3(size*.32,size*.55,size*.57)),target);}
+  function focusFeature(id:string){const b=world.buildings.find(b=>b.id===id);if(!b)return;orbit();onSelect(id);const size=b.bounds.getSize(new THREE.Vector2()),d=Math.max(45,Math.max(size.x,size.y)*1.45);fitShadow(b.position,d*2.5);const front=b.entrance.clone().sub(b.position).setY(0).normalize(),side=new THREE.Vector3(-front.z,0,front.x);fly(b.position.clone().addScaledVector(front,d).addScaledVector(side,d*.45).add(new THREE.Vector3(0,d*.6,0)),b.position.clone().add(new THREE.Vector3(0,b.height/2,0)));}
+  function closestRoad(p:Point,minWidth=4){const road=nearestDriveRoad(p,world.roads,world.blocked,minWidth);return {...road,point:road.point??{x:world.focus?.entrance.x??mid.x,z:world.focus?.entrance.z??mid.y}};}
+  const stops:DeliveryStop[]=campusDeliveryStops(world.buildings,world.roads,world.blocked);
   function spawn(){const target=controls.target;const s=closestRoad({x:target.x,z:target.z});player.set(s.point.x,world.surfaceHeight(s.point.x,s.point.z),s.point.z);yaw=s.heading;speed=lateral=0;keys.clear();jumpHeight=jumpVelocity=0;updateVehicle(0,true);}
   function setMode(next:'walk'|'drive'){mode=next;app.dataset.mode=next;flight=undefined;controls.enabled=false;vehicle.visible=next==='drive';headlights.visible=night&&next==='drive';highlight();tip.hidden=true;driveHud.hidden=next!=='drive';walkHud.hidden=next!=='walk';camera.fov=next==='walk'?72:58;camera.near=.1;resize();spawn();renderer.domElement.focus();request();}
   function getBest(){try{const n=Number(localStorage.getItem('fuoye-courier-best'));return Number.isFinite(n)&&n>0?n:0;}catch{return 0;}}
@@ -161,7 +164,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   },24);
   const focal=world.focus?.position??new THREE.Vector3(mid.x,0,mid.y);
   controls.target.copy(focal).add(new THREE.Vector3(25,4,-15));camera.position.copy(focal).add(new THREE.Vector3(165,175,215));
-  controls.update();renderer.shadowMap.needsUpdate=true;resize();active();
+  fitShadow(focal,480);controls.update();renderer.shadowMap.needsUpdate=true;resize();active();
   return {
     getBuildings:()=>world.buildings,focusFeature,highlight,reset,
     destroy(){loop?.dispose();resizeObserver.disconnect();visibilityObserver.disconnect();removers.forEach(remove=>remove());controls.dispose();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();highlight();world.dispose();scene.remove(world.root);const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Points){geometries.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());glowTexture.dispose();glowMaterial.dispose();highlightMaterial.dispose();renderer.dispose();renderer.forceContextLoss();host.replaceChildren();},
