@@ -16,8 +16,9 @@ Open http://127.0.0.1:5173/. `npm run build` builds the explorer and `/review.ht
 The opening view faces the main gate beside Phase 1. Use **Main gate · Phase 1** in the directory to return there. Named buildings have bold frontage signs and up to four nearby labels; phase markers are app-added campus guidance.
 
 - **Orbit:** drag to rotate, right-drag to pan, scroll/pinch to zoom. Hover highlights a building. Click a building or directory entry to fly closer. Full view fits the campus.
-- **Drive:** Campus Courier offers Start, Free drive and Exit. WASD/arrows drive, Space drifts, R resets to a road, Escape exits. Timed runs start at 75 seconds. Follow the gold arrow/beacon and slow down inside the ring to deliver. Deliveries add points and time; best score persists in this browser.
-- **Walk:** hover over a place (or tap ground on touch), then click Walk to start there. Obstructed points move to nearby clear ground. WASD/arrows move, Shift runs, Space jumps. Click for mouse-look, or drag if pointer lock is unavailable. Escape releases mouse-look; Escape again exits. On touch screens, the left thumb moves and the right thumb looks.
+- **Choose a starting point:** click/tap open ground to pin the marker, then choose **Walk here** or **Drive here** (the top toolbar uses the same pinned point). On desktop, hover and press **W** or **D** to start immediately under the cursor. Dragging or focusing another building clears the pin. Blocked points move to nearby safe ground, allowing more room for the car.
+- **Drive:** Campus Courier offers Start, Free drive and Exit. WASD/arrows drive, Space drifts, R resets to a road, Escape exits to a close orbit around your current position. Start/Free drive preserve the chosen location; only R deliberately returns to a road. Timed runs start at 75 seconds. Follow the gold arrow/beacon and slow down inside the ring to deliver. Deliveries add points and time; best score persists in this browser.
+- **Walk:** starts at your selected point. Exit walk returns to a close orbit at your current location; **Full view** fits the whole campus. WASD/arrows move, Shift runs, Space jumps. Click for mouse-look, or drag if pointer lock is unavailable. Escape releases mouse-look; Escape again exits. On touch screens, the left thumb moves and the right thumb looks.
 - **Night:** moonlight, stars, illuminated windows/lamps and a driving headlight. Day restores daylight.
 
 The main page uses the reference's floating directory, serif title, four controls, mode-specific HUD and attribution footer. The map and notes workspace remains at `/review.html`, accessible through About.
@@ -48,11 +49,14 @@ npm run test:review
 npm run test:routes
 npm run test:entrance
 npm run test:walk-start
+npm run test:transitions
 ```
 
 The browser check expects installed Chrome and a dev server on port 5173; set `BASE_URL` for a different origin. Headless software WebGL checks directory selection, courier start, free driving, reset, walking/jumping, night/day, mobile layout/touch movement, review routing, a geometry budget and idle rendering. Reports/screenshots go to ignored `output/`. Unit tests cover notes, geometry, elevation, the scheduler, car/jump physics, delivery rules and source provenance.
 
 The review check verifies visible outlines, source links, note persistence and zero external requests by default. The route check builds the actual collision world without WebGL, verifies access to all 11 roadside drop-offs and exercises scoring/bonus/next-target rules at each. It permits off-road travel and does not replace a keyboard-driven delivery run.
+
+The transition regression checks a real mouse journey to the toolbar after pinning ground, exact walk/car placement, Courier/Free drive position preservation, obstacle adjustment, nearby exit cameras, hover shortcuts, touch actions, mobile bounds and idle rendering.
 
 The reference inspection script is a research aid; its heavy renderer can time out under software graphics. It is not a required application test.
 
