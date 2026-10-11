@@ -14,7 +14,8 @@
     "test:review": "node scripts/review-smoke.cjs",
     "test:routes": "node scripts/courier-routes.cjs",
     "test:entrance": "node scripts/entrance-smoke.cjs",
-    "test:walk-start": "node scripts/walk-start-smoke.cjs"
+    "test:walk-start": "node scripts/walk-start-smoke.cjs",
+    "test:transitions": "node scripts/mode-transitions-smoke.cjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
