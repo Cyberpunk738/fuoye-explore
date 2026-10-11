@@ -23,13 +23,15 @@ export function makeMaterials() {
     roofs:[surface('roof','#4f776d',2),surface('roof','#7d8580',2),surface('roof','#815447',2),surface('roof','#697c9c',2),surface('roof','#b4b097',2)],
     accent:plain('#b77843'),hostelInset:plain('#ae7963'),ivory:surface('plaster','#e8e1d2',6),
     brick:surface('brick','#a07554',2),stone:surface('brick','#bbb3a1',2),pavers:surface('pavers','#d0c4ae',4),asphalt:surface('asphalt','#535952',5),soil:surface('soil','#ad9b7f',5),grass:surface('grass','#ffffff',18),
-    trim:plain('#f6eee0'),base:plain('#a6997f'),wood:plain('#796043'),steel:plain('#364c48'),white:plain('#eeeede'),green:plain('#226746'),turf:[plain('#78915b'),plain('#829d64')],rubber:plain('#262b29'),glass:new THREE.MeshLambertMaterial({color:'#678a91'}),
-    leaves:[plain('#3e673f'),plain('#547945'),plain('#62884b'),plain('#779351'),plain('#365c40')],
+    trim:plain('#f6eee0'),base:plain('#a6997f'),wood:plain('#796043'),steel:plain('#364c48'),white:plain('#eeeede'),green:plain('#226746'),turf:[surface('grass','#8ba366',8),surface('grass','#98ac75',8)],rubber:plain('#262b29'),glass:new THREE.MeshLambertMaterial({color:'#678a91'}),
+    leaves:[plain('#3e673f'),plain('#779658'),plain('#62884b'),plain('#779351'),plain('#365c40')],
     carPaint:[plain('#b5b6a8',.3),plain('#284a58',.3),plain('#aa5c47',.3),plain('#ebe8db',.3),plain('#49514d',.3)],
     people:[plain('#af674c'),plain('#3c6d90'),plain('#e5d3a1'),plain('#526544')],skin:plain('#6b4735'),
     flowers:[plain('#bd7290'),plain('#d2b55d'),plain('#c66c42')],
     glow:new THREE.MeshLambertMaterial({color:'#fff4d3',emissive:'#ffc269',emissiveIntensity:0}),
     tail:new THREE.MeshLambertMaterial({color:'#bf4332',emissive:'#d83f2b',emissiveIntensity:.3}),
+    louvres:new THREE.MeshLambertMaterial({color:'#8dc4b0',emissive:'#ffcb80',emissiveIntensity:0}),
+    adminWindows:new THREE.MeshLambertMaterial({color:'#82918a',emissive:'#ffcb80',emissiveIntensity:0}),
     windows:new THREE.MeshLambertMaterial({color:'#3d5657',emissive:'#ffcb80',emissiveIntensity:0}),
   };
   // A single textured panel supplies frame, mullion and glass reflection detail.
@@ -39,6 +41,19 @@ export function makeMaterials() {
   pc.fillStyle=reflection;pc.fillRect(0,0,128,160);pc.strokeStyle='#e8e1cf';pc.lineWidth=7;pc.strokeRect(3,3,122,154);pc.lineWidth=4;pc.beginPath();pc.moveTo(64,4);pc.lineTo(64,156);pc.moveTo(4,102);pc.lineTo(124,102);pc.stroke();
   const paneTexture=new THREE.CanvasTexture(pane);paneTexture.colorSpace=THREE.SRGBColorSpace;textures.push(paneTexture);
   materials.windows.map=paneTexture;materials.windows.color.set('#ffffff');materials.windows.userData.preserveUV=true;
+  const louvreCanvas=document.createElement('canvas');louvreCanvas.width=128;louvreCanvas.height=160;const lctx=louvreCanvas.getContext('2d')!;
+  lctx.fillStyle='#3c585a';lctx.fillRect(0,0,128,160);
+  for(let y=8;y<156;y+=19){lctx.fillStyle='#a1b9b4';lctx.fillRect(7,y,114,4);lctx.fillStyle='#56736f';lctx.fillRect(7,y+4,114,8);lctx.fillStyle='#263d3c';lctx.fillRect(7,y+12,114,6);}
+  lctx.strokeStyle='#e8e1cf';lctx.lineWidth=7;lctx.strokeRect(3,3,122,154);lctx.fillRect(61,3,5,154);
+  const louvreTexture=new THREE.CanvasTexture(louvreCanvas);louvreTexture.colorSpace=THREE.SRGBColorSpace;textures.push(louvreTexture);
+  for(const material of [materials.louvres,materials.adminWindows]){material.map=louvreTexture;material.userData.preserveUV=true;}
+  // A small shared leaf-cluster texture breaks up solid crowns without extra meshes.
+  const foliage=document.createElement('canvas');foliage.width=foliage.height=256;const lc=foliage.getContext('2d')!,leafRandom=randomFrom(415);
+  lc.fillStyle='#aeb8a1';lc.fillRect(0,0,256,256);
+  for(let i=0;i<1500;i++){const x=leafRandom()*256,y=leafRandom()*256,shade=Math.floor(148+leafRandom()*95);lc.fillStyle=`rgb(${shade},${Math.min(255,shade+7)},${Math.max(0,shade-12)})`;lc.beginPath();lc.ellipse(x,y,1.5+leafRandom()*3,.9+leafRandom()*1.8,leafRandom()*Math.PI,0,Math.PI*2);lc.fill();}
+  const foliageTexture=new THREE.CanvasTexture(foliage);foliageTexture.colorSpace=THREE.SRGBColorSpace;textures.push(foliageTexture);
+  materials.leaves.forEach(material=>{material.map=foliageTexture;material.userData.preserveUV=true;});
+  materials.turf.forEach(m=>m.userData.groundReceiver=true);
   materials.asphalt.userData.groundReceiver=true;
   materials.pavers.userData.groundReceiver=true;
   materials.soil.userData.groundReceiver=true;

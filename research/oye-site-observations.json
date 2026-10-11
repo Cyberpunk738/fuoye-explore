@@ -845,6 +845,131 @@
       "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
       "checkedOn": "2026-10-10",
       "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/phase1-south-lawn",
+      "kind": "land",
+      "phase": 1,
+      "coordinates": [
+        [
+          5.32196,
+          7.77976
+        ],
+        [
+          5.32212,
+          7.77979
+        ],
+        [
+          5.32234,
+          7.77988
+        ],
+        [
+          5.3224,
+          7.77968
+        ],
+        [
+          5.32235,
+          7.77943
+        ],
+        [
+          5.32218,
+          7.77939
+        ],
+        [
+          5.32193,
+          7.7794
+        ],
+        [
+          5.32196,
+          7.77976
+        ]
+      ],
+      "tags": {
+        "surface": "grass",
+        "landuse": "grass"
+      },
+      "sourceUrl": "https://www.google.com/maps/@7.7792,5.3221,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-11",
+      "evidence": "Separate vegetation patch visible within the Phase 1 loop in cached east-detail.png. Approximate extent interpreted from the saved satellite view.",
+      "accuracy": "Visual estimate, not surveyed or verified current. Edge kerbs, hedge species and planting heights are illustrative."
+    },
+    {
+      "id": "local/phase1-east-garden",
+      "kind": "land",
+      "phase": 1,
+      "coordinates": [
+        [
+          5.32221,
+          7.78017
+        ],
+        [
+          5.32238,
+          7.78024
+        ],
+        [
+          5.32244,
+          7.78018
+        ],
+        [
+          5.32241,
+          7.77997
+        ],
+        [
+          5.32228,
+          7.77991
+        ],
+        [
+          5.32223,
+          7.78
+        ],
+        [
+          5.32221,
+          7.78017
+        ]
+      ],
+      "tags": {
+        "surface": "grass",
+        "landuse": "grass"
+      },
+      "sourceUrl": "https://www.google.com/maps/@7.7792,5.3221,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-11",
+      "evidence": "Separate vegetation patch visible within the Phase 1 loop in cached east-detail.png. Approximate extent interpreted from the saved satellite view.",
+      "accuracy": "Visual estimate, not surveyed or verified current. Edge kerbs, hedge species and planting heights are illustrative."
+    },
+    {
+      "id": "local/phase1-north-verge",
+      "kind": "land",
+      "phase": 1,
+      "coordinates": [
+        [
+          5.32152,
+          7.78039
+        ],
+        [
+          5.32245,
+          7.78041
+        ],
+        [
+          5.32245,
+          7.78029
+        ],
+        [
+          5.32153,
+          7.78027
+        ],
+        [
+          5.32152,
+          7.78039
+        ]
+      ],
+      "tags": {
+        "surface": "grass",
+        "landuse": "grass"
+      },
+      "sourceUrl": "https://www.google.com/maps/@7.7792,5.3221,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-11",
+      "evidence": "Separate vegetation patch visible within the Phase 1 loop in cached east-detail.png. Approximate extent interpreted from the saved satellite view.",
+      "accuracy": "Visual estimate, not surveyed or verified current. Edge kerbs, hedge species and planting heights are illustrative."
     }
   ]
 }

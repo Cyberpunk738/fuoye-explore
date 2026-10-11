@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Feature, Notes, Position } from '../data';
 import { sectionedRoof, groundPolygon } from './architecture';
 import { GeometryBatch } from './batch';
 import { makeMaterials } from './materials';
 import { createSignage } from './signage';
 import { addCampusEntrance, mainGatePosition } from './entrance';
+import { addPhaseOnePlanting } from './phase-one';
 import { buildVegetation, sampleCover } from './vegetation';
 import type { LandCover } from './vegetation';
 import { clipSegment, hashSeed, nearestPoint, pointInRing, projectPosition, randomFrom, sampleElevation, unprojectPosition } from './math';
@@ -48,7 +50,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   const onRoad=(p:Point,pad=0)=>roads.some(s=>{const q=nearestPoint(p,s.a,s.b);return Math.hypot(p.x-q.x,p.z-q.z)<s.width/2+pad;});
   const surfaceHeight=(x:number,z:number)=>{const p={x,z};let offset=0;for(const s of roads){const q=nearestPoint(p,s.a,s.b);if(Math.hypot(p.x-q.x,p.z-q.z)<s.width/2)offset=Math.max(offset,s.surface==='asphalt'?.4:.13);}for(const site of groundSites)if(pointInRing(p,site.ring))offset=Math.max(offset,.08);for(const pad of pavedPads)if(pad.bounds.containsPoint(new THREE.Vector2(x,z)))offset=Math.max(offset,pad.offset);for(const path of paths){const q=nearestPoint(p,path.a,path.b);if(Math.hypot(q.x-x,q.z-z)<path.width/2)offset=Math.max(offset,.13);}return height(x,z)+offset;};
   const groundSites=features.filter(f=>f.properties.kind==='land'&&f.geometry.type==='Polygon').map(f=>({feature:f,ring:f.geometry.type==='Polygon'?f.geometry.coordinates[0].slice(0,-1).map(project):[]}));
-  for(const site of groundSites){const surface=site.feature.properties.tags.surface,material=surface==='grass'?m.turf[0]:surface==='paving_stones'?m.pavers:m.soil;batch.add(groundPolygon([site.ring],(x,z)=>height(x,z)+.07,{x:worldBounds.min.x,z:worldBounds.min.y},{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},terrainSteps),material);}
+  for(const site of groundSites){const surface=site.feature.properties.tags.surface,material=surface==='grass'?m.turf[0]:surface==='paving_stones'?m.pavers:m.soil;batch.add(groundPolygon([site.ring],(x,z)=>height(x,z)+(surface==='grass'?.10:.07),{x:worldBounds.min.x,z:worldBounds.min.y},{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},terrainSteps),material);}
   function ribbon(a:Point,b:Point,width:number,material:THREE.Material,offset=.12){const length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.02)return;const nx=-(b.z-a.z)/length*width/2,nz=(b.x-a.x)/length*width/2,steps=Math.max(1,Math.ceil(length/6)),across=Math.max(1,Math.ceil(width/4)),vertices:number[]=[];
     for(let i=0;i<steps;i++){const t=i/steps,u=(i+1)/steps;const p={x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t},q={x:a.x+(b.x-a.x)*u,z:a.z+(b.z-a.z)*u};const v=(p:Point,k:number)=>[p.x+nx*k,height(p.x+nx*k,p.z+nz*k)+offset,p.z+nz*k];for(let j=0;j<across;j++){const lo=-1+j/across*2,hi=-1+(j+1)/across*2;vertices.push(...v(p,lo),...v(q,lo),...v(q,hi),...v(p,lo),...v(q,hi),...v(p,hi));}}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.computeVertexNormals();material.side=THREE.DoubleSide;batch.add(g,material);
@@ -71,7 +73,8 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   // Architectural profiles retain source outlines. Detail assemblies are illustrative.
   const heroIds=new Set(sourceBuildings.filter(f=>f.properties.campus?.id).map(f=>f.id));
   for(const [index,b] of buildings.entries()){
-    const f=sourceBuildings[index];if(f.geometry.type!=='Polygon')continue;const rng=randomFrom(hashSeed(b.id)),profile=f.properties.campus?.appearance;const wall=profile?.wall==='ivory'?m.ivory:m.walls[profile?.wall==='cream'?0:Math.floor(rng()*m.walls.length)];const roofIndex=({green:0,grey:1,red:2,blue:3,sand:4} as Record<string,number>)[profile?.roof??'']??(f.properties.campus?.phase===3?3:0);const roof=m.roofs[roofIndex];const y=b.position.y,h=b.height;
+    const f=sourceBuildings[index];if(f.geometry.type!=='Polygon')continue;const rng=randomFrom(hashSeed(b.id)),profile=f.properties.campus?.appearance;const wall=profile?.wall==='ivory'?m.ivory:m.walls[profile?.wall==='cream'?0:Math.floor(rng()*m.walls.length)];const roofIndex=({green:0,grey:1,red:2,blue:3,sand:4} as Record<string,number>)[profile?.roof??'']??(f.properties.campus?.phase===3?3:0);const roof=m.roofs[roofIndex];const y=b.position.y,h=b.height,hall=b.placeId==='phase1-auditorium',hostel=profile?.facade==='hostel',admin=profile?.facade==='admin',management=profile?.facade==='management';
+    const glazing=hostel?m.louvres:admin?m.adminWindows:m.windows;
     const shape=new THREE.Shape(b.ring.map(p=>new THREE.Vector2(p.x,-p.z)));for(const hole of f.geometry.coordinates.slice(1))shape.holes.push(new THREE.Path(hole.map(project).map(p=>new THREE.Vector2(p.x,-p.z))));
     const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});geo.rotateX(-Math.PI/2);geo.translate(0,y+.12,0);const body=new THREE.Mesh(geo,wall);body.castShadow=true;body.receiveShadow=false;body.userData.id=b.id;
     // Facade UVs are measured in metres, for consistent texture density.
@@ -85,48 +88,67 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
     if(rectangular&&roofType!=='terrace'){const rise=Math.min(d*.28,5);const vertex=(x:number,z:number,yy:number)=>{const p=edge.clone().multiplyScalar(mU+x).addScaledVector(perpendicular,mV+z);return[p.x,y+yy,p.y];};const cs=[vertex(-w/2-.7,-d/2-.7,h),vertex(w/2+.7,-d/2-.7,h),vertex(w/2+.7,d/2+.7,h),vertex(-w/2-.7,d/2+.7,h)];const inset=roofType==='hip'?Math.min(d/2,w/2):0;const r1=vertex(-w/2+inset,0,h+rise),r2=vertex(w/2-inset,0,h+rise);const vertices=[...cs[0],...cs[1],...r2,...cs[0],...r2,...r1,...cs[1],...cs[2],...r2,...cs[2],...cs[3],...r1,...cs[2],...r1,...r2,...cs[3],...cs[0],...r1];const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.computeVertexNormals();batch.add(g,roof);
       const ridge=edge.clone().multiplyScalar(mU).addScaledVector(perpendicular,mV);box(Math.max(.4,w-inset*2),.18,.2,ridge.x,y+h+rise+.04,ridge.y,m.trim,-Math.atan2(edge.y,edge.x));
       if(roofType==='gable'){for(const s of[-1,1]){const verts=[...vertex(s*w/2,-d/2,h),...vertex(s*w/2,d/2,h),...vertex(s*w/2,0,h+rise)];const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.computeVertexNormals();wall.side=THREE.DoubleSide;batch.add(g,wall);}}
-    }else if(roofType==='compound'){const rings=f.geometry.coordinates.map(r=>r.slice(0,-1).map(project));batch.add(sectionedRoof(rings,y+h+.12,Math.min(4.5,Math.max(1.4,d*.25))),roof);
+    }else if(roofType==='compound'){const rings=f.geometry.coordinates.map(r=>r.slice(0,-1).map(project));let roofGeometry=sectionedRoof(rings,y+h+.12,Math.min(4.5,Math.max(1.4,d*.25)));
+      if(b.named&&!roofGeometry.userData.sections){roofGeometry.deleteAttribute('normal');const smooth=mergeVertices(roofGeometry,.001);roofGeometry.dispose();smooth.computeVertexNormals();roofGeometry=smooth;}
+      batch.add(roofGeometry,roof);
     }else{const g=new THREE.ShapeGeometry(shape);g.rotateX(-Math.PI/2);g.translate(0,y+h+.18,0);batch.add(g,m.roofs[1]);if(f.properties.area>400){box(5,1.3,4,b.position.x,y+h+.65,b.position.z,m.walls[1]);box(5.4,.15,4.4,b.position.x,y+h+1.4,b.position.z,m.roofs[1]);}}
     for(let i=0;i<b.ring.length;i++){
       const a=b.ring[i],c=b.ring[(i+1)%b.ring.length],dx=c.x-a.x,dz=c.z-a.z,length=Math.hypot(dx,dz);if(length<2)continue;const direction=new THREE.Vector2(dx,dz).normalize(),angle=-Math.atan2(dz,dx),midEdge=new THREE.Vector2((a.x+c.x)/2,(a.z+c.z)/2);let n=new THREE.Vector2(-direction.y,direction.x);if(pointInRing({x:midEdge.x+n.x*.3,z:midEdge.y+n.y*.3},b.ring))n.negate();
       box(length,.5,.24,midEdge.x+n.x*.04,y+.28,midEdge.y+n.y*.04,m.base,angle);box(length,.22,.35,midEdge.x,y+h-.12,midEdge.y,m.trim,angle);
+      if(b.named&&length>3){const aa={x:a.x+n.x*.5,z:a.z+n.y*.5},bb={x:c.x+n.x*.5,z:c.z+n.y*.5};ribbon(aa,bb,.7,m.pavers,.11);}
       if(roofType==='terrace')box(length,.55,.25,midEdge.x,y+h+.27,midEdge.y,m.walls[1],angle);
       for(let floor=1;floor<b.floors;floor++)box(length,.18,.32,midEdge.x,y+floor*3.6,midEdge.y,m.trim,angle);
-      const windowSpacing=profile?.facade==='hostel'?3.1:heroIds.has(b.id)?3.7:4.8+rng();const count=Math.floor(length/windowSpacing);
+      const windowSpacing=hall?4.6:profile?.facade==='hostel'?3.1:heroIds.has(b.id)?3.7:4.8+rng();const count=Math.floor(length/windowSpacing);
       for(let j=0;j<count;j++){
         const p=new THREE.Vector2(a.x,a.z).lerp(new THREE.Vector2(c.x,c.z),(j+.5)/count).addScaledVector(n,.1);
         for(let floor=0;floor<b.floors;floor++){
           if(profile?.facade==='management'&&i===front&&floor>0)continue;
-          const yy=y+1.95+floor*3.6;const admin=profile?.facade==='admin',ww=admin?2.3:1.32,wh=admin?1.1:1.48;
+          const yy=y+(hall?2.85:1.95)+floor*3.6;const ww=hall?1.6:admin?2.3:hostel?1.15:management?1.6:1.32,wh=hall?2.75:admin?1.1:hostel?1.7:management?2.0:1.48;
           if(profile?.facade==='hostel'&&floor>0&&j%4<2)panel(2.9,2.8,p.x-n.x*.02,yy,p.y-n.y*.02,m.hostelInset,angle);
-          panel(ww+.23,wh+.27,p.x,yy,p.y,m.trim,angle);panel(ww,wh,p.x+n.x*.035,yy,p.y+n.y*.035,m.windows,angle);if(heroIds.has(b.id)){box(.055,1.5,.2,p.x+n.x*.07,yy,p.y+n.y*.07,m.trim,angle);box(1.6,.1,.38,p.x+n.x*.1,yy-.9,p.y+n.y*.1,m.base,angle);}
-          if(heroIds.has(b.id)&&(j+index)%5===0){box(.65,.42,.38,p.x+n.x*.4,y+.95+floor*3.6,p.y+n.y*.4,m.white,angle);box(.5,.27,.02,p.x+n.x*.6,y+.95+floor*3.6,p.y+n.y*.6,m.steel,angle);}
+          panel(ww+.23,wh+.27,p.x,yy,p.y,m.trim,angle);panel(ww,wh,p.x+n.x*.035,yy,p.y+n.y*.035,glazing,angle);if(heroIds.has(b.id)){box(.055,wh,.2,p.x+n.x*.07,yy,p.y+n.y*.07,m.trim,angle);box(1.6,.1,.38,p.x+n.x*.1,yy-wh/2-.15,p.y+n.y*.1,m.base,angle);}
+          if(b.named&&!hall){
+            // Projecting reveals and hoods supply depth; unseen dimensions are estimates.
+            box(ww+.36,.09,.38,p.x+n.x*.14,yy+wh/2+.16,p.y+n.y*.14,m.trim,angle);
+            if(hostel&&floor===0&&j%4===2)box(.22,h-.35,.22,p.x-direction.x*1.5,y+h/2,p.y-direction.y*1.5,m.trim,angle);
+          }
+          if(heroIds.has(b.id)&&(admin||management)&&(j+index)%5===0){box(.65,.42,.38,p.x+n.x*.4,y+.95+floor*3.6,p.y+n.y*.4,m.white,angle);box(.5,.27,.02,p.x+n.x*.6,y+.95+floor*3.6,p.y+n.y*.6,m.steel,angle);}
         }
+      }
+      if(hall){
+        // Recess shadow, sill and narrow pilasters give the tall hall a distinct rhythm.
+        const bays=Math.max(1,Math.floor(length/4.6));
+        for(let j=0;j<=bays;j++){const q=midEdge.clone().addScaledVector(direction,(j/bays-.5)*length).addScaledVector(n,.13);box(.26,h-.3,.26,q.x,y+(h-.3)/2,q.y,m.trim,angle);}
+        box(length,.12,.62,midEdge.x+n.x*.12,y+h-.3,midEdge.y+n.y*.12,m.base,angle);
+        for(let j=0;j<count;j++){const q=new THREE.Vector2(a.x,a.z).lerp(new THREE.Vector2(c.x,c.z),(j+.5)/count).addScaledVector(n,.2);box(1.95,.1,.65,q.x,y+4.35,q.y,m.trim,angle);}
       }
       if(heroIds.has(b.id)&&length>6){for(const s of[-1,1]){const p=midEdge.clone().addScaledVector(direction,s*(length/2-.3)).addScaledVector(n,.2);cyl(.055,.055,h,p.x,y+h/2,p.y,m.steel,5);}}
       if(profile?.facade==='admin'&&length>5){
         const ncols=Math.max(2,Math.floor(length/5));
-        for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.24);box(.35,h+.3,.5,q.x,y+h/2,q.y,m.accent,angle);}
-        box(length,.55,.55,midEdge.x+n.x*.25,y+h-.05,midEdge.y+n.y*.25,m.accent,angle);
+        for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.24);box(.45,h+.4,.85,q.x+n.x*.22,y+h/2,q.y+n.y*.22,m.accent,angle);}
+        box(length,.75,.85,midEdge.x+n.x*.45,y+h-.05,midEdge.y+n.y*.45,m.accent,angle);
+        box(length,.24,.55,midEdge.x+n.x*.35,y+3.6,midEdge.y+n.y*.35,m.accent,angle);
       }
-      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=profile?.facade==='management'?h-.3:3.4;signs.add(batch,b.id,Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
-        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=large?Math.min(length*.6,15):3.5;
-        box(2,2.8,.2,midEdge.x+n.x*.13,y+1.4,midEdge.y+n.y*.13,m.glass,angle);
+      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=profile?.facade==='management'?3.95:3.4;signs.add(batch,b.id,hall?Math.min(8,length*.65):Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
+        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=hall?Math.min(length*.65,8):large?Math.min(length*.6,15):3.5;
+        if(!management)box(2,2.8,.2,midEdge.x+n.x*.13,y+1.4,midEdge.y+n.y*.13,m.glass,angle);
         const deck=midEdge.clone().addScaledVector(n,1.8);box(porticoWidth,.18,3.7,deck.x,y+.25,deck.y,m.pavers,angle);
-        const canopyHeight=profile?.facade==='management'?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
+        const canopyHeight=management?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
         const columnCount=large?5:2;for(let j=0;j<columnCount;j++){const p=midEdge.clone().addScaledVector(direction,(j/(columnCount-1)-.5)*(porticoWidth-.6)).addScaledVector(n,3.3);if(Math.abs(j/(columnCount-1)-.5)<.1)continue;if(profile?.facade==='management')box(.55,canopyHeight,.55,p.x,y+canopyHeight/2,p.y,wall,angle);else cyl(.17,.21,canopyHeight,p.x,y+canopyHeight/2,p.y,m.trim);}
         if(profile?.facade==='management'){
+          box(porticoWidth,.28,3.7,deck.x,y+3.6,deck.y,wall,angle);
+          // Two door bays under the photographed tall column/glazing composition.
+          for(const side of [-1,1]){const q=midEdge.clone().addScaledVector(direction,side*1.3).addScaledVector(n,.18);box(1.35,2.65,.12,q.x,y+1.4,q.y,m.steel,angle);box(.045,.45,.08,q.x+direction.x*.48,y+1.45,q.y+direction.y*.48,m.trim,angle);}
           const columns=Math.max(3,Math.floor(porticoWidth/1.5));
           for(let j=0;j<columns;j++){const q=midEdge.clone().addScaledVector(direction,(j+.5)/columns*porticoWidth-porticoWidth/2).addScaledVector(n,.22);panel(porticoWidth/columns-.08,2.9,q.x,y+5.25,q.y,m.windows,angle);}
 
         }
         if(profile?.facade==='hostel'){
           const balconyWidth=Math.min(10,length*.28),depth=2;
-          for(let floor=1;floor<b.floors;floor++){const q=midEdge.clone().addScaledVector(n,depth/2);box(balconyWidth,.18,depth,q.x,y+floor*3.6,q.y,m.trim,angle);const rail=midEdge.clone().addScaledVector(n,depth);for(const offset of [.4,.9])box(balconyWidth,.06,.07,rail.x,y+floor*3.6+offset,rail.y,m.trim,angle);for(let j=0;j<=8;j++){const post=rail.clone().addScaledVector(direction,(j/8-.5)*balconyWidth);box(.045,.95,.045,post.x,y+floor*3.6+.5,post.y,m.trim);}}
+          for(let floor=1;floor<b.floors;floor++){const q=midEdge.clone().addScaledVector(n,depth/2);box(balconyWidth,.18,depth,q.x,y+floor*3.6,q.y,m.trim,angle);const rail=midEdge.clone().addScaledVector(n,depth);for(const offset of [.25,.5,.75,1.0])box(balconyWidth,.06,.07,rail.x,y+floor*3.6+offset,rail.y,m.trim,angle);for(let j=0;j<=8;j++){const post=rail.clone().addScaledVector(direction,(j/8-.5)*balconyWidth);box(.045,.95,.045,post.x,y+floor*3.6+.5,post.y,m.trim);}}
           const q=midEdge.clone().addScaledVector(n,1.2);box(balconyWidth+1,.2,3,q.x,y+h,q.y,roof,angle);
         }
         if(large&&b.floors>1&&profile?.facade!=='management'&&profile?.facade!=='hostel'){box(porticoWidth,.13,3.7,deck.x,y+3.6,deck.y,m.trim,angle);const p=midEdge.clone().addScaledVector(n,3.5);box(porticoWidth,.07,.08,p.x,y+4.5,p.y,m.steel,angle);for(let j=0;j<Math.floor(porticoWidth/1.4);j++){const q=p.clone().addScaledVector(direction,(j+.5)*1.4-porticoWidth/2);box(.04,.9,.04,q.x,y+4.05,q.y,m.steel);} }
-        for(let j=0;j<3;j++){const p=midEdge.clone().addScaledVector(n,3.8+j*.3);box(3,.12,.5,p.x,y+.23-j*.07,p.y,m.pavers,angle);}
+        for(let j=0;j<(hall?4:3);j++){const p=midEdge.clone().addScaledVector(n,3.8+j*.3);box(b.named?Math.min(porticoWidth,6):3,.12,.5,p.x,y+.23-j*.07,p.y,m.pavers,angle);}
 
       }
     }
@@ -134,7 +156,8 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
 
   // Roads drape over the DEM. Centre lines and verge strips provide legible scale.
   let roadDistance=0;
-  for(const s of roads){if(s.surface!=='asphalt'){ribbon(s.a,s.b,s.width,s.surface==='paving_stones'?m.pavers:m.soil,.12);continue;}ribbon(s.a,s.b,s.width+1,m.pavers,.16);ribbon(s.a,s.b,s.width,m.asphalt,.38);if(s.width>4){const dx=(s.b.x-s.a.x)/s.length,dz=(s.b.z-s.a.z)/s.length;
+  for(const s of roads){if(s.surface!=='asphalt'){ribbon(s.a,s.b,s.width,s.surface==='paving_stones'?m.pavers:m.soil,.12);
+      if(s.surface==='paving_stones'){const nx=-(s.b.z-s.a.z)/s.length,nz=(s.b.x-s.a.x)/s.length;for(const side of [-1,1])ribbon({x:s.a.x+nx*side*(s.width/2+.08),z:s.a.z+nz*side*(s.width/2+.08)},{x:s.b.x+nx*side*(s.width/2+.08),z:s.b.z+nz*side*(s.width/2+.08)},.16,m.base,.17);}continue;}ribbon(s.a,s.b,s.width+1,m.pavers,.16);ribbon(s.a,s.b,s.width,m.asphalt,.38);if(s.width>4){const dx=(s.b.x-s.a.x)/s.length,dz=(s.b.z-s.a.z)/s.length;
       for(let t=2;t<s.length;t+=11){const a={x:s.a.x+dx*t,z:s.a.z+dz*t},b={x:s.a.x+dx*Math.min(t+3,s.length),z:s.a.z+dz*Math.min(t+3,s.length)};ribbon(a,b,.12,m.white,.47);}
       for(let t=0;t<s.length;t+=4){for(const side of[-1,1]){const a={x:s.a.x+dx*t-dz*side*(s.width/2+.2),z:s.a.z+dz*t+dx*side*(s.width/2+.2)},b={x:s.a.x+dx*Math.min(t+4,s.length)-dz*side*(s.width/2+.2),z:s.a.z+dz*Math.min(t+4,s.length)+dx*side*(s.width/2+.2)};ribbon(a,b,.3,Math.floor(t/4)%2===0?m.white:m.steel,.47);}}
       for(let t=12;t<s.length;t+=100){const p={x:s.a.x+dx*t-dz*(s.width/2+1.1),z:s.a.z+dz*t+dx*(s.width/2+1.1)};if(!blocked(p,2))lamp(p);}
@@ -151,7 +174,20 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
     for(const side of [-1,1]){const x=q.x+Math.cos(angle)*side*2.35,z=q.z-Math.sin(angle)*side*2.35;cyl(.065,.065,3,x,y+1.5,z,m.steel,5);structureBounds.push(new THREE.Box2(new THREE.Vector2(x-.1,z-.1),new THREE.Vector2(x+.1,z+.1)));}
   }
   // Vegetation density follows the satellite land-cover mask, with bounded instancing.
-  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m);
+  // Low edging follows only the observed park boundary. Open gaps at mapped
+  // paths/roads; kerb dimensions are illustrative, not surveyed infrastructure.
+  for(const site of groundSites.filter(s=>s.feature.id==='local/admin-park')){
+    for(let edge=0;edge<site.ring.length;edge++){
+      const a=site.ring[edge],b=site.ring[(edge+1)%site.ring.length],length=Math.hypot(b.x-a.x,b.z-a.z),steps=Math.ceil(length/2);
+      for(let j=0;j<steps;j++){
+        const p={x:a.x+(b.x-a.x)*j/steps,z:a.z+(b.z-a.z)*j/steps},q={x:a.x+(b.x-a.x)*(j+1)/steps,z:a.z+(b.z-a.z)*(j+1)/steps};
+        if(onRoad(p,1.2)||onRoad(q,1.2)||blocked(p,2)||blocked(q,2))continue;
+        ribbon(p,q,.22,m.base,.19);
+      }
+    }
+  }
+  const planting=addPhaseOnePlanting(features,center,batch,m,height,p=>!blocked(p,2)&&!onRoad(p,1));
+  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m,planting.trees);
   root.add(vegetation.root);
   const trees=vegetation.count,people=0,parkingLots=0;
   // Terrain mesh with subtle natural variation, sampled at real metre scale.
@@ -163,7 +199,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   const distant=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),new THREE.MeshLambertMaterial({color:'#b3bea0'}));distant.rotation.x=-Math.PI/2;distant.position.set(mid.x,-85,mid.y);distant.material.userData.ownedMaterial=true;root.add(distant);
   batch.finish(root);
   const selected=buildings.find(b=>b.placeId==='science')??buildings[0];
-  return {root,ground,entrance,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>();root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
+  return {root,ground,entrance,updateVegetation:vegetation.updateDetail,vegetationDetail:()=>vegetation.root.userData.detailedTrees??0,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>(vegetation.root.userData.sharedGeometries??[]);root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
 }
 export type World=ReturnType<typeof buildWorld>;
 

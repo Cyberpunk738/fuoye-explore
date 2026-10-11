@@ -50,8 +50,8 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=false;controls.screenSpacePanning=false;controls.minDistance=6;controls.maxDistance=1800;
   controls.minPolarAngle=.1;controls.maxPolarAngle=1.53;
-  const hemi=new THREE.HemisphereLight('#d8eafa','#66744e',1.05);scene.add(hemi);
-  const sun=new THREE.DirectionalLight('#fff1dc',1.65);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.normalBias=1.2;sun.shadow.bias=-.0008;
+  const hemi=new THREE.HemisphereLight('#e9f3f6','#899080',1.35);scene.add(hemi);
+  const sun=new THREE.DirectionalLight('#fff1dc',1.45);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.normalBias=1.2;sun.shadow.bias=-.0008;
   const mid=world.cameraBounds.getCenter(new THREE.Vector2()),extent=world.cameraBounds.getSize(new THREE.Vector2());
   const shadowRadius=Math.max(extent.x,extent.y)*.58;
   Object.assign(sun.shadow.camera,{left:-shadowRadius,right:shadowRadius,top:shadowRadius,bottom:-shadowRadius,near:1,far:2200});
@@ -149,7 +149,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
     if(mode==='walk'||!startAtPoint('walk'))return;
     walkHud.dataset.jumpPeak='0';prompt.hidden=false;updateWalker(0);request();
   }
-  function toggleNight(){night=!night;paintSky(night);app.dataset.night=String(night);const b=tools.querySelector<HTMLButtonElement>('.night')!;b.textContent=night?'Day':'Night';b.setAttribute('aria-pressed',String(night));hemi.intensity=night?.55:1.05;hemi.color.set(night?'#8aa1ca':'#d8eafa');sun.intensity=night?.48:1.65;sun.color.set(night?'#a4b9e2':'#fff1dc');stars.visible=night;lampGlows.visible=night;headlights.visible=night&&mode==='drive';scene.background=new THREE.Color(night?'#111e32':'#cbdfe4');(scene.fog as THREE.Fog).color.copy(scene.background);world.materials.windows.emissiveIntensity=night?1.2:0;world.materials.glow.emissiveIntensity=night?2:0;request();}
+  function toggleNight(){night=!night;paintSky(night);app.dataset.night=String(night);const b=tools.querySelector<HTMLButtonElement>('.night')!;b.textContent=night?'Day':'Night';b.setAttribute('aria-pressed',String(night));hemi.intensity=night?.55:1.35;hemi.color.set(night?'#8aa1ca':'#e9f3f6');sun.intensity=night?.48:1.45;sun.color.set(night?'#a4b9e2':'#fff1dc');stars.visible=night;lampGlows.visible=night;headlights.visible=night&&mode==='drive';scene.background=new THREE.Color(night?'#111e32':'#cbdfe4');(scene.fog as THREE.Fog).color.copy(scene.background);for(const material of [world.materials.windows,world.materials.louvres,world.materials.adminWindows])material.emissiveIntensity=night?1.2:0;world.materials.glow.emissiveIntensity=night?2:0;request();}
   tools.querySelector<HTMLButtonElement>('.drive')!.onclick=openDrive;
   tools.querySelector<HTMLButtonElement>('.walk')!.onclick=openWalk;
   tools.querySelector<HTMLButtonElement>('.night')!.onclick=toggleNight;
@@ -219,12 +219,12 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
     }
     if(elapsed>toastUntil)toast.hidden=true;
     driveHud.dataset.x=walkHud.dataset.x=String(player.x);driveHud.dataset.z=walkHud.dataset.z=String(player.z);
-    updateLabels();updateStartMarker();fps.dataset.cameraX=String(camera.position.x);fps.dataset.cameraY=String(camera.position.y);fps.dataset.cameraZ=String(camera.position.z);fps.dataset.orbitX=String(controls.target.x);fps.dataset.orbitZ=String(controls.target.z);fps.dataset.cameraGroundHeight=String(camera.position.y-world.surfaceHeight(camera.position.x,camera.position.z));sky.position.copy(camera.position);const started=performance.now();renderer.render(scene,camera);const cost=performance.now()-started;
+    if(world.updateVegetation(camera.position))renderer.shadowMap.needsUpdate=true;updateLabels();updateStartMarker();fps.dataset.cameraX=String(camera.position.x);fps.dataset.cameraY=String(camera.position.y);fps.dataset.cameraZ=String(camera.position.z);fps.dataset.orbitX=String(controls.target.x);fps.dataset.orbitZ=String(controls.target.z);fps.dataset.cameraGroundHeight=String(camera.position.y-world.surfaceHeight(camera.position.x,camera.position.z));sky.position.copy(camera.position);const started=performance.now();renderer.render(scene,camera);const cost=performance.now()-started;
     if(renderCount>10&&cost>70)lowFrames++;else lowFrames=Math.max(0,lowFrames-1);
     if(lowFrames>8&&renderScale> .75){renderScale=.75;renderer.shadowMap.enabled=false;resize();lowFrames=0;}
     const moving=!!flight||(mode==='walk'&&(keys.size>0||stickInput.lengthSq()>.001||jumpHeight>0||jumpQueued))||(mode==='drive'&&(driveState==='run'||driveState==='free'&&(keys.size>0||Math.abs(speed)>.02||Math.abs(lateral)>.02)))||!toast.hidden;
     if(!moving&&mode==='drive')speed=lateral=0;
-    fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);fps.dataset.nameplates=String(world.signageCount);
+    fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);fps.dataset.nameplates=String(world.signageCount);fps.dataset.detailedTrees=String(world.vegetationDetail());
     return moving;
   },24);
   function gateView(){
