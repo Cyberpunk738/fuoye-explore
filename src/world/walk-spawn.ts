@@ -1,7 +1,8 @@
 import type { Point } from './math';
 
 /** Keep a clear requested point exactly. Search outward only for an obstacle or
- * a point beyond the terrain. This never snaps a pedestrian to a drive road. */
+ * a point beyond the terrain. Callers provide walking or vehicle clearance;
+ * neither mode is snapped to a road. */
 export function resolveWalkSpawn(requested: Point, bounds: {min: Point; max: Point}, allowed: (p: Point) => boolean): Point | undefined {
   if (!Number.isFinite(requested.x + requested.z)) return undefined;
   const p = {x: Math.max(bounds.min.x + .5, Math.min(bounds.max.x - .5, requested.x)), z: Math.max(bounds.min.z + .5, Math.min(bounds.max.z - .5, requested.z))};
