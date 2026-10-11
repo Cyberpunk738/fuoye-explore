@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './style.css';
-import { escapeHtml as esc, landmarks, namingSource, paperSource, persistNotes, readNotes, validateNotes } from './data';
+import { escapeHtml as esc, landmarks, namingSource, paperSource, persistNotes, readNotes, validateNotes, mergeCampusDataset, featureSource } from './data';
 import type { Dataset, Feature, Notes } from './data';
 import type { createScene } from './scene';
 import type { TerrainGrid } from './world/math';
@@ -27,7 +27,7 @@ app.innerHTML = `
       <div class="map-toolbar"><div class="mode-switch" aria-label="View mode"><button id="map-mode" class="active" aria-pressed="true">◇ Map</button><button id="scene-mode" aria-pressed="false">◈ 3D campus</button></div><button id="overview" class="tool-button">↗ Overview</button></div>
       <button id="mobile-panel" class="tool-button mobile-panel">☰ Landmarks</button>
       <div class="area-tag"><span class="eyebrow">EXPLORATORY MAP</span><h2>Oye campus & surroundings</h2><p id="view-caption">Real building outlines. Identities to be checked.</p></div>
-      <div class="layer-controls" id="layer-controls"><label><input id="basemap" type="checkbox" checked /> Street map</label><label><input id="buildings" type="checkbox" checked /> Building outlines</label><label><input id="roads" type="checkbox" checked /> Roads & paths</label></div>
+      <div class="layer-controls" id="layer-controls"><label><input id="basemap" type="checkbox" /> Street map</label><label><input id="buildings" type="checkbox" checked /> Building outlines</label><label><input id="roads" type="checkbox" checked /> Roads & paths</label></div>
       <div id="map-error" class="map-error" hidden></div>
       <div class="north" id="north" aria-hidden="true">N<span>↑</span></div>
       <div class="map-bottom"><div class="legend"><span><i class="unverified"></i>Unverified</span><span><i class="candidate"></i>Candidate</span><span><i class="identified"></i>Identified</span></div><span id="visible-count">Loading outlines…</span></div>
@@ -48,7 +48,7 @@ let panel: 'landmarks' | 'notes' = 'landmarks';
 let mode: 'map' | 'scene' = 'map';
 let scene: ReturnType<typeof createScene> | undefined;
 let sceneRequest = 0;
-let sceneBounds = L.latLngBounds([[7.7727, 5.309], [7.7808, 5.3192]]);
+let sceneBounds = L.latLngBounds([[7.7727, 5.309], [7.7811, 5.3238]]);
 const terrainRequest = fetch('/data/terrain.json').then(r => r.ok ? r.json() as Promise<TerrainGrid> : undefined).catch(() => undefined);
 let buildingLayer: L.GeoJSON | undefined;
 let roadsLayer: L.GeoJSON | undefined;
@@ -95,18 +95,20 @@ function renderList() {
       $('place-list').querySelectorAll<HTMLButtonElement>('[data-scene-site]').forEach(button => button.onclick = () => { scene?.focusSite(button.dataset.sceneSite!); $('sidebar').classList.remove('mobile-open'); });
       return;
     }
+    const matched=dataset?.features.filter(f=>f.properties.kind==='building'&&f.properties.campus?.id&&f.properties.campus.directory&&`${f.properties.tags.name} ${f.id}`.toLowerCase().includes(term))??[];
     const items = landmarks.filter(l => `${l.name} ${l.alias}`.toLowerCase().includes(term));
-    $('list-intro').innerHTML = `Places to locate <span>${items.length}</span>`;
-    $('place-list').innerHTML = items.map(l => {
+    $('list-intro').innerHTML = `Mapped places & references <span>${matched.length+items.length}</span>`;
+    $('place-list').innerHTML = matched.map(f=>`<button class="place" data-campus-building="${esc(f.id)}"><span class="place-number">◇</span><span><strong>${esc(f.properties.tags.name)}</strong><small>Phase ${f.properties.campus!.phase} · ${esc(f.properties.campus!.match??'research match')}</small><span class="place-state">Source record available</span></span><span class="place-arrow">↗</span></button>`).join('') + items.map(l => {
       const index = landmarks.indexOf(l);
       const matches = Object.entries(notes).filter(([, n]) => n.name === l.name);
       return `<button class="place" data-landmark="${index}"><span class="place-number">${String(index + 1).padStart(2, '0')}</span><span><strong>${esc(l.name)}</strong><small>${esc(l.alias)}</small><span class="place-state ${matches.length ? 'has-note' : ''}">${matches.length ? `${matches.length} review note${matches.length > 1 ? 's' : ''}` : 'Footprint to locate'}</span></span><span class="place-arrow">↗</span></button>`;
     }).join('') || '<div class="empty">No matching landmarks.</div>';
+    $('place-list').querySelectorAll<HTMLButtonElement>('[data-campus-building]').forEach(button=>button.onclick=()=>{const f=featuresById.get(button.dataset.campusBuilding!)!;map.setView([f.properties.center[1],f.properties.center[0]],19);selectFeature(f);$('sidebar').classList.remove('mobile-open');});
     $('place-list').querySelectorAll<HTMLButtonElement>('[data-landmark]').forEach(button => button.onclick = () => showReference(Number(button.dataset.landmark)));
   } else {
     const items = Object.entries(notes).filter(([id, n]) => `${id} ${n.name}`.toLowerCase().includes(term));
     $('list-intro').innerHTML = `Saved identifications <span>${items.length}</span>`;
-    $('place-list').innerHTML = items.map(([id, n]) => `<button class="place" data-note="${id}"><span class="note-dot ${n.status}"></span><span><strong>${esc(n.name)}</strong><small>${id.startsWith('ms/') ? 'Microsoft' : 'OSM'} ${esc(id)}</small><span class="place-state">${n.status === 'identified' ? 'Identified by reviewer' : 'Candidate · needs checking'}</span></span><span class="place-arrow">↗</span></button>`).join('') || '<div class="empty"><span>Nothing saved yet.</span>Click a building outline to add its name and the evidence that identifies it.</div>';
+    $('place-list').innerHTML = items.map(([id, n]) => `<button class="place" data-note="${id}"><span class="note-dot ${n.status}"></span><span><strong>${esc(n.name)}</strong><small>${id.startsWith('local/') ? 'Observation' : id.startsWith('ms/') ? 'Microsoft' : 'OSM'} ${esc(id)}</small><span class="place-state">${n.status === 'identified' ? 'Identified by reviewer' : 'Candidate · needs checking'}</span></span><span class="place-arrow">↗</span></button>`).join('') || '<div class="empty"><span>Nothing saved yet.</span>Click a building outline to add its name and the evidence that identifies it.</div>';
     $('place-list').querySelectorAll<HTMLButtonElement>('[data-note]').forEach(button => button.onclick = async () => { const f = featuresById.get(button.dataset.note!); if (!f) return; await setMode('map'); map.setView([f.properties.center[1], f.properties.center[0]], 18); selectFeature(f); $('sidebar').classList.remove('mobile-open'); });
   }
 }
@@ -133,13 +135,17 @@ function selectFeature(f: Feature) {
   }
   const note = notes[f.id];
   const [lon, lat] = f.properties.center;
-  const sourceName = f.properties.source === 'microsoft' ? 'Microsoft machine detection' : 'OpenStreetMap';
-  const sourceUrl = f.properties.source === 'microsoft' ? 'https://github.com/microsoft/GlobalMLBuildingFootprints' : `https://www.openstreetmap.org/${f.id}`;
-  $('inspector-content').innerHTML = `<div class="eyebrow">BUILDING OUTLINE</div><h2>${esc(note?.name ?? f.properties.tags.name ?? 'Which building is this?')}</h2><div class="status-badge ${note?.status ?? 'unverified'}">${note ? note.status === 'identified' ? 'Identified by reviewer' : 'Candidate identification' : 'Identity unverified'}</div><div class="building-facts"><div><span>Footprint area</span><strong>≈ ${Math.round(f.properties.area).toLocaleString()} m²</strong></div><div><span>Height</span><strong>Unknown</strong></div></div><p class="coords">${lat.toFixed(6)}° N, ${lon.toFixed(6)}° E · OSM ${esc(f.id)}</p><a class="source-link" href="https://www.openstreetmap.org/${f.id}" target="_blank" rel="noopener">Inspect original map feature ↗</a><form id="note-form"><label for="building-name">Building name</label><input id="building-name" list="landmark-names" maxlength="160" required placeholder="e.g. Main administration" value="${esc(note?.name ?? '')}" /><datalist id="landmark-names">${landmarks.map(l => `<option value="${esc(l.name)}"></option>`).join('')}</datalist><label for="identification-status">Identification</label><select id="identification-status"><option value="candidate" ${note?.status !== 'identified' ? 'selected' : ''}>Candidate · still needs checking</option><option value="identified" ${note?.status === 'identified' ? 'selected' : ''}>Identified · evidence checked</option></select><label for="evidence">Evidence / reference</label><textarea id="evidence" maxlength="2000" rows="3" placeholder="Photo URL, map source, or what you checked…">${esc(note?.evidence ?? '')}</textarea><p class="form-help">An identified building needs evidence. This is your review record, not university verification.</p><button type="submit" class="primary">Save identification</button>${note ? '<button type="button" class="secondary" id="remove-note">Remove identification</button>' : ''}</form>`;
+  const source=featureSource(f),sourceName=source.name,sourceUrl=source.url;
+  $('inspector-content').innerHTML = `<div class="eyebrow">BUILDING OUTLINE</div><h2>${esc(note?.name ?? f.properties.tags.name ?? 'Which building is this?')}</h2><div class="status-badge ${note?.status ?? 'unverified'}">${note ? note.status === 'identified' ? 'Identified by reviewer' : 'Candidate identification' : 'Identity unverified'}</div><div class="building-facts"><div><span>Footprint area</span><strong>≈ ${Math.round(f.properties.area).toLocaleString()} m²</strong></div><div><span>Height</span><strong>Unknown</strong></div></div><p class="coords">${lat.toFixed(6)}° N, ${lon.toFixed(6)}° E · OSM ${esc(f.id)}</p><a class="source-link" href="https://www.openstreetmap.org/${f.id}" target="_blank" rel="noopener">Inspect original map feature ↗</a><form id="note-form"><label for="building-name">Building name</label><input id="building-name" list="landmark-names" maxlength="160" required placeholder="e.g. Main administration" value="${esc(note?.name ?? f.properties.tags.name ?? '')}" /><datalist id="landmark-names">${landmarks.map(l => `<option value="${esc(l.name)}"></option>`).join('')}</datalist><label for="identification-status">Identification</label><select id="identification-status"><option value="candidate" ${note?.status !== 'identified' ? 'selected' : ''}>Candidate · still needs checking</option><option value="identified" ${note?.status === 'identified' ? 'selected' : ''}>Identified · evidence checked</option></select><label for="evidence">Evidence / reference</label><textarea id="evidence" maxlength="2000" rows="3" placeholder="Photo URL, map source, or what you checked…">${esc(note?.evidence ?? f.properties.campus?.source ?? '')}</textarea><p class="form-help">An identified building needs evidence. This is your review record, not university verification.</p><button type="submit" class="primary">Save identification</button>${note ? '<button type="button" class="secondary" id="remove-note">Remove identification</button>' : ''}</form>`;
   $('inspector-content').querySelector('.coords')!.textContent = `${lat.toFixed(6)}° N, ${lon.toFixed(6)}° E · ${sourceName} · ${f.id}`;
   const sourceLink = $('inspector-content').querySelector<HTMLAnchorElement>('.source-link')!;
   sourceLink.href = sourceUrl;
   sourceLink.textContent = `Inspect ${sourceName} source ↗`;
+  const evidence=document.createElement('div');evidence.className='reference-clue';
+  const detail=document.createElement('p');detail.textContent=source.note;evidence.appendChild(detail);
+  const campus=f.properties.campus;
+  if(campus?.id){const match=document.createElement('p');match.textContent=`Research match: ${campus.match??campus.identity}. Checked ${campus.checkedOn??'date unrecorded'}. ${campus.note??'A listing match is not university verification.'}`;evidence.appendChild(match);if(campus.source?.startsWith('https://')){const link=document.createElement('a');link.href=campus.source;link.target='_blank';link.rel='noopener';link.textContent='Open place evidence ↗';evidence.appendChild(link);}if(campus.appearance?.evidence){const appearance=document.createElement('p');appearance.textContent=campus.appearance.evidence;evidence.appendChild(appearance);}}
+  sourceLink.after(evidence);
   $('inspector').hidden = false;
   $('note-form').onsubmit = async event => {
     event.preventDefault();
@@ -250,10 +256,12 @@ renderList();
 $('scene-mode',).setAttribute('disabled', '');
 async function start() {
   try {
-    const response = await fetch('/data/oye.geojson'); if (!response.ok) throw new Error('Map data could not be loaded.');
-    dataset = await response.json() as Dataset;
+    const responses=await Promise.all([fetch('/data/oye.geojson'),fetch('/data/campus.geojson')]);
+    if(responses.some(r=>!r.ok))throw new Error('Map data could not be loaded.');
+    const [area,campus]=await Promise.all(responses.map(r=>r.json() as Promise<Dataset>));
+    dataset=mergeCampusDataset(area,campus);
     dataset.features.forEach(f => featuresById.set(f.id, f));
-    updateCount(); $('scene-mode').removeAttribute('disabled');
+    loadMapLayers();renderList();updateCount(); $('scene-mode').removeAttribute('disabled');
   } catch (error) { $('map-error').hidden = false; $('map-error').textContent = error instanceof Error ? error.message : 'Could not load the review map.'; $('visible-count').textContent = 'Data unavailable'; }
 }
 void start();

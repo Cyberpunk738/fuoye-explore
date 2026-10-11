@@ -1,0 +1,12 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs/promises');
+(async()=>{const browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1280,height:800}});const errors=[];page.on('pageerror',e=>errors.push(e.message));let external=0;await page.route('https://**/*',route=>{external++;return route.abort();});try{
+ await page.addInitScript(()=>{if(!localStorage.getItem('fuoye-oye-review-v1'))localStorage.setItem('fuoye-oye-review-v1',JSON.stringify({'ms/1b77ae9be7b6829b':{name:'Existing note',status:'candidate',evidence:'Preserve me',updatedAt:'2026-10-11'}}));});
+ await page.goto(new URL('review.html',process.env.BASE_URL||'http://127.0.0.1:5173/').href);await page.locator('[data-campus-building="local/senate"]').waitFor();await page.locator('#map .leaflet-overlay-pane canvas').waitFor({state:'visible'});
+ assert.equal(await page.locator('#basemap').isChecked(),false);assert.equal(external,0);
+ await page.locator('[data-campus-building="local/senate"]').click();await page.getByRole('heading',{name:'New Senate Building',exact:true}).waitFor();
+ const source=page.locator('#inspector-content > .source-link');assert.match(await source.textContent(),/Visual satellite observation/);assert.match(await source.getAttribute('href'),/^https:\/\/www.google.com\/maps\//);
+ await page.locator('#building-name').fill('Senate review note');await page.getByRole('button',{name:'Save identification',exact:true}).click();
+ let notes=await page.evaluate(()=>JSON.parse(localStorage.getItem('fuoye-oye-review-v1')));assert.equal(notes['local/senate'].name,'Senate review note');assert.equal(notes['ms/1b77ae9be7b6829b'].evidence,'Preserve me');
+ await page.reload();await page.locator('[data-campus-building="local/senate"]').waitFor();await page.locator('#notes-tab').click();await page.locator('[data-note="local/senate"]').click();assert.equal(await page.locator('#building-name').inputValue(),'Senate review note');
+ await page.screenshot({path:'output/review-evidence.png'});assert.deepEqual(errors,[]);await fs.writeFile('output/review-checks.json',JSON.stringify({outlinesVisible:true,observationSource:true,notesPersisted:true,existingNotesPreserved:true,externalRequests:external,errors},null,2));console.log('Review evidence and persistence checks passed');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});

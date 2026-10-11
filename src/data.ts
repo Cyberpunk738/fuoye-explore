@@ -46,3 +46,17 @@ export function validateNotes(value: unknown): Notes {
   return result;
 }
 export function persistNotes(notes: Notes): void { localStorage.setItem(KEY, JSON.stringify(notes)); }
+/** Overlay the reviewed campus records on the wider Oye extract without duplicating
+ * shared polygons. Original IDs remain valid for existing localStorage notes. */
+export function mergeCampusDataset(area:Dataset,campus:Dataset):Dataset {
+  const features=new Map(area.features.map(f=>[f.id,f]));
+  campus.features.forEach(f=>features.set(f.id,f));
+  const merged=[...features.values()],summary={...area.metadata.summary};
+  for(const kind of ['building','road','land'])summary[kind]=merged.filter(f=>f.properties.kind===kind).length;
+  return {...area,features:merged,metadata:{...area.metadata,summary,scope:area.metadata.scope+' Campus records include reviewed identities and approximate visual observations.'}};
+}
+export function featureSource(f:Feature) {
+  if(f.properties.source==='observation')return {name:'Visual satellite observation',url:f.properties.sources.find(s=>s.startsWith('https://www.google.com/maps/'))??'https://maps.app.goo.gl/yDcJm6EFjyrKhLUY6',note:'Approximate visual trace; not surveyed building walls.'};
+  if(f.properties.source==='microsoft')return {name:'Microsoft machine detection',url:'https://github.com/microsoft/GlobalMLBuildingFootprints',note:'Machine-detected outline; geometry needs checking.'};
+  return {name:'OpenStreetMap',url:`https://www.openstreetmap.org/${f.id}`,note:'Mapped outline; building dimensions and occupancy may have changed.'};
+}
