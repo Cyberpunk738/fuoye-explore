@@ -22,11 +22,11 @@ The main page uses the reference's floating directory, serif title, four control
 
 ## Evidence and limits
 
-85 mapped building footprints, OSM road centre lines and real DEM elevations establish the scene. The area includes surrounding land; an official campus boundary and individual building identities remain unverified. Unknown buildings keep numbered names. Reviewer notes are not university verification.
+The current main-campus extract includes 108 building polygons across Phases 1, 2 and 3, with 11 named places and 62 directory entries. Small supporting structures and secondary wings stay visible without cluttering the directory. Names are tied to Maps pins or visible compounds, with match confidence and source links in the inventory; they are not official university verification. Unknown buildings remain numbered.
 
-A published FUOYE campus photo informs cream plaster, green metal roofs, columned verandas, recessed entrances, glazing, palms and green/white kerbs. Heights without mapped tags, roof forms, facades and entrances remain estimates, not measured replicas of individual buildings.
+OSM/Microsoft outlines establish most geometry. The new Senate and eight unnamed roofs use explicitly recorded approximate satellite traces. Management Sciences, the four-storey boys' hostel and Administration have photo-informed facade profiles. Reviewed contributor photos date from 2021–2022; satellite acquisition dates are unavailable. Unobserved heights, dimensions, entrances and facade details remain estimates.
 
-ESA WorldCover's **2021** 10 m raster guides tree-cover areas and terrain colours. It is older satellite coverage, not a current tree inventory; individual positions, heights and species are estimated. Invented gardens, parking concepts, sports sites and connecting paths have been removed. Roads and navigation follow rendered terrain triangles, without vertical exaggeration. A 3×3 elevation filter reduces DEM/canopy noise; gradual 35 m foundation transitions are estimated grading, not surveyed earthworks.
+ESA WorldCover **2021** guides vegetation coverage, not individual tree positions. Recorded forecourts, paths and the park beside Administration follow inspected imagery. Roads/terrain use real DEM elevations without vertical exaggeration; foundation grading is estimated. Ground patches are clipped to the rendered terrain triangles. This remains a reconstruction in progress, not a finished digital twin.
 
 See [source metadata](public/data/scene-sources.json), [campus research](research/oye-campus-research.md) and [reference comparison](research/reference-parity.md). Reference photos and downloaded reference source are not redistributed in the app.
 
@@ -34,7 +34,7 @@ See [source metadata](public/data/scene-sources.json), [campus research](researc
 
 Low-power WebGL, Lambert materials, shared textures, spatially chunked tree instances, a 1280 × 720 resolution ceiling and a 24 fps navigation cap. Idle, hidden and offscreen scenes stop rendering. Reduced-motion preferences shorten flights and remove walking bob. A slow-frame fallback reduces resolution and disables shadows.
 
-The static world uses one cached 1024² shadow map. Buildings cast onto the ground without facade self-shadowing. The terrain has 96 × 96 cells; at most 3200 trees share small crowns and trunks. Night uses emissive surfaces, lamp sprites and one unshadowed headlight. No ambient occlusion, post-processing, animated crowds or background traffic. Actual speed depends on the device.
+The static world uses one cached 1024² shadow map, fitted more closely when focusing a building. Buildings cast onto the ground without facade self-shadowing. The terrain has 96 × 96 cells; at most 3200 trees share small crowns and trunks. Night uses emissive surfaces, lamp sprites and one unshadowed headlight. No ambient occlusion, post-processing, animated crowds or background traffic. Actual speed depends on the device.
 
 ## Validation
 
@@ -42,15 +42,21 @@ The static world uses one cached 1024² shadow map. Buildings cast onto the grou
 npm test
 npm run build
 npm run test:browser
+npm run test:review
+npm run test:routes
 ```
 
 The browser check expects installed Chrome and a dev server on port 5173; set `BASE_URL` for a different origin. Headless software WebGL checks directory selection, courier start, free driving, reset, walking/jumping, night/day, mobile layout/touch movement, review routing, a geometry budget and idle rendering. Reports/screenshots go to ignored `output/`. Unit tests cover notes, geometry, elevation, the scheduler, car/jump physics, delivery rules and source provenance.
+
+The review check verifies visible outlines, source links, note persistence and zero external requests by default. The route check builds the actual collision world without WebGL, verifies access to all 11 roadside drop-offs and exercises scoring/bonus/next-target rules at each. It permits off-road travel and does not replace a keyboard-driven delivery run.
 
 The reference inspection script is a research aid; its heavy renderer can time out under software graphics. It is not a required application test.
 
 ## Map notes and data
 
-At `/review.html`, select a footprint and save its name, status and evidence. Export/import JSON backups. Reload the explorer after editing to update directory names. No backend or account is needed.
+At `/review.html`, the current campus evidence is merged into the wider map. Street-map tiles are opt-in; the default view uses bundled data and system fonts. Select a footprint and save its name, status and evidence. Export/import JSON backups. Reload the explorer after editing to update directory names. No backend or account is needed.
+
+`npm run data:campus` regenerates the compact runtime extract offline from the canonical inventory and site observations. Do not rerun the one-off seed/apply/fix scripts as a build pipeline; some overwrite later work.
 
 `npm run data` rebuilds footprints from downloaded inputs. `scripts/prepare_terrain.py` needs Python/Pillow. `scripts/prepare_landcover.py` reads only the Oye window of ESA's public cloud-optimized GeoTIFF and needs Python/rasterio/certifi. Prepared JSON files are included; the main explorer makes no runtime map/elevation API calls.
 

@@ -1,5 +1,5 @@
 {
-  "scope": "Oye campus area architectural reconstruction; boundary and building identities unverified",
+  "scope": "Oye campus Phases 1, 2 and 3. Imagery-guided area of interest; not an official property boundary.",
   "footprints": {
     "sources": [
       "OpenStreetMap",
@@ -9,11 +9,17 @@
       "ODbL",
       "CDLA-Permissive-2.0"
     ],
-    "geometry": "Mapped polygons; machine detections need checking"
+    "geometry": "OSM/Microsoft mapped polygons plus explicitly attributed local visual roof traces; 108 building polygons at this checkpoint.",
+    "observations": {
+      "source": "Google Maps visual inspection",
+      "url": "https://maps.app.goo.gl/yDcJm6EFjyrKhLUY6",
+      "records": "/data/campus-places.json",
+      "notes": "New Senate and eight unnamed roofs are approximate visual traces, not surveyed walls. Source image acquisition dates unavailable."
+    }
   },
   "roads": {
     "source": "OpenStreetMap",
-    "geometry": "Mapped centre lines",
+    "geometry": "OSM centre lines plus attributed local observations of campus access and park paths.",
     "estimated": [
       "width",
       "kerbs",
@@ -25,29 +31,31 @@
     "source": "Mapzen Terrain Tiles / global terrain data courtesy of USGS",
     "url": "https://registry.opendata.aws/terrain-tiles/",
     "attribution": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md",
-    "processing": "Terrarium decoding, 3x3 weighted elevation smoothing for DEM/canopy noise, bilinear grid sampling, polygon foundation grading with a 35m transition and rendered triangle interpolation; no vertical exaggeration"
+    "processing": "Terrarium decoding, 3x3 weighted elevation smoothing for DEM/canopy noise, bilinear grid sampling, polygon foundation grading with a 35m transition and rendered triangle interpolation; no vertical exaggeration; observed ground areas clipped to the exact terrain triangles to avoid intersecting independently tessellated surfaces"
   },
   "architecture": {
-    "photo": "https://cdn.businessday.ng/2020/09/fuoye-campus.jpg",
-    "article": "https://businessday.ng/education/article/fuoye-not-open-for-academic-activities-yet-fasina/",
+    "inventory": "/data/campus-places.json",
     "observed": [
-      "cream walls",
-      "green hip roofs",
-      "two-storey blocks",
-      "columned verandas",
-      "green-and-white kerbs",
-      "palms"
+      "11 place identities matched to pins or compounds with explicit match types",
+      "Four-storey boys hostel; cream/terracotta facade; green roof",
+      "Two-storey Management Sciences with tall cream columns and upper frontage glazing",
+      "Administration compound with cream/orange facade treatment",
+      "Roof colours and outlines visible in satellite imagery"
     ],
+    "photoCaptureDates": {
+      "managementSciences": "2021-11",
+      "boysHostel": "2022-11",
+      "centralAdministration": "2021-10",
+      "phase1AuditoriumInterior": "2022-05"
+    },
     "estimated": [
-      "individual building identities",
-      "heights",
-      "roof configuration",
-      "windows",
-      "entrances",
-      "balconies",
-      "AC units",
-      "downpipes"
-    ]
+      "Most building heights and floors",
+      "Window and facade dimensions",
+      "Entrances without direct evidence",
+      "Unphotographed facades including Senate",
+      "Exact roof ridges and pitches"
+    ],
+    "limitations": "Maps listing matches do not certify present occupancy. Photo-informed models are approximations. Current page access and copyright dates do not establish current imagery."
   },
   "landscape": {
     "source": "ESA WorldCover 10 m 2021 v200",
@@ -63,10 +71,10 @@
       "cars",
       "street lamps"
     ],
-    "limitations": "2021 satellite classification, not a current tree survey. Trees are excluded from mapped buildings and roads. No invented parking, gardens or sports sites."
+    "limitations": "ESA 2021 classification, not a current tree survey. Individual trees, species, vehicles and lamps are estimated. Five ground areas and seven path/access observations follow the inspected imagery; their edges/materials are approximate."
   },
   "textures": "Locally generated canvas textures; no third-party texture assets",
-  "retrievedOn": "2026-10-09",
+  "retrievedOn": "2026-10-10",
   "reference": {
     "url": "https://mount-alison-3d.vercel.app/",
     "author": "0xbigturk",
