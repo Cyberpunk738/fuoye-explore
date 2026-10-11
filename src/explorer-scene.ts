@@ -12,6 +12,7 @@ import { createRenderLoop } from './world/render-loop';
 import { chooseDelivery, formatTime, startCourier, tickCourier } from './world/courier';
 import type { CourierRun, DeliveryStop } from './world/courier';
 import { stepCar, stepJump } from './world/motion';
+import { resolveWalkSpawn } from './world/walk-spawn';
 
 export function createExplorerScene(host:HTMLElement,features:Feature[],center:Position,notes:Notes,onSelect:(id:string)=>void,terrain?:TerrainGrid,cover?:LandCover) {
   const app=host.closest<HTMLElement>('.app')!;
@@ -31,6 +32,21 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   function paintSky(dark:boolean){const top=new THREE.Color(dark?'#0c152b':'#81b5cf'),horizon=new THREE.Color(dark?'#273749':'#d4ded7'),color=new THREE.Color();for(let i=0;i<skyGeometry.attributes.position.count;i++){const elevation=skyGeometry.attributes.position.getY(i)/4500,t=Math.pow(Math.max(0,elevation),.55);color.copy(horizon).lerp(top,t);skyColors.set([color.r,color.g,color.b],i*3);}skyGeometry.attributes.color.needsUpdate=true;}paintSky(false);
   const world=buildWorld(features,center,notes,terrain,cover);scene.add(world.root);
   const camera=new THREE.PerspectiveCamera(38,1,.15,8000);
+  const labels=document.createElement('div');labels.className='building-labels';host.appendChild(labels);
+  const buildingLabels=world.buildings.filter(b=>b.named&&b.directory).map(building=>{const element=document.createElement('span');element.className='building-label';element.dataset.label=building.id;element.textContent=building.name;element.hidden=true;labels.appendChild(element);return {building,element};});
+  function updateLabels(){
+    const used:{x:number;y:number;width:number}[]=[];const rect=host.getBoundingClientRect();
+    for(const item of [...buildingLabels].sort((a,b)=>camera.position.distanceToSquared(a.building.position)-camera.position.distanceToSquared(b.building.position))){
+      const {building,element}=item;element.hidden=true;if(mode!=='orbit'||used.length>=4)continue;
+      const size=building.bounds.getSize(new THREE.Vector2()),distance=camera.position.distanceTo(building.position);
+      if(distance>Math.max(145,Math.max(size.x,size.y)*3.2))continue;
+      const point=building.position.clone().add(new THREE.Vector3(0,building.height+6,0)).project(camera),x=(point.x+1)/2*rect.width,y=(1-point.y)/2*rect.height;
+      if(point.z< -1||point.z>1||x<(rect.width>640?340:90)||x>rect.width-90||y<100||y>rect.height-80)continue;
+      const width=Math.min(260,building.name.length*7+24);if(used.some(p=>Math.abs(p.x-x)<(p.width+width)/2+8&&Math.abs(p.y-y)<42))continue;
+      element.style.left=`${x}px`;element.style.top=`${y}px`;element.hidden=false;used.push({x,y,width});
+    }
+  }
+
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=false;controls.screenSpacePanning=false;controls.minDistance=6;controls.maxDistance=1800;
   controls.minPolarAngle=.1;controls.maxPolarAngle=1.53;
@@ -75,11 +91,12 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   const player=new THREE.Vector3(),keys=new Set<string>(),stickInput=new THREE.Vector2();
   type Flight={from:THREE.Vector3;to:THREE.Vector3;targetFrom:THREE.Vector3;targetTo:THREE.Vector3;t:number};
   let flight:Flight|undefined,hovered:THREE.Mesh|undefined;
+  let walkPoint:Point|undefined,walkPointer:THREE.Vector2|undefined,lastWalkSample=0;
   const removers:(()=>void)[]=[];
   function listen(target:EventTarget,type:string,handler:EventListener,options?:AddEventListenerOptions){target.addEventListener(type,handler,options);removers.push(()=>target.removeEventListener(type,handler,options));}
   function resize(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;camera.aspect=width/height;renderer.setPixelRatio(Math.min(renderScale,1280/width,720/height));renderer.setSize(width,height,false);if(width>640&&mode==='orbit')camera.setViewOffset(width,height,-165,0,width,height);else camera.clearViewOffset();camera.updateProjectionMatrix();request();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);
-  function fly(to:THREE.Vector3,target:THREE.Vector3){flight={from:camera.position.clone(),to,targetFrom:controls.target.clone(),targetTo:target,t:0};request();}
+  function fly(to:THREE.Vector3,target:THREE.Vector3){walkPoint=undefined;walkPointer=undefined;delete walkHud.dataset.targetX;delete walkHud.dataset.targetZ;flight={from:camera.position.clone(),to,targetFrom:controls.target.clone(),targetTo:target,t:0};request();}
   function highlight(id?:string){const mesh=world.pickables.find(m=>m.userData.id===id);if(mesh===hovered)return;if(hovered){hovered.material=(hovered.userData.originalMaterial as THREE.Material);delete hovered.userData.originalMaterial;}hovered=mesh;if(mesh){mesh.userData.originalMaterial=mesh.material;mesh.material=highlightMaterial;}request();}
   const highlightMaterial=new THREE.MeshLambertMaterial({color:'#f0dfae'});
   function orbit(){mode='orbit';delete app.dataset.mode;speed=lateral=0;keys.clear();stickInput.set(0,0);vehicle.visible=false;headlights.visible=false;beacon.visible=arrow.visible=false;driveHud.hidden=walkHud.hidden=true;controls.enabled=true;camera.fov=38;camera.near=.15;camera.updateProjectionMatrix();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();resize();onSelect('');}
@@ -88,7 +105,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   function closestRoad(p:Point,minWidth=4){const road=nearestDriveRoad(p,world.roads,world.blocked,minWidth);return {...road,point:road.point??{x:world.focus?.entrance.x??mid.x,z:world.focus?.entrance.z??mid.y}};}
   const stops:DeliveryStop[]=campusDeliveryStops(world.buildings,world.roads,world.blocked);
   function spawn(){const target=controls.target;const s=closestRoad({x:target.x,z:target.z});player.set(s.point.x,world.surfaceHeight(s.point.x,s.point.z),s.point.z);yaw=s.heading;speed=lateral=0;keys.clear();jumpHeight=jumpVelocity=0;updateVehicle(0,true);}
-  function setMode(next:'walk'|'drive'){mode=next;app.dataset.mode=next;flight=undefined;controls.enabled=false;vehicle.visible=next==='drive';headlights.visible=night&&next==='drive';highlight();tip.hidden=true;driveHud.hidden=next!=='drive';walkHud.hidden=next!=='walk';camera.fov=next==='walk'?72:58;camera.near=.1;resize();spawn();renderer.domElement.focus();request();}
+  function setMode(next:'walk'|'drive'){mode=next;app.dataset.mode=next;flight=undefined;controls.enabled=false;vehicle.visible=next==='drive';headlights.visible=night&&next==='drive';highlight();tip.hidden=true;driveHud.hidden=next!=='drive';walkHud.hidden=next!=='walk';camera.fov=next==='walk'?72:58;camera.near=.1;resize();if(next==='drive')spawn();renderer.domElement.focus();request();}
   function getBest(){try{const n=Number(localStorage.getItem('fuoye-courier-best'));return Number.isFinite(n)&&n>0?n:0;}catch{return 0;}}
   function showCard(title:string,text:string,actions:[string,()=>void][]){card.replaceChildren();const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=text;const row=document.createElement('div');row.className='actions';actions.forEach(([name,action],i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;if(i===0)b.className='primary';b.onclick=action;row.appendChild(b);});card.append(h,p,row);card.hidden=false;row.querySelector('button')?.focus();request();}
   function notify(text:string){toast.textContent=text;toast.hidden=false;toastUntil=elapsed+1.8;request();}
@@ -96,7 +113,19 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   function startDrive(state:'run'|'free'){driveState=state;courierAt=performance.now();driveHud.dataset.state=state;card.hidden=true;spawn();renderer.domElement.focus();if(state==='run'){run=startCourier(stops,player);positionTarget();timeOutput.textContent='1:15';scoreOutput.textContent='0';notify('Go!');if(run.over)finishRun();}else{run=undefined;job.textContent='Free drive';distanceOutput.textContent='';beacon.visible=arrow.visible=false;}request();}
   function finishRun(){toast.hidden=true;driveState='over';driveHud.dataset.state='over';beacon.visible=arrow.visible=false;speed=lateral=0;keys.clear();const best=getBest(),score=run?.score??0;if(score>best){try{localStorage.setItem('fuoye-courier-best',String(score));}catch{/* Gameplay works when storage is unavailable. */}}showCard("Time's up",`${run?.deliveries??0} deliveries, ${score.toLocaleString()} points. ${score>best?'New best!':`Best: ${best.toLocaleString()}.`}`,[['Drive again',()=>startDrive('run')],['Free drive',()=>startDrive('free')],['Exit',reset]]);}
   function openDrive(){setMode('drive');driveState='menu';driveHud.dataset.state='menu';job.textContent='Campus Courier';distanceOutput.textContent='';const best=getBest();showCard('Campus Courier',`Deliver to as many campus buildings as you can before time runs out. Each drop adds time. Stop inside the gold ring to deliver.${best?` Best: ${best.toLocaleString()}.`:''}`,[['Start',()=>startDrive('run')],['Free drive',()=>startDrive('free')],['Exit',reset]]);}
-  function openWalk(){setMode('walk');pitch=0;jumpQueued=false;walkHud.dataset.jumpPeak='0';prompt.hidden=false;updateWalker(0);request();}
+  function openWalk(){
+    if(mode==='walk')return;
+    if(mode==='orbit'&&walkPointer)refreshWalkPoint();
+    const direction=camera.getWorldDirection(new THREE.Vector3());
+    const requested=mode==='drive'?{x:player.x,z:player.z}:walkPoint??{x:controls.target.x,z:controls.target.z};
+    const position=resolveWalkSpawn(requested,{min:{x:world.bounds.min.x,z:world.bounds.min.y},max:{x:world.bounds.max.x,z:world.bounds.max.y}},p=>!world.blocked(p,.35)&&!treeBlocked(p,.35));
+    if(!position){tip.textContent='Choose an open ground area to start walking';tip.style.left='50%';tip.style.top='100px';tip.hidden=false;return;}
+    setMode('walk');player.set(position.x,world.surfaceHeight(position.x,position.z),position.z);
+    yaw=Math.atan2(direction.x,direction.z);pitch=0;speed=lateral=jumpHeight=jumpVelocity=0;keys.clear();stickInput.set(0,0);jumpQueued=false;
+    fitShadow(player,220);walkHud.dataset.jumpPeak='0';walkHud.dataset.spawnAdjusted=String(Math.hypot(position.x-requested.x,position.z-requested.z)>.05);
+    walkHud.dataset.requestedX=String(requested.x);walkHud.dataset.requestedZ=String(requested.z);
+    prompt.hidden=false;updateWalker(0);request();
+  }
   function toggleNight(){night=!night;paintSky(night);app.dataset.night=String(night);const b=tools.querySelector<HTMLButtonElement>('.night')!;b.textContent=night?'Day':'Night';b.setAttribute('aria-pressed',String(night));hemi.intensity=night?.55:1.05;hemi.color.set(night?'#8aa1ca':'#d8eafa');sun.intensity=night?.48:1.65;sun.color.set(night?'#a4b9e2':'#fff1dc');stars.visible=night;lampGlows.visible=night;headlights.visible=night&&mode==='drive';scene.background=new THREE.Color(night?'#111e32':'#cbdfe4');(scene.fog as THREE.Fog).color.copy(scene.background);world.materials.windows.emissiveIntensity=night?1.2:0;world.materials.glow.emissiveIntensity=night?2:0;request();}
   tools.querySelector<HTMLButtonElement>('.drive')!.onclick=openDrive;
   tools.querySelector<HTMLButtonElement>('.walk')!.onclick=openWalk;
@@ -119,10 +148,21 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   let down={x:0,y:0},dragPointer:number|undefined,last={x:0,y:0},movePointer:number|undefined,lookPointer:number|undefined,stickOrigin={x:0,y:0},lastHover=0;
   const raycaster=new THREE.Raycaster();
   function pick(e:PointerEvent){const r=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);return raycaster.intersectObjects(world.pickables,false)[0]?.object.userData.id as string|undefined;}
+  function refreshWalkPoint(){
+    if(!walkPointer)return;
+    raycaster.setFromCamera(walkPointer,camera);
+    const hit=raycaster.intersectObjects([world.ground,...world.pickables],false)[0];
+    if(hit){walkPoint={x:hit.point.x,z:hit.point.z};walkHud.dataset.targetX=String(walkPoint.x);walkHud.dataset.targetZ=String(walkPoint.z);}
+  }
+  function rememberWalkPoint(e:PointerEvent){
+    const r=renderer.domElement.getBoundingClientRect();walkPointer=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+    // Limit preview raycasts; Walk always resolves the latest pointer exactly.
+    const now=performance.now();if(now-lastWalkSample<60&&e.type==='pointermove')return;lastWalkSample=now;refreshWalkPoint();
+  }
   function look(dx:number,dy:number){yaw-=dx*.0022;pitch=THREE.MathUtils.clamp(pitch+dy*.0022,-1.4,1.4);request();}
   listen(renderer.domElement,'pointerdown',((e:PointerEvent)=>{down={x:e.clientX,y:e.clientY};if(lookPointer===undefined)last={x:e.clientX,y:e.clientY};dragPointer=e.pointerId;if(mode==='orbit'){flight=undefined;tip.hidden=true;return;}if(mode!=='walk')return;if(coarse||e.pointerType==='touch'){renderer.domElement.setPointerCapture(e.pointerId);if(e.clientX<innerWidth*.45&&movePointer===undefined){movePointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};stick.style.left=`${e.clientX}px`;stick.style.top=`${e.clientY}px`;stick.hidden=false;}else{lookPointer=e.pointerId;last={x:e.clientX,y:e.clientY};}prompt.hidden=true;}else if(document.pointerLockElement!==renderer.domElement){renderer.domElement.requestPointerLock()?.catch(()=>{prompt.textContent='Drag to look around';});}request();})as EventListener);
-  listen(renderer.domElement,'pointermove',((e:PointerEvent)=>{if(mode==='walk'){if(document.pointerLockElement===renderer.domElement)return;if(e.pointerId===movePointer){const x=(e.clientX-stickOrigin.x)/50,y=(stickOrigin.y-e.clientY)/50;stickInput.set(x,y).divideScalar(Math.max(1,Math.hypot(x,y)));stick.firstElementChild!.setAttribute('style',`transform:translate(${stickInput.x*34}px,${-stickInput.y*34}px)`);request();}else if(e.pointerId===lookPointer||e.buttons&&dragPointer===e.pointerId){look(e.clientX-last.x,e.clientY-last.y);last={x:e.clientX,y:e.clientY};}return;}if(mode!=='orbit'||e.buttons)return;const now=performance.now();if(now-lastHover<100)return;lastHover=now;const id=pick(e),b=world.buildings.find(b=>b.id===id);highlight(id);tip.hidden=!b;renderer.domElement.classList.toggle('pointing',!!b);if(b){tip.textContent=b.name;tip.style.left=`${THREE.MathUtils.clamp(e.clientX,80,innerWidth-80)}px`;tip.style.top=`${e.clientY}px`;}})as EventListener);
-  function pointerUp(e:PointerEvent){if(e.pointerId===movePointer){movePointer=undefined;stickInput.set(0,0);stick.hidden=true;request();}if(e.pointerId===lookPointer)lookPointer=undefined;dragPointer=undefined;if(e.type!=='pointercancel'&&mode==='orbit'&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<5){const id=pick(e);if(id)focusFeature(id);}}
+  listen(renderer.domElement,'pointermove',((e:PointerEvent)=>{if(mode==='walk'){if(document.pointerLockElement===renderer.domElement)return;if(e.pointerId===movePointer){const x=(e.clientX-stickOrigin.x)/50,y=(stickOrigin.y-e.clientY)/50;stickInput.set(x,y).divideScalar(Math.max(1,Math.hypot(x,y)));stick.firstElementChild!.setAttribute('style',`transform:translate(${stickInput.x*34}px,${-stickInput.y*34}px)`);request();}else if(e.pointerId===lookPointer||e.buttons&&dragPointer===e.pointerId){look(e.clientX-last.x,e.clientY-last.y);last={x:e.clientX,y:e.clientY};}return;}if(mode!=='orbit'||e.buttons)return;rememberWalkPoint(e);const now=performance.now();if(now-lastHover<100)return;lastHover=now;const id=pick(e),b=world.buildings.find(b=>b.id===id);highlight(id);tip.hidden=!b;renderer.domElement.classList.toggle('pointing',!!b);if(b){tip.textContent=b.name;tip.style.left=`${THREE.MathUtils.clamp(e.clientX,80,innerWidth-80)}px`;tip.style.top=`${e.clientY}px`;}})as EventListener);
+  function pointerUp(e:PointerEvent){if(e.pointerId===movePointer){movePointer=undefined;stickInput.set(0,0);stick.hidden=true;request();}if(e.pointerId===lookPointer)lookPointer=undefined;dragPointer=undefined;if(e.type!=='pointercancel'&&mode==='orbit')rememberWalkPoint(e);if(e.type!=='pointercancel'&&mode==='orbit'&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<5){const id=pick(e);if(id)focusFeature(id);}}
   listen(renderer.domElement,'pointerup',pointerUp as EventListener);listen(renderer.domElement,'pointercancel',pointerUp as EventListener);
   listen(renderer.domElement,'pointerleave',()=>{tip.hidden=true;highlight();});
   listen(document,'mousemove',((e:MouseEvent)=>{if(mode==='walk'&&document.pointerLockElement===renderer.domElement)look(e.movementX,e.movementY);})as EventListener);
@@ -154,19 +194,27 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
     }
     if(elapsed>toastUntil)toast.hidden=true;
     driveHud.dataset.x=walkHud.dataset.x=String(player.x);driveHud.dataset.z=walkHud.dataset.z=String(player.z);
-    sky.position.copy(camera.position);const started=performance.now();renderer.render(scene,camera);const cost=performance.now()-started;
+    updateLabels();sky.position.copy(camera.position);const started=performance.now();renderer.render(scene,camera);const cost=performance.now()-started;
     if(renderCount>10&&cost>70)lowFrames++;else lowFrames=Math.max(0,lowFrames-1);
     if(lowFrames>8&&renderScale> .75){renderScale=.75;renderer.shadowMap.enabled=false;resize();lowFrames=0;}
     const moving=!!flight||(mode==='walk'&&(keys.size>0||stickInput.lengthSq()>.001||jumpHeight>0||jumpQueued))||(mode==='drive'&&(driveState==='run'||driveState==='free'&&(keys.size>0||Math.abs(speed)>.02||Math.abs(lateral)>.02)))||!toast.hidden;
     if(!moving&&mode==='drive')speed=lateral=0;
-    fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);
+    fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);fps.dataset.nameplates=String(world.signageCount);
     return moving;
   },24);
-  const focal=world.focus?.position??new THREE.Vector3(mid.x,0,mid.y);
-  controls.target.copy(focal).add(new THREE.Vector3(25,4,-15));camera.position.copy(focal).add(new THREE.Vector3(165,175,215));
-  fitShadow(focal,480);controls.update();renderer.shadowMap.needsUpdate=true;resize();active();
+  function gateView(){
+    orbit();highlight();tip.hidden=true;
+    const target=world.entrance.position.clone().add(new THREE.Vector3(0,4.5,0));
+    fitShadow(target,220);
+    fly(world.entrance.approach.clone().add(new THREE.Vector3(10,14,10)),target);
+    walkPoint={x:world.entrance.approach.x,z:world.entrance.approach.z};
+  }
+  const gateTarget=world.entrance.position.clone().add(new THREE.Vector3(0,4.5,0));
+  walkPoint={x:world.entrance.approach.x,z:world.entrance.approach.z};
+  controls.target.copy(gateTarget);camera.position.copy(world.entrance.approach).add(new THREE.Vector3(10,14,10));
+  fitShadow(gateTarget,220);controls.update();renderer.shadowMap.needsUpdate=true;resize();active();
   return {
-    getBuildings:()=>world.buildings,focusFeature,highlight,reset,
+    getBuildings:()=>world.buildings,focusFeature,highlight,reset,gateView,
     destroy(){loop?.dispose();resizeObserver.disconnect();visibilityObserver.disconnect();removers.forEach(remove=>remove());controls.dispose();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();highlight();world.dispose();scene.remove(world.root);const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Points){geometries.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());glowTexture.dispose();glowMaterial.dispose();highlightMaterial.dispose();renderer.dispose();renderer.forceContextLoss();host.replaceChildren();},
   };
 }

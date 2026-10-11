@@ -3,6 +3,8 @@ import type { Feature, Notes, Position } from '../data';
 import { sectionedRoof, groundPolygon } from './architecture';
 import { GeometryBatch } from './batch';
 import { makeMaterials } from './materials';
+import { createSignage } from './signage';
+import { addCampusEntrance, mainGatePosition } from './entrance';
 import { buildVegetation, sampleCover } from './vegetation';
 import type { LandCover } from './vegetation';
 import { clipSegment, hashSeed, nearestPoint, pointInRing, projectPosition, randomFrom, sampleElevation, unprojectPosition } from './math';
@@ -27,14 +29,17 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   const cameraBounds=bounds.clone().expandByScalar(130);
   const worldBounds=grid?new THREE.Box2().setFromPoints([project([grid.bbox[0],grid.bbox[1]]),project([grid.bbox[2],grid.bbox[3]])].map(p=>new THREE.Vector2(p.x,p.z))):cameraBounds.clone();
   // Grade foundations gradually, using polygon distance rather than a bounding-box pad.
-  const flatHeight=(x:number,z:number)=>{const p={x,z},h=rawHeight(x,z);let total=0,weighted=0,influence=0;for(const b of buildings){if(b.bounds.distanceToPoint(new THREE.Vector2(x,z))>=35)continue;const inside=pointInRing(p,b.ring);if(inside)return b.position.y;const distance=Math.min(...b.ring.map((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(x-q.x,z-q.z);}));if(distance>=35)continue;const falloff=1-THREE.MathUtils.smoothstep(distance,0,35),weight=falloff/(distance+1)**2;total+=weight;weighted+=b.position.y*weight;influence=Math.max(influence,falloff);}return total?h+(weighted/total-h)*influence:h;};
+  const buildingHeight=(x:number,z:number)=>{const p={x,z},h=rawHeight(x,z);let total=0,weighted=0,influence=0;for(const b of buildings){if(b.bounds.distanceToPoint(new THREE.Vector2(x,z))>=35)continue;const inside=pointInRing(p,b.ring);if(inside)return b.position.y;const distance=Math.min(...b.ring.map((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(x-q.x,z-q.z);}));if(distance>=35)continue;const falloff=1-THREE.MathUtils.smoothstep(distance,0,35),weight=falloff/(distance+1)**2;total+=weight;weighted+=b.position.y*weight;influence=Math.max(influence,falloff);}return total?h+(weighted/total-h)*influence:h;};
+  const gateGround=project(mainGatePosition),gateBase=rawHeight(gateGround.x,gateGround.z);
+  const flatHeight=(x:number,z:number)=>{const distance=Math.hypot(x-gateGround.x,z-gateGround.z),base=buildingHeight(x,z),blend=1-THREE.MathUtils.smoothstep(distance,34,70);return base+(gateBase-base)*blend;};
   const terrainSteps=96, terrainSize=worldBounds.getSize(new THREE.Vector2()), terrainValues:number[]=[];
   for(let row=0;row<=terrainSteps;row++)for(let col=0;col<=terrainSteps;col++)terrainValues.push(flatHeight(worldBounds.min.x+col/terrainSteps*terrainSize.x,worldBounds.min.y+row/terrainSteps*terrainSize.y));
   // Objects sample the actual rendered ground triangles, so terrain and ribbons
   // cannot intersect when the DEM bends between mesh vertices.
   const height=(x:number,z:number)=>{const gx=THREE.MathUtils.clamp((x-worldBounds.min.x)/terrainSize.x*terrainSteps,0,terrainSteps),gz=THREE.MathUtils.clamp((z-worldBounds.min.y)/terrainSize.y*terrainSteps,0,terrainSteps),ix=Math.min(terrainSteps-1,Math.floor(gx)),iz=Math.min(terrainSteps-1,Math.floor(gz)),fx=gx-ix,fz=gz-iz,stride=terrainSteps+1,a=terrainValues[iz*stride+ix],b=terrainValues[(iz+1)*stride+ix],c=terrainValues[(iz+1)*stride+ix+1],d=terrainValues[iz*stride+ix+1];return fx+fz<=1?a+(d-a)*fx+(b-a)*fz:c+(b-c)*(1-fx)+(d-c)*(1-fz);};
   buildings.forEach(b=>b.position.y=height(b.position.x,b.position.z));
-  const blocked=(p:Point,padding=0)=>buildings.some(b=>{if(p.x<b.bounds.min.x-padding||p.x>b.bounds.max.x+padding||p.z<b.bounds.min.y-padding||p.z>b.bounds.max.y+padding)return false;if(pointInRing(p,b.ring))return true;return padding>0&&b.ring.some((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(p.x-q.x,p.z-q.z)<padding;});});
+  const structureBounds:THREE.Box2[]=[];
+  const blocked=(p:Point,padding=0)=>structureBounds.some(b=>p.x>=b.min.x-padding&&p.x<=b.max.x+padding&&p.z>=b.min.y-padding&&p.z<=b.max.y+padding)||buildings.some(b=>{if(p.x<b.bounds.min.x-padding||p.x>b.bounds.max.x+padding||p.z<b.bounds.min.y-padding||p.z>b.bounds.max.y+padding)return false;if(pointInRing(p,b.ring))return true;return padding>0&&b.ring.some((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(p.x-q.x,p.z-q.z)<padding;});});
   const paths:{a:Point;b:Point;width:number}[]=[];
   const reserved=(p:Point,padding=0)=>blocked(p,padding)||exclusions.some(b=>b.clone().expandByScalar(padding).containsPoint(new THREE.Vector2(p.x,p.z)))||paths.some(s=>{const q=nearestPoint(p,s.a,s.b);return Math.hypot(p.x-q.x,p.z-q.z)<s.width/2+padding;});
   for(const f of features){if(f.properties.kind!=='road'||f.geometry.type!=='LineString')continue;const width=Number(f.properties.tags.width)||(['footway','path','steps'].includes(f.properties.tags.highway)?2:f.properties.tags.highway==='service'?4.5:7);const surface=f.properties.tags.surface??(width<3?'ground':'asphalt');
@@ -56,6 +61,13 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   function lamp(p:Point){const y=height(p.x,p.z);cyl(.075,.13,6,p.x,y+3,p.z,m.steel);box(1.2,.08,.1,p.x+.45,y+5.9,p.z,m.steel);box(.5,.1,.28,p.x+.95,y+5.85,p.z,m.glow);lamps.push(new THREE.Vector3(p.x+.95,y+5.8,p.z));}
   function bench(p:Point,angle:number){const y=height(p.x,p.z);box(2,.12,.5,p.x,y+.5,p.z,m.wood,angle);box(2,.55,.09,p.x+Math.sin(angle)*.25,y+.8,p.z+Math.cos(angle)*.25,m.wood,angle);for(const s of[-1,1])box(.12,.5,.45,p.x+Math.cos(angle)*s*.7,y+.25,p.z-Math.sin(angle)*s*.7,m.steel,angle);}
   function sign(p:Point,text:string,angle=0){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d')!;ctx.fillStyle='#174c3d';ctx.fillRect(0,0,512,128);ctx.fillStyle='#f4eddc';ctx.font='bold 34px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,76,480);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const material=new THREE.MeshLambertMaterial({map:tex});material.userData.ownedTexture=tex;const mesh=new THREE.Mesh(new THREE.BoxGeometry(5,.95,.12),material);mesh.rotation.y=angle;mesh.position.set(p.x,height(p.x,p.z)+2,p.z);root.add(mesh);for(const s of[-1,1])cyl(.055,.055,1.55,p.x+Math.cos(angle)*s*2,height(p.x,p.z)+.8,p.z-Math.sin(angle)*s*2,m.steel);}
+  const namedBuildings=buildings.filter(b=>b.named&&b.directory);
+  const signs=createSignage([
+    ...namedBuildings.map(b=>({key:b.id,lines:[b.name.toUpperCase()],stretch:4})),
+    {key:'gate',lines:['FEDERAL UNIVERSITY OYE-EKITI'],footer:'EKITI STATE, NIGERIA',stretch:2.5,background:'#dfae25',color:'#163b2b'},
+    {key:'gate-safety',lines:['SPEED LIMIT','30 KM/H'],footer:'DRIVE SAFE · SLOW DOWN'},
+    ...[1,2,3].map(phase=>({key:'phase-'+phase,lines:['PHASE '+phase],footer:'CAMPUS GUIDE',background:'#184c3b',color:'#fff9dc'}))
+  ]);
   // Architectural profiles retain source outlines. Detail assemblies are illustrative.
   const heroIds=new Set(sourceBuildings.filter(f=>f.properties.campus?.id).map(f=>f.id));
   for(const [index,b] of buildings.entries()){
@@ -97,7 +109,8 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
         for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.24);box(.35,h+.3,.5,q.x,y+h/2,q.y,m.accent,angle);}
         box(length,.55,.55,midEdge.x+n.x*.25,y+h-.05,midEdge.y+n.y*.25,m.accent,angle);
       }
-      if(i===front){const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=large?Math.min(length*.6,15):3.5;
+      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=profile?.facade==='management'?h-.3:3.4;signs.add(batch,b.id,Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
+        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=large?Math.min(length*.6,15):3.5;
         box(2,2.8,.2,midEdge.x+n.x*.13,y+1.4,midEdge.y+n.y*.13,m.glass,angle);
         const deck=midEdge.clone().addScaledVector(n,1.8);box(porticoWidth,.18,3.7,deck.x,y+.25,deck.y,m.pavers,angle);
         const canopyHeight=profile?.facade==='management'?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
@@ -105,7 +118,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
         if(profile?.facade==='management'){
           const columns=Math.max(3,Math.floor(porticoWidth/1.5));
           for(let j=0;j<columns;j++){const q=midEdge.clone().addScaledVector(direction,(j+.5)/columns*porticoWidth-porticoWidth/2).addScaledVector(n,.22);panel(porticoWidth/columns-.08,2.9,q.x,y+5.25,q.y,m.windows,angle);}
-          const plate=document.createElement('canvas');plate.width=512;plate.height=64;const ctx=plate.getContext('2d')!;ctx.fillStyle='#f3ecdc';ctx.fillRect(0,0,512,64);ctx.fillStyle='#183775';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.fillText('FACULTY OF MANAGEMENT SCIENCES',256,42,496);const texture=new THREE.CanvasTexture(plate);texture.colorSpace=THREE.SRGBColorSpace;const material=new THREE.MeshLambertMaterial({map:texture,side:THREE.DoubleSide});material.userData.ownedTexture=texture;const mesh=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(porticoWidth,12),.8),material);mesh.rotation.y=angle;mesh.position.set(midEdge.x+n.x*.32,y+3.7,midEdge.y+n.y*.32);root.add(mesh);
+
         }
         if(profile?.facade==='hostel'){
           const balconyWidth=Math.min(10,length*.28),depth=2;
@@ -127,8 +140,18 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
       for(let t=12;t<s.length;t+=100){const p={x:s.a.x+dx*t-dz*(s.width/2+1.1),z:s.a.z+dz*t+dx*(s.width/2+1.1)};if(!blocked(p,2))lamp(p);}
       if(s.length>45&&roadDistance%3===0){const p={x:(s.a.x+s.b.x)/2-dz*1.7,z:(s.a.z+s.b.z)/2+dx*1.7};if(!blocked(p))car(p,Math.atan2(dx,dz),roadDistance);}
     }roadDistance++;}
+  const entrance=addCampusEntrance(batch,m,signs,center,height,{origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps});
+  structureBounds.push(...entrance.obstacles);
+  // App-added phase markers at the campus road edges; not surveyed existing signs.
+  for(const [phase,lon,lat] of [[1,5.32144,7.78042],[2,5.31596,7.77855],[3,5.31165,7.77734]]){
+    const p=project([lon,lat]),road=nearestRoad(p);if(!road.point)continue;
+    const dx=p.x-road.point.x,dz=p.z-road.point.z,l=Math.hypot(dx,dz)||1,angle=Math.atan2(-dx,-dz);
+    const q={x:road.point.x+dx/l*6,z:road.point.z+dz/l*6},y=height(q.x,q.z);
+    signs.add(batch,'phase-'+phase,5.5,2,new THREE.Vector3(q.x,y+3,q.z),angle);
+    for(const side of [-1,1]){const x=q.x+Math.cos(angle)*side*2.35,z=q.z-Math.sin(angle)*side*2.35;cyl(.065,.065,3,x,y+1.5,z,m.steel,5);structureBounds.push(new THREE.Box2(new THREE.Vector2(x-.1,z-.1),new THREE.Vector2(x+.1,z+.1)));}
+  }
   // Vegetation density follows the satellite land-cover mask, with bounded instancing.
-  const vegetation=buildVegetation(cover,center,height,p=>blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m);
+  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m);
   root.add(vegetation.root);
   const trees=vegetation.count,people=0,parkingLots=0;
   // Terrain mesh with subtle natural variation, sampled at real metre scale.
@@ -140,7 +163,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   const distant=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),new THREE.MeshLambertMaterial({color:'#b3bea0'}));distant.rotation.x=-Math.PI/2;distant.position.set(mid.x,-85,mid.y);distant.material.userData.ownedMaterial=true;root.add(distant);
   batch.finish(root);
   const selected=buildings.find(b=>b.placeId==='science')??buildings[0];
-  return {root,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>();root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
+  return {root,ground,entrance,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>();root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
 }
 export type World=ReturnType<typeof buildWorld>;
 
