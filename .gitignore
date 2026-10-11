@@ -4,3 +4,6 @@ tmp/
 *.log
 output/
 research/reference/
+
+# Device-only project continuation notes
+/PROJECT_HANDOFF.md
