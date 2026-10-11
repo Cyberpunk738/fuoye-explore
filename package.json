@@ -12,7 +12,9 @@
     "test:browser": "node scripts/explorer-smoke.cjs",
     "data:campus": "python scripts/prepare_campus.py",
     "test:review": "node scripts/review-smoke.cjs",
-    "test:routes": "node scripts/courier-routes.cjs"
+    "test:routes": "node scripts/courier-routes.cjs",
+    "test:entrance": "node scripts/entrance-smoke.cjs",
+    "test:walk-start": "node scripts/walk-start-smoke.cjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
