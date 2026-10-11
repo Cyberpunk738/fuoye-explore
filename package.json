@@ -10,7 +10,9 @@
     "data": "python scripts/prepare_data.py",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:browser": "node scripts/explorer-smoke.cjs",
-    "data:campus": "python scripts/prepare_campus.py"
+    "data:campus": "python scripts/prepare_campus.py",
+    "test:review": "node scripts/review-smoke.cjs",
+    "test:routes": "node scripts/courier-routes.cjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
