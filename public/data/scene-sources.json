@@ -1,0 +1,75 @@
+{
+  "scope": "Oye campus area architectural reconstruction; boundary and building identities unverified",
+  "footprints": {
+    "sources": [
+      "OpenStreetMap",
+      "Microsoft Global ML Building Footprints"
+    ],
+    "licenses": [
+      "ODbL",
+      "CDLA-Permissive-2.0"
+    ],
+    "geometry": "Mapped polygons; machine detections need checking"
+  },
+  "roads": {
+    "source": "OpenStreetMap",
+    "geometry": "Mapped centre lines",
+    "estimated": [
+      "width",
+      "kerbs",
+      "markings",
+      "street furniture"
+    ]
+  },
+  "terrain": {
+    "source": "Mapzen Terrain Tiles / global terrain data courtesy of USGS",
+    "url": "https://registry.opendata.aws/terrain-tiles/",
+    "attribution": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md",
+    "processing": "Terrarium decoding, 3x3 weighted elevation smoothing for DEM/canopy noise, bilinear grid sampling, polygon foundation grading with a 35m transition and rendered triangle interpolation; no vertical exaggeration"
+  },
+  "architecture": {
+    "photo": "https://cdn.businessday.ng/2020/09/fuoye-campus.jpg",
+    "article": "https://businessday.ng/education/article/fuoye-not-open-for-academic-activities-yet-fasina/",
+    "observed": [
+      "cream walls",
+      "green hip roofs",
+      "two-storey blocks",
+      "columned verandas",
+      "green-and-white kerbs",
+      "palms"
+    ],
+    "estimated": [
+      "individual building identities",
+      "heights",
+      "roof configuration",
+      "windows",
+      "entrances",
+      "balconies",
+      "AC units",
+      "downpipes"
+    ]
+  },
+  "landscape": {
+    "source": "ESA WorldCover 10 m 2021 v200",
+    "url": "https://esa-worldcover.org/en/data-access",
+    "doi": "https://doi.org/10.5281/zenodo.7254221",
+    "license": "CC BY 4.0",
+    "year": 2021,
+    "processing": "Oye window read from public cloud-optimized GeoTIFF. Class 10 drives tree placement and other classes tint terrain. Shared, spatially chunked instances, maximum 3200 trees.",
+    "estimated": [
+      "individual tree positions",
+      "tree heights",
+      "tree species",
+      "cars",
+      "street lamps"
+    ],
+    "limitations": "2021 satellite classification, not a current tree survey. Trees are excluded from mapped buildings and roads. No invented parking, gardens or sports sites."
+  },
+  "textures": "Locally generated canvas textures; no third-party texture assets",
+  "retrievedOn": "2026-10-09",
+  "reference": {
+    "url": "https://mount-alison-3d.vercel.app/",
+    "author": "0xbigturk",
+    "use": "Behavior and visual layout reference. Application implementation and textures are original. No reference buildings or downloaded reference code are served."
+  }
+}

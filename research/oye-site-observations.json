@@ -1,0 +1,850 @@
+{
+  "notes": "Manual observations from Maps screenshots. Not surveyed or guaranteed current. Screenshot files are excluded from distribution. No Google imagery is used as a runtime texture.",
+  "observations": [
+    {
+      "id": "local/senate",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.3134923,
+          7.78001222
+        ],
+        [
+          5.31359691,
+          7.7800069
+        ],
+        [
+          5.3135835,
+          7.77974646
+        ],
+        [
+          5.31369883,
+          7.77974115
+        ],
+        [
+          5.31371493,
+          7.7800069
+        ],
+        [
+          5.31384636,
+          7.77999893
+        ],
+        [
+          5.31381417,
+          7.77963485
+        ],
+        [
+          5.31344402,
+          7.77965611
+        ],
+        [
+          5.3134923,
+          7.78001222
+        ]
+      ],
+      "tags": {},
+      "evidence": "U-shaped blue roof visible at New Senate pin; missing from the downloaded building dataset.",
+      "sourceUrl": "https://www.google.com/maps/@7.7793,5.3139,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/admin-forecourt",
+      "kind": "land",
+      "coordinates": [
+        [
+          5.31421918,
+          7.77896249
+        ],
+        [
+          5.31499702,
+          7.77896249
+        ],
+        [
+          5.31497288,
+          7.7783114
+        ],
+        [
+          5.31423796,
+          7.7783114
+        ],
+        [
+          5.31421918,
+          7.77896249
+        ]
+      ],
+      "tags": {
+        "surface": "paving_stones"
+      },
+      "evidence": "Admin paved forecourt and parking visible around three mapped wings; no invented stall layout.",
+      "sourceUrl": "https://www.google.com/maps/@7.7793,5.3139,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/science-forecourt",
+      "kind": "land",
+      "coordinates": [
+        [
+          5.31369312,
+          7.77742521
+        ],
+        [
+          5.31398816,
+          7.77746241
+        ],
+        [
+          5.31423493,
+          7.77719666
+        ],
+        [
+          5.3146909,
+          7.77733485
+        ],
+        [
+          5.31502349,
+          7.77726575
+        ],
+        [
+          5.31552775,
+          7.77718071
+        ],
+        [
+          5.31568332,
+          7.77672362
+        ],
+        [
+          5.31559212,
+          7.7763994
+        ],
+        [
+          5.31458361,
+          7.77628778
+        ],
+        [
+          5.31418665,
+          7.77656416
+        ],
+        [
+          5.31380041,
+          7.77663857
+        ],
+        [
+          5.31369312,
+          7.77742521
+        ]
+      ],
+      "tags": {
+        "surface": "compacted"
+      },
+      "evidence": "Visible science compound clearing; exact surface boundaries approximate.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/management-forecourt",
+      "kind": "land",
+      "coordinates": [
+        [
+          5.31626268,
+          7.77575627
+        ],
+        [
+          5.31729801,
+          7.77581474
+        ],
+        [
+          5.31735165,
+          7.77515035
+        ],
+        [
+          5.31631096,
+          7.77516098
+        ],
+        [
+          5.31626268,
+          7.77575627
+        ]
+      ],
+      "tags": {
+        "surface": "compacted"
+      },
+      "evidence": "Management Sciences courtyard/approach visible in satellite view and building photograph.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/phase1-auditorium-grounds",
+      "kind": "land",
+      "coordinates": [
+        [
+          5.32149382,
+          7.780364
+        ],
+        [
+          5.32298513,
+          7.78040652
+        ],
+        [
+          5.32302804,
+          7.7801195
+        ],
+        [
+          5.32260426,
+          7.77996005
+        ],
+        [
+          5.32247014,
+          7.77934351
+        ],
+        [
+          5.32143481,
+          7.77941792
+        ],
+        [
+          5.32149382,
+          7.780364
+        ]
+      ],
+      "tags": {
+        "surface": "compacted"
+      },
+      "evidence": "Phase 1 auditorium enclosure and hardstanding; planting/lawns left visible as separate ground.",
+      "sourceUrl": "https://www.google.com/maps/@7.7792,5.3221,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/phase1-loop",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.32141872,
+          7.78043309
+        ],
+        [
+          5.32141335,
+          7.77941792
+        ],
+        [
+          5.3216923,
+          7.77934351
+        ],
+        [
+          5.32222338,
+          7.77932756
+        ],
+        [
+          5.32240577,
+          7.77940197
+        ],
+        [
+          5.32247551,
+          7.77960926
+        ],
+        [
+          5.32251306,
+          7.78012482
+        ],
+        [
+          5.32270081,
+          7.78023112
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "compacted",
+        "width": "4.5"
+      },
+      "evidence": "Visible loop west/south/east of Phase 1 auditorium.",
+      "sourceUrl": "https://www.google.com/maps/@7.7792,5.3221,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/science-access",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31505568,
+          7.77737206
+        ],
+        [
+          5.31503959,
+          7.77729233
+        ],
+        [
+          5.3146909,
+          7.77720197
+        ],
+        [
+          5.31426711,
+          7.77708504
+        ],
+        [
+          5.31415446,
+          7.77678208
+        ],
+        [
+          5.31430466,
+          7.77643129
+        ],
+        [
+          5.31428321,
+          7.77599545
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "compacted",
+        "width": "4"
+      },
+      "evidence": "Visible access through Faculty of Science compound; approximate centre line.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/science-south-path",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31427784,
+          7.77638345
+        ],
+        [
+          5.31473918,
+          7.77626652
+        ],
+        [
+          5.31504495,
+          7.77619211
+        ],
+        [
+          5.3154151,
+          7.77597419
+        ],
+        [
+          5.31562967,
+          7.77576159
+        ],
+        [
+          5.31599445,
+          7.77575096
+        ]
+      ],
+      "tags": {
+        "highway": "footway",
+        "surface": "ground",
+        "width": "2"
+      },
+      "evidence": "Visible worn path between science blocks and eastern road.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/admin-park",
+      "kind": "land",
+      "coordinates": [
+        [
+          5.3153239,
+          7.77858921
+        ],
+        [
+          5.31601055,
+          7.77856263
+        ],
+        [
+          5.3159569,
+          7.77778663
+        ],
+        [
+          5.31522198,
+          7.77785041
+        ],
+        [
+          5.3153239,
+          7.77858921
+        ]
+      ],
+      "tags": {
+        "surface": "grass",
+        "campus:landscape": "park"
+      },
+      "evidence": "Rectangular park beside administration visible in satellite view; official park name unresolved.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/park-path-0",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31560822,
+          7.77832345
+        ],
+        [
+          5.31543655,
+          7.77848291
+        ]
+      ],
+      "tags": {
+        "highway": "footway",
+        "surface": "paving_stones",
+        "width": "1.6"
+      },
+      "evidence": "Visible diagonal park path, approximate centre line.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/park-path-1",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31560822,
+          7.77832345
+        ],
+        [
+          5.31588717,
+          7.77846696
+        ]
+      ],
+      "tags": {
+        "highway": "footway",
+        "surface": "paving_stones",
+        "width": "1.6"
+      },
+      "evidence": "Visible diagonal park path, approximate centre line.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/park-path-2",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31560822,
+          7.77832345
+        ],
+        [
+          5.31580134,
+          7.77793545
+        ]
+      ],
+      "tags": {
+        "highway": "footway",
+        "surface": "paving_stones",
+        "width": "1.6"
+      },
+      "evidence": "Visible diagonal park path, approximate centre line.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/park-path-3",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31560822,
+          7.77832345
+        ],
+        [
+          5.31539364,
+          7.77793545
+        ]
+      ],
+      "tags": {
+        "highway": "footway",
+        "surface": "paving_stones",
+        "width": "1.6"
+      },
+      "evidence": "Visible diagonal park path, approximate centre line.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/park-path-4",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.31560822,
+          7.77832345
+        ],
+        [
+          5.31561895,
+          7.77814806
+        ]
+      ],
+      "tags": {
+        "highway": "footway",
+        "surface": "paving_stones",
+        "width": "1.6"
+      },
+      "evidence": "Visible diagonal park path, approximate centre line.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual trace; roof edges and path widths are not a ground survey."
+    },
+    {
+      "id": "local/west-north-01",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31074269,
+          7.77861047
+        ],
+        [
+          5.31084998,
+          7.77855732
+        ],
+        [
+          5.31076951,
+          7.77842444
+        ],
+        [
+          5.31066759,
+          7.77848822
+        ],
+        [
+          5.31074269,
+          7.77861047
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 3,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/west-north-02",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31042082,
+          7.77836066
+        ],
+        [
+          5.31060858,
+          7.77830219
+        ],
+        [
+          5.31052811,
+          7.77814274
+        ],
+        [
+          5.31036182,
+          7.77820121
+        ],
+        [
+          5.31042082,
+          7.77836066
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 3,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/phase3-north-hall",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.3113596,
+          7.77747304
+        ],
+        [
+          5.31160636,
+          7.7774571
+        ],
+        [
+          5.31159563,
+          7.77733485
+        ],
+        [
+          5.3113596,
+          7.77734548
+        ],
+        [
+          5.3113596,
+          7.77747304
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 3,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/phase3-east-hall",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31171901,
+          7.77691496
+        ],
+        [
+          5.31197651,
+          7.77685118
+        ],
+        [
+          5.31193359,
+          7.77673956
+        ],
+        [
+          5.3116761,
+          7.77679271
+        ],
+        [
+          5.31171901,
+          7.77691496
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 3,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/phase3-west-complex",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31014187,
+          7.77589978
+        ],
+        [
+          5.31040473,
+          7.77591572
+        ],
+        [
+          5.31044765,
+          7.77579348
+        ],
+        [
+          5.31043155,
+          7.77572438
+        ],
+        [
+          5.31047447,
+          7.7755915
+        ],
+        [
+          5.31031354,
+          7.77551709
+        ],
+        [
+          5.31015797,
+          7.77551709
+        ],
+        [
+          5.31011505,
+          7.7757297
+        ],
+        [
+          5.31014187,
+          7.77589978
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 3,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/phase3-twin-halls",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31019552,
+          7.77528855
+        ],
+        [
+          5.31054421,
+          7.77533107
+        ],
+        [
+          5.31058176,
+          7.77519819
+        ],
+        [
+          5.31052811,
+          7.77518224
+        ],
+        [
+          5.31061394,
+          7.77505468
+        ],
+        [
+          5.31057103,
+          7.77495901
+        ],
+        [
+          5.31026526,
+          7.77490586
+        ],
+        [
+          5.31022234,
+          7.77501216
+        ],
+        [
+          5.31026526,
+          7.77508126
+        ],
+        [
+          5.31023307,
+          7.77508657
+        ],
+        [
+          5.31019552,
+          7.77528855
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 3,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/science-south-hall-01",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31459434,
+          7.77513972
+        ],
+        [
+          5.31463726,
+          7.77527791
+        ],
+        [
+          5.31473382,
+          7.77524071
+        ],
+        [
+          5.31474454,
+          7.77512909
+        ],
+        [
+          5.31469627,
+          7.77501216
+        ],
+        [
+          5.31455143,
+          7.77507063
+        ],
+        [
+          5.31459434,
+          7.77513972
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 2,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    },
+    {
+      "id": "local/science-south-hall-02",
+      "kind": "building",
+      "coordinates": [
+        [
+          5.31476064,
+          7.77512909
+        ],
+        [
+          5.31490548,
+          7.7752035
+        ],
+        [
+          5.31505032,
+          7.77514504
+        ],
+        [
+          5.31502349,
+          7.7749909
+        ],
+        [
+          5.31494303,
+          7.77487928
+        ],
+        [
+          5.31478746,
+          7.77495901
+        ],
+        [
+          5.31476064,
+          7.77512909
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Blue/grey roof outline visible in satellite imagery, absent from machine footprints. Identity, storeys and facade unverified."
+      },
+      "phase": 2,
+      "evidence": "Visible roof missing from the downloaded footprint extraction. Kept unnamed.",
+      "sourceUrl": "https://www.google.com/maps/@7.777,5.3135,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-10",
+      "accuracy": "Approximate visual roof trace, not surveyed walls."
+    }
+  ]
+}

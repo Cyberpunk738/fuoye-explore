@@ -1,0 +1,357 @@
+{
+  "checkedOn": "2026-10-10",
+  "map": "https://maps.app.goo.gl/yDcJm6EFjyrKhLUY6",
+  "areaOfInterest": [
+    [
+      5.3089,
+      7.774
+    ],
+    [
+      5.309,
+      7.7778
+    ],
+    [
+      5.311,
+      7.7794
+    ],
+    [
+      5.312,
+      7.7811
+    ],
+    [
+      5.3154,
+      7.781
+    ],
+    [
+      5.3168,
+      7.77925
+    ],
+    [
+      5.3201,
+      7.78065
+    ],
+    [
+      5.32372,
+      7.7807
+    ],
+    [
+      5.32366,
+      7.7792
+    ],
+    [
+      5.32325,
+      7.7776
+    ],
+    [
+      5.3226,
+      7.77755
+    ],
+    [
+      5.3206,
+      7.7773
+    ],
+    [
+      5.3176,
+      7.7731
+    ],
+    [
+      5.315,
+      7.7727
+    ],
+    [
+      5.3107,
+      7.7727
+    ]
+  ],
+  "scope": "Oye main campus Phases 1, 2 and 3; imagery-guided scene extent, not an official university property boundary. Maps place identity does not certify current occupancy.",
+  "places": [
+    {
+      "id": "management",
+      "name": "Faculty of Management Sciences",
+      "phase": 2,
+      "featureIds": [
+        "ms/1b77ae9be7b6829b"
+      ],
+      "position": [
+        5.3163699,
+        7.7754724
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Fuoye+management+science+building/data=!4m7!3m6!1s0x10480b4df37b5a25:0x2f0e4e1865f727c0!8m2!3d7.7754724!4d5.3163699!16s%2Fg%2F11n826n1cx!19sChIJJVp7800LSBARwCf3ZRhODi8",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "floors": 2,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "management",
+        "frontBearing": 0,
+        "photoDate": "2021-11",
+        "photoUrl": "https://www.google.com/maps/@7.7772629,5.3149102,3a,75y,90t/data=!3m8!1e2!3m6!1sCIHM0ogKEICAgIDGqIP0ogE!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fgps-cs-s%2FANWiy9Te9x_c8m99ITNc70BTwHu6cZkM2lGO0tLAlMPf_Fxsr72PIBDH6aAds97KDie1xuoHo2NFELIZSrLxDDa5wRlsaM6wg_w_nTXYgFVNg0bnsOrWLKc7niR3Gh7rCPf5PMIJXCIPWA%3Dw122-h86-k-no!7i4032!8i2840?hl=en&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D",
+        "evidence": "Google Maps contributor photo; observed storeys and visible facade only. Photo capture date is not the present condition."
+      }
+    },
+    {
+      "id": "science",
+      "name": "Faculty of Science",
+      "phase": 2,
+      "featureIds": [
+        "ms/f36a67c7baf5405c"
+      ],
+      "position": [
+        5.3148961,
+        7.7772951
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Faculty+of+science/data=!4m7!3m6!1s0x10480b0556cc782d:0x784bab355f374f66!8m2!3d7.7772951!4d5.3148961!16s%2Fg%2F11j_2yfckr!19sChIJLXjMVgULSBARZk83XzWrS3g",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "roof": "grey",
+        "roofForm": "compound",
+        "evidence": "Roof colour and form read from Google Maps satellite view on 2026-10-10. Heights, openings and entrances estimated."
+      }
+    },
+    {
+      "id": "education",
+      "name": "Faculty of Education",
+      "phase": 1,
+      "featureIds": [
+        "way/951581878"
+      ],
+      "position": [
+        5.3234104,
+        7.7785628
+      ],
+      "match": "adjacent-pin",
+      "source": "https://www.google.com/maps/place/Fuoye+Faculty+Of+Education/data=!4m7!3m6!1s0x10480a3c7da25a15:0x7c2595ff07a16f35!8m2!3d7.7785628!4d5.3234104!16s%2Fg%2F11fz9y0557!19sChIJFVqifTwKSBARNW-hB_-VJXw",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "roof": "sand",
+        "roofForm": "compound",
+        "evidence": "Roof colour and form read from Google Maps satellite view on 2026-10-10. Heights, openings and entrances estimated."
+      }
+    },
+    {
+      "id": "basic-medical",
+      "name": "Faculty of Basic Medical Sciences",
+      "phase": 3,
+      "featureIds": [
+        "ms/a4a5711314210e9e"
+      ],
+      "position": [
+        5.3100832,
+        7.7766139
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Faculty+of+Basic+Medical+Sciences/data=!4m7!3m6!1s0x1048090ecc2bd01d:0x2f66dd8ba495d17e!8m2!3d7.7766139!4d5.3100832!16s%2Fg%2F11rhw0zpdl!19sChIJHdArzA4JSBARftGVpIvdZi8",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "evidence": "Roof colour and form read from Google Maps satellite view on 2026-10-10. Heights, openings and entrances estimated."
+      }
+    },
+    {
+      "id": "social-sciences",
+      "name": "Faculty of Social Sciences",
+      "phase": 3,
+      "featureIds": [
+        "ms/5ad0a4312cd48f1b"
+      ],
+      "position": [
+        5.3113264,
+        7.7758713
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/FACULTY+OF+SOCIAL+SCIENCES/data=!4m7!3m6!1s0x10480b175f2c9273:0x1bcb4adb0d9481f0!8m2!3d7.7758713!4d5.3113264!16s%2Fg%2F11rk93d_s3!19sChIJc5IsXxcLSBAR8IGUDdtKyxs",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "roof": "grey",
+        "roofForm": "compound",
+        "evidence": "Roof colour and form read from Google Maps satellite view on 2026-10-10. Heights, openings and entrances estimated."
+      }
+    },
+    {
+      "id": "boys-hostel",
+      "name": "Boys’ hostel",
+      "phase": 3,
+      "featureIds": [
+        "ms/f21e378e2871efba"
+      ],
+      "position": [
+        5.3117696,
+        7.7739748
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Fuoye+boys+hostel/data=!4m7!3m6!1s0x10480be05f14b20b:0xb212d8923556263!8m2!3d7.7739748!4d5.3117696!16s%2Fg%2F11p15_4mk4!19sChIJC7IUX-ALSBARY2JVI4ktIQs",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "floors": 4,
+        "wall": "ivory",
+        "roof": "green",
+        "roofForm": "hip",
+        "facade": "hostel",
+        "frontBearing": 0,
+        "photoDate": "2022-11",
+        "photoUrl": "https://www.google.com/maps/@7.7739748,5.3117696,3a,76.9y,90t/data=!3m8!1e2!3m6!1sCIHM0ogKEICAgID-hOy71gE!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fgps-cs-s%2FANWiy9QgCgylnCmvWFJmwFcAqw5tOzn2fQBVlA9K2-p99X8Lze4S0HQFzpHeXxzLSNJqXeFaAAyIHNVsL3EWqj-S13Dn26ir7kK0nCvYqleWsWNMd0p3Ph6op2UsX6GhU4ktzow23KjF%3Dw115-h86-k-no!7i1080!8i806?hl=en&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D",
+        "evidence": "Google Maps contributor photo; observed storeys and visible facade only. Photo capture date is not the present condition."
+      }
+    },
+    {
+      "id": "old-girls-hostel",
+      "name": "Old girls’ hostel",
+      "phase": 2,
+      "featureIds": [
+        "ms/0d54a652d9b95b28"
+      ],
+      "position": [
+        5.3164588,
+        7.7744572
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Old+girls+hostel/data=!4m7!3m6!1s0x10480b0077790e7b:0xe7e76b95eaad6390!8m2!3d7.7744572!4d5.3164588!16s%2Fg%2F11nhq7qj3_!19sChIJew55dwALSBARkGOt6pVr5-c",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "roof": "grey",
+        "roofForm": "compound",
+        "evidence": "Roof colour and form read from Google Maps satellite view on 2026-10-10. Heights, openings and entrances estimated."
+      }
+    },
+    {
+      "id": "phase1-auditorium",
+      "name": "Phase 1 Main Auditorium",
+      "phase": 1,
+      "featureIds": [
+        "way/951581888"
+      ],
+      "position": [
+        5.3220314,
+        7.7799613
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/search/FUOYE+Phase+1+Main+Auditorium",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "floors": 1,
+        "height": 5.5,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "hall",
+        "photoDate": "2022-05",
+        "frontBearing": 270,
+        "photoUrl": "https://www.google.com/maps/@7.7799613,5.3220314,3a,75y,90t/data=!3m8!1e2!3m6!1sCIHM0ogKEICAgICO2JrzEg!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fgps-cs-s%2FANWiy9R4rInbTronpjvuCik9gBk5zrzrXiTALvLwlVL_rEL-yALfGomtxIvQC5_tdInzT-AWcNUV8ChadQSaoieg4Qn5S-YGyqJPxDrhShTQhYionV334EwWGSHWCF6wV96TGA5v5XzI%3Dw114-h86-k-no!7i3264!8i2448?hl=en&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D",
+        "evidence": "Google Maps contributor photo; observed storeys and visible facade only. Photo capture date is not the present condition."
+      }
+    },
+    {
+      "id": "central-admin",
+      "name": "Central Administration",
+      "phase": 2,
+      "featureIds": [
+        "ms/8d79d312faf8d996",
+        "ms/8e441f4da274c677",
+        "ms/268546222d2d761c"
+      ],
+      "position": [
+        5.3145162,
+        7.7785465
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/search/FUOYE+CENTRAL+ADMINISTRATIVE+BUILDING",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "floors": 2,
+        "wall": "ivory",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "admin",
+        "frontBearing": 0,
+        "photoDate": "2021-10",
+        "photoUrl": "https://www.google.com/maps/@7.7784752,5.3149533,3a,75y,90t/data=!3m8!1e2!3m6!1sCIHM0ogKEICAgICGhriWGg!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fgps-cs-s%2FANWiy9TQ5RecsTQXVwoGRg9Pa07R5mXNkkhcSsOmCoarEJJU4O-CyILG93CWBjCES7pB7Ipw_AfKUlsWhORrWxJlSHp1uMGKnlnw5vwXR64SwCBU1qxVpA3Uf2-BtFhFKpr2h6Bdv_rj%3Dw86-h114-k-no!7i3456!8i4608?hl=en&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D",
+        "evidence": "Google Maps contributor photo; observed storeys and visible facade only. Photo capture date is not the present condition."
+      },
+      "note": "Maps pin falls in a courtyard. Three mapped wings form the administration compound in satellite imagery; small courtyard sheds are excluded."
+    },
+    {
+      "id": "senate",
+      "name": "New Senate Building",
+      "phase": 2,
+      "featureIds": [
+        "local/senate"
+      ],
+      "position": [
+        5.3136294,
+        7.7796474
+      ],
+      "match": "satellite-outline",
+      "source": "https://www.google.com/maps/search/FUOYE+Senate+Building+New",
+      "checkedOn": "2026-10-10",
+      "appearance": {
+        "roof": "blue",
+        "roofForm": "compound",
+        "wall": "ivory",
+        "frontBearing": 180,
+        "evidence": "U-shaped roof observed in satellite view. Height and facade details estimated; exterior photograph not available."
+      }
+    },
+    {
+      "id": "theatre",
+      "name": "Theatre and Media Arts",
+      "phase": 2,
+      "featureIds": [
+        "ms/76ef234c1ad990c6",
+        "ms/ea4308eda7502c7e"
+      ],
+      "position": [
+        5.3163616,
+        7.7767796
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/search/FUOYE+Theatre+And+Media+Art+Department",
+      "checkedOn": "2026-10-10",
+      "note": "Department pin is on the western annex beside the large hall. Matched as a compound, not by nearest-centroid assignment.",
+      "appearance": {
+        "roof": "grey",
+        "roofForm": "compound",
+        "evidence": "Main hall and adjacent annex visible in the satellite view. Height/facade estimated."
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "name": "New Faculty of Science Auditorium",
+      "position": [
+        5.3136376,
+        7.77927
+      ],
+      "reason": "Pin is on open ground in the inspected satellite image. Do not mislabel the Senate Building or invent an auditorium footprint."
+    },
+    {
+      "name": "University Library",
+      "position": [
+        5.328548,
+        7.7978432
+      ],
+      "reason": "Maps listing is in Oye town, outside this main-campus scene. Main-campus library identity unresolved."
+    },
+    {
+      "name": "FUOYE ICT Centre",
+      "position": [
+        5.342974,
+        7.7991459
+      ],
+      "reason": "Maps listing is outside the main-campus scene."
+    }
+  ],
+  "excluded": [
+    "Ikole engineering faculty and hostels",
+    "Tourism/Aviation Quarters listing sharing the generic university pin",
+    "Private hostels and businesses east of University Road"
+  ],
+  "limitations": [
+    "Satellite acquisition date unavailable; ©2026 is a copyright date.",
+    "Reviewed contributor photos date from 2021–2022; not represented as 2026 photographs.",
+    "Social Sciences photo appears geotagged in town; not used to reconstruct the Phase 3 facade."
+  ]
+}
