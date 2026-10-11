@@ -13,9 +13,11 @@ Open http://127.0.0.1:5173/. `npm run build` builds the explorer and `/review.ht
 
 ## Controls
 
+The opening view faces the main gate beside Phase 1. Use **Main gate · Phase 1** in the directory to return there. Named buildings have bold frontage signs and up to four nearby labels; phase markers are app-added campus guidance.
+
 - **Orbit:** drag to rotate, right-drag to pan, scroll/pinch to zoom. Hover highlights a building. Click a building or directory entry to fly closer. Full view fits the campus.
 - **Drive:** Campus Courier offers Start, Free drive and Exit. WASD/arrows drive, Space drifts, R resets to a road, Escape exits. Timed runs start at 75 seconds. Follow the gold arrow/beacon and slow down inside the ring to deliver. Deliveries add points and time; best score persists in this browser.
-- **Walk:** WASD/arrows move, Shift runs, Space jumps. Click for mouse-look, or drag if pointer lock is unavailable. Escape releases mouse-look; Escape again exits. On touch screens, the left thumb moves and the right thumb looks.
+- **Walk:** hover over a place (or tap ground on touch), then click Walk to start there. Obstructed points move to nearby clear ground. WASD/arrows move, Shift runs, Space jumps. Click for mouse-look, or drag if pointer lock is unavailable. Escape releases mouse-look; Escape again exits. On touch screens, the left thumb moves and the right thumb looks.
 - **Night:** moonlight, stars, illuminated windows/lamps and a driving headlight. Day restores daylight.
 
 The main page uses the reference's floating directory, serif title, four controls, mode-specific HUD and attribution footer. The map and notes workspace remains at `/review.html`, accessible through About.
@@ -26,7 +28,7 @@ The current main-campus extract includes 108 building polygons across Phases 1, 
 
 OSM/Microsoft outlines establish most geometry. The new Senate and eight unnamed roofs use explicitly recorded approximate satellite traces. Management Sciences, the four-storey boys' hostel and Administration have photo-informed facade profiles. Reviewed contributor photos date from 2021–2022; satellite acquisition dates are unavailable. Unobserved heights, dimensions, entrances and facade details remain estimates.
 
-ESA WorldCover **2021** guides vegetation coverage, not individual tree positions. Recorded forecourts, paths and the park beside Administration follow inspected imagery. Roads/terrain use real DEM elevations without vertical exaggeration; foundation grading is estimated. Ground patches are clipped to the rendered terrain triangles. This remains a reconstruction in progress, not a finished digital twin.
+ESA WorldCover **2021** guides vegetation coverage, not individual tree positions. Recorded forecourts, paths and the park beside Administration follow inspected imagery. Roads/terrain use real DEM elevations without vertical exaggeration; foundation grading is estimated. Ground patches are clipped to the rendered terrain triangles. The Phase 1 gate follows satellite alignment and a wide entrance photo; dimensions, terrain grading and sculpture details are approximate. See [entrance evidence](research/entrance-and-identification.md). Wema Bank is user-confirmed in Phase 1, but its exact footprint is still unresolved. This remains a reconstruction in progress, not a finished digital twin.
 
 See [source metadata](public/data/scene-sources.json), [campus research](research/oye-campus-research.md) and [reference comparison](research/reference-parity.md). Reference photos and downloaded reference source are not redistributed in the app.
 
@@ -44,6 +46,8 @@ npm run build
 npm run test:browser
 npm run test:review
 npm run test:routes
+npm run test:entrance
+npm run test:walk-start
 ```
 
 The browser check expects installed Chrome and a dev server on port 5173; set `BASE_URL` for a different origin. Headless software WebGL checks directory selection, courier start, free driving, reset, walking/jumping, night/day, mobile layout/touch movement, review routing, a geometry budget and idle rendering. Reports/screenshots go to ignored `output/`. Unit tests cover notes, geometry, elevation, the scheduler, car/jump physics, delivery rules and source provenance.

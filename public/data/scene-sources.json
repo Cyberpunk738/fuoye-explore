@@ -79,5 +79,21 @@
     "url": "https://mount-alison-3d.vercel.app/",
     "author": "0xbigturk",
     "use": "Behavior and visual layout reference. Application implementation and textures are original. No reference buildings or downloaded reference code are served."
+  },
+  "entrance": {
+    "location": [
+      5.3233,
+      7.78057
+    ],
+    "checkedOn": "2026-10-11",
+    "identity": "User confirmed main entrance beside Phase 1",
+    "satellite": "https://www.google.com/maps/@7.78057,5.32339,20z/data=!3m1!1e3",
+    "photograph": "https://i0.wp.com/media.premiumtimesng.com/wp-content/files/2025/03/Federal-University-Oye-Ekiti-FUOYE.jpg-copy.jpg?ssl=1",
+    "limitations": "Satellite/photo correspondence is a visual inference; image capture date and exact dimensions unknown. Gate sculpture, flags, walls and graded approach are approximations. Photograph is not served as a runtime asset."
+  },
+  "identification": {
+    "nameplates": "Inventory-backed primary buildings; generated signs, not transcriptions of every real facade sign.",
+    "phaseMarkers": "App-added campus guide signs; locations approximate.",
+    "wemaBank": "User confirms Wema Bank in Phase 1. Exact building footprint awaits a pin/landmark; no arbitrary footprint has been assigned."
   }
 }
