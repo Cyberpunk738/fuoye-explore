@@ -7,6 +7,7 @@ import { makeMaterials } from './materials';
 import { createSignage } from './signage';
 import { addCampusEntrance, mainGatePosition } from './entrance';
 import { addPhaseOnePlanting } from './phase-one';
+import { addPhaseOneSportsComplex } from './sports';
 import { buildVegetation, sampleCover } from './vegetation';
 import type { LandCover } from './vegetation';
 import { clipSegment, hashSeed, nearestPoint, pointInRing, projectPosition, randomFrom, sampleElevation, unprojectPosition } from './math';
@@ -33,7 +34,21 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   // Grade foundations gradually, using polygon distance rather than a bounding-box pad.
   const buildingHeight=(x:number,z:number)=>{const p={x,z},h=rawHeight(x,z);let total=0,weighted=0,influence=0;for(const b of buildings){if(b.bounds.distanceToPoint(new THREE.Vector2(x,z))>=35)continue;const inside=pointInRing(p,b.ring);if(inside)return b.position.y;const distance=Math.min(...b.ring.map((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(x-q.x,z-q.z);}));if(distance>=35)continue;const falloff=1-THREE.MathUtils.smoothstep(distance,0,35),weight=falloff/(distance+1)**2;total+=weight;weighted+=b.position.y*weight;influence=Math.max(influence,falloff);}return total?h+(weighted/total-h)*influence:h;};
   const gateGround=project(mainGatePosition),gateBase=rawHeight(gateGround.x,gateGround.z);
-  const flatHeight=(x:number,z:number)=>{const distance=Math.hypot(x-gateGround.x,z-gateGround.z),base=buildingHeight(x,z),blend=1-THREE.MathUtils.smoothstep(distance,34,70);return base+(gateBase-base)*blend;};
+  const sportsMinX = 575, sportsMaxX = 765, sportsMinZ = -530, sportsMaxZ = -380;
+  const sportsLevelY = 1.4;
+  const flatHeight=(x:number,z:number)=>{
+    const distance=Math.hypot(x-gateGround.x,z-gateGround.z),base=buildingHeight(x,z),blend=1-THREE.MathUtils.smoothstep(distance,34,70);
+    const gateGraded = base+(gateBase-base)*blend;
+    const dx = Math.max(0, sportsMinX - x, x - sportsMaxX);
+    const dz = Math.max(0, sportsMinZ - z, z - sportsMaxZ);
+    const sportsDist = Math.hypot(dx, dz);
+    if (sportsDist === 0) return sportsLevelY;
+    if (sportsDist < 14) {
+      const t = sportsDist / 14, s = t * t * (3 - 2 * t);
+      return sportsLevelY * (1 - s) + gateGraded * s;
+    }
+    return gateGraded;
+  };
   const terrainSteps=96, terrainSize=worldBounds.getSize(new THREE.Vector2()), terrainValues:number[]=[];
   for(let row=0;row<=terrainSteps;row++)for(let col=0;col<=terrainSteps;col++)terrainValues.push(flatHeight(worldBounds.min.x+col/terrainSteps*terrainSize.x,worldBounds.min.y+row/terrainSteps*terrainSize.y));
   // Objects sample the actual rendered ground triangles, so terrain and ribbons
@@ -163,6 +178,11 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
       for(let t=12;t<s.length;t+=100){const p={x:s.a.x+dx*t-dz*(s.width/2+1.1),z:s.a.z+dz*t+dx*(s.width/2+1.1)};if(!blocked(p,2))lamp(p);}
       if(s.length>45&&roadDistance%3===0){const p={x:(s.a.x+s.b.x)/2-dz*1.7,z:(s.a.z+s.b.z)/2+dx*1.7};if(!blocked(p))car(p,Math.atan2(dx,dz),roadDistance);}
     }roadDistance++;}
+  const sports=addPhaseOneSportsComplex(root,batch,m,center,height);
+  structureBounds.push(...sports.obstacles);
+  lamps.push(...sports.lamps);
+  buildings.push(sports.building);
+  pickables.push(sports.pickable);
   const entrance=addCampusEntrance(batch,m,signs,center,height,{origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps});
   structureBounds.push(...entrance.obstacles);
   // App-added phase markers at the campus road edges; not surveyed existing signs.
@@ -187,7 +207,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
     }
   }
   const planting=addPhaseOnePlanting(features,center,batch,m,height,p=>!blocked(p,2)&&!onRoad(p,1));
-  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m,planting.trees);
+  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||sports.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m,planting.trees);
   root.add(vegetation.root);
   const trees=vegetation.count,people=0,parkingLots=0;
   // Terrain mesh with subtle natural variation, sampled at real metre scale.
