@@ -48,7 +48,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   }
 
   const controls=new OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=false;controls.screenSpacePanning=false;controls.minDistance=6;controls.maxDistance=1800;
+  controls.enableDamping=false;controls.screenSpacePanning=true;controls.mouseButtons.LEFT=THREE.MOUSE.ROTATE;controls.mouseButtons.MIDDLE=THREE.MOUSE.DOLLY;controls.mouseButtons.RIGHT=THREE.MOUSE.PAN;controls.minDistance=6;controls.maxDistance=1800;
   controls.minPolarAngle=.1;controls.maxPolarAngle=1.53;
   const hemi=new THREE.HemisphereLight('#e9f3f6','#899080',1.35);scene.add(hemi);
   const sun=new THREE.DirectionalLight('#fff1dc',1.45);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.normalBias=1.2;sun.shadow.bias=-.0008;
@@ -171,6 +171,15 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   let down={x:0,y:0},dragPointer:number|undefined,last={x:0,y:0},movePointer:number|undefined,lookPointer:number|undefined,stickOrigin={x:0,y:0},lastHover=0;
   const raycaster=new THREE.Raycaster();
   function pick(e:PointerEvent){const r=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);return raycaster.intersectObjects(world.pickables,false)[0]?.object.userData.id as string|undefined;}
+  function focusGround(e:PointerEvent){
+    const r=renderer.domElement.getBoundingClientRect();
+    raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);
+    const hit=raycaster.intersectObject(world.ground,false)[0];if(!hit)return;
+    const target=new THREE.Vector3(hit.point.x,world.surfaceHeight(hit.point.x,hit.point.z)+3,hit.point.z);
+    const offset=camera.position.clone().sub(controls.target);
+    fitShadow(target,shadowRadius);fly(target.clone().add(offset),target);
+    walkPoint={x:hit.point.x,z:hit.point.z};pinnedPoint=true;walkPointer=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);updateStartMarker();request();
+  }
   function refreshWalkPoint(){
     if(!walkPointer||pinnedPoint)return;
     raycaster.setFromCamera(walkPointer,camera);
@@ -186,8 +195,9 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   }
   function look(dx:number,dy:number){yaw-=dx*.0022;pitch=THREE.MathUtils.clamp(pitch+dy*.0022,-1.4,1.4);request();}
   listen(renderer.domElement,'pointerdown',((e:PointerEvent)=>{down={x:e.clientX,y:e.clientY};if(lookPointer===undefined)last={x:e.clientX,y:e.clientY};dragPointer=e.pointerId;if(mode==='orbit'){flight=undefined;tip.hidden=true;return;}if(mode!=='walk')return;if(coarse||e.pointerType==='touch'){renderer.domElement.setPointerCapture(e.pointerId);if(e.clientX<innerWidth*.45&&movePointer===undefined){movePointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};stick.style.left=`${e.clientX}px`;stick.style.top=`${e.clientY}px`;stick.hidden=false;}else{lookPointer=e.pointerId;last={x:e.clientX,y:e.clientY};}prompt.hidden=true;}else if(document.pointerLockElement!==renderer.domElement){renderer.domElement.requestPointerLock()?.catch(()=>{prompt.textContent='Drag to look around';});}request();})as EventListener);
+  listen(renderer.domElement,'contextmenu',((e:MouseEvent)=>e.preventDefault())as EventListener);
   listen(renderer.domElement,'pointermove',((e:PointerEvent)=>{if(mode==='walk'){if(document.pointerLockElement===renderer.domElement)return;if(e.pointerId===movePointer){const x=(e.clientX-stickOrigin.x)/50,y=(stickOrigin.y-e.clientY)/50;stickInput.set(x,y).divideScalar(Math.max(1,Math.hypot(x,y)));stick.firstElementChild!.setAttribute('style',`transform:translate(${stickInput.x*34}px,${-stickInput.y*34}px)`);request();}else if(e.pointerId===lookPointer||e.buttons&&dragPointer===e.pointerId){look(e.clientX-last.x,e.clientY-last.y);last={x:e.clientX,y:e.clientY};}return;}if(mode!=='orbit')return;if(e.buttons){clearStartPoint();return;}rememberWalkPoint(e);const now=performance.now();if(now-lastHover<100)return;lastHover=now;const id=pick(e),b=world.buildings.find(b=>b.id===id);highlight(id);tip.hidden=!b;renderer.domElement.classList.toggle('pointing',!!b);if(b){tip.textContent=b.name;tip.style.left=`${THREE.MathUtils.clamp(e.clientX,80,innerWidth-80)}px`;tip.style.top=`${e.clientY}px`;}})as EventListener);
-  function pointerUp(e:PointerEvent){if(e.pointerId===movePointer){movePointer=undefined;stickInput.set(0,0);stick.hidden=true;request();}if(e.pointerId===lookPointer)lookPointer=undefined;dragPointer=undefined;if(e.type!=='pointercancel'&&mode==='orbit')rememberWalkPoint(e);if(e.type!=='pointercancel'&&mode==='orbit'&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<5){const id=pick(e);if(id)focusFeature(id);else{pinnedPoint=false;rememberWalkPoint(e);pinnedPoint=!!walkPoint;updateStartMarker();request();}}}
+  function pointerUp(e:PointerEvent){if(e.pointerId===movePointer){movePointer=undefined;stickInput.set(0,0);stick.hidden=true;request();}if(e.pointerId===lookPointer)lookPointer=undefined;dragPointer=undefined;if(e.type==='pointercancel'||mode!=='orbit'||e.button!==0)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y);if(moved>=5)return;rememberWalkPoint(e);const id=pick(e);if(id)focusFeature(id);else focusGround(e);}
   listen(renderer.domElement,'pointerup',pointerUp as EventListener);listen(renderer.domElement,'pointercancel',pointerUp as EventListener);
   listen(renderer.domElement,'pointerleave',()=>{tip.hidden=true;highlight();});
   listen(document,'mousemove',((e:MouseEvent)=>{if(mode==='walk'&&document.pointerLockElement===renderer.domElement)look(e.movementX,e.movementY);})as EventListener);
