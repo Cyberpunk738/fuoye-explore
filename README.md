@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # FUOYE Explore
 
@@ -54,7 +54,7 @@ Switch to **Night** for illuminated windows, lamps, stars and a vehicle headligh
 
 ### Recognizable buildings and grounds
 
-The visual pass adds distinct treatments to Management Sciences, the boys’ hostel and Central Administration using saved contributor photos. Other refinements include the Phase 1 auditorium, varied nearby tree crowns, separate observed lawn patches, roof details, window reveals and park/path edging.
+The visual pass adds distinct treatments to Management Sciences, the boys’ hostel and Central Administration using saved contributor photos. Other refinements include the Phase 1 sports complex (featuring a regulation East-West football pitch, running track, basketball and volleyball courts, floodlight towers, and spectator bleachers), the Phase 1 auditorium, varied nearby tree crowns, separate observed lawn patches, roof details, window reveals and park/path edging.
 
 <details>
 <summary><strong>View the Management Sciences model</strong></summary>
@@ -112,10 +112,10 @@ No API keys or environment file are needed for the bundled explorer. After the i
 | Action | Desktop | Touch |
 | --- | --- | --- |
 | Rotate the view | Drag | Drag |
-| Move the view | Right-drag | Use directory focus or select a ground point |
+| Move the view | Right-drag (screen-space pan) | Use directory focus or tap ground |
 | Zoom | Mouse wheel | Pinch |
 | Focus a building | Click the building or directory entry | Tap the building or directory entry |
-| Choose a starting point | Click clear ground, then **Walk here** or **Drive here** | Tap clear ground, then choose the action |
+| Center view and set starting point | Click open ground to fly camera and pin start | Tap open ground to center view and pin start |
 | Start immediately under the cursor | Hover over ground, then press **W** or **D** | Use the ground-point actions |
 | Fit the campus | **Full view** | **Full view** |
 | Return to the entrance | **Main gate · Phase 1** in the directory | Same |
@@ -152,7 +152,7 @@ Courier runs begin with **75 seconds**. Follow the gold arrow/beacon and slow do
 
 ## Campus coverage
 
-The 108 polygons include secondary wings and small supporting structures. The 62-entry building directory groups or excludes these supporting parts to keep navigation useful; the gate is an additional landmark entry.
+The 108 polygons include secondary wings and small supporting structures. The 62-entry building directory groups or excludes these supporting parts to keep navigation useful; the gate and sports complex are additional landmark entries.
 
 Current named destinations:
 
@@ -161,9 +161,9 @@ Current named destinations:
 | Faculty of Management Sciences | Central Administration |
 | Faculty of Science | New Senate Building |
 | Faculty of Education | Phase 1 Main Auditorium |
-| Faculty of Basic Medical Sciences | Boys’ hostel |
-| Faculty of Social Sciences | Old girls’ hostel |
-| Theatre and Media Arts | |
+| Faculty of Basic Medical Sciences | Phase 1 Sports Complex |
+| Faculty of Social Sciences | Boys’ hostel |
+| Theatre and Media Arts | Old girls’ hostel |
 
 Names are matched to Maps pins or visible compounds, with confidence and evidence recorded in the [campus inventory](research/oye-campus-inventory.json). Unknown buildings remain numbered. The modeled area is scene coverage, not an official property boundary.
 
@@ -177,6 +177,7 @@ The reconstruction keeps source geometry, visual observations and estimated deta
 | Place names | Maps listings and visible compounds | Exact occupancy and ambiguous compound matches |
 | Architecture | Saved photos, satellite roof observations and procedural profiles | Most heights, window spacing, roof pitch and unseen facades |
 | Main entrance | Satellite alignment, a wide entrance photo and user confirmation of the Phase 1 location | Dimensions, sculpture details and ground grading |
+| Sports complex | Observed satellite layout, regulation pitch and court dimensions | Surface wear, track lane markings, and exact spectator seating capacity |
 | Roads and paths | OSM lines plus documented local observations | Widths, markings, kerbs and street furniture |
 | Terrain | Mapzen Terrain Tiles / USGS elevation data | Source resolution, smoothing and estimated foundation grading |
 | Vegetation | ESA WorldCover 2021 and observed planted areas | Individual tree positions, species, heights and hedge placement |
