@@ -13,7 +13,7 @@ app.innerHTML = `
   <aside class="panel" aria-label="Campus building directory">
     <header><h1>FUOYE<span>.</span></h1><p class="where">Oye-Ekiti, Nigeria</p></header>
     <details class="list" ${compact ? '' : 'open'}><summary>Campus buildings</summary><ul id="building-list"></ul></details>
-    <p class="hint">${matchMedia('(pointer: coarse)').matches ? 'Drag to turn, pinch to zoom. Tap ground to choose where to walk or drive.' : 'Drag to turn, right-drag to move, scroll to zoom. Click ground to pin a starting point; W to walk, D to drive.'}</p>
+    <p class="hint">${matchMedia('(pointer: coarse)').matches ? 'Drag to turn, pinch to zoom. Tap open ground to center your view and set a starting point.' : 'Drag to orbit, right-drag to pan, scroll to zoom. Click open ground to move your view; click buildings to inspect. W to walk, D to drive.'}</p>
   </aside>
   <p class="credit">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> / <a href="https://github.com/microsoft/GlobalMLBuildingFootprints" target="_blank" rel="noopener">Microsoft</a>. Elevation: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles</a>. Trees: <a href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener">ESA WorldCover</a>. <button id="about-open">About</button></p>
   <p class="loading" role="status">Building the campus…</p>
