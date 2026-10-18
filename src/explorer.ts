@@ -50,8 +50,9 @@ async function start() {
     document.querySelector('#place-count')!.textContent=`${placeCount} named places have source records.`;
     scene = module.createExplorerScene(document.querySelector('#scene')!, dataset.features, [5.3163,7.7772], readNotes(), select, terrain, cover);
     const buildings = [...scene.getBuildings()].filter(b=>b.directory).sort((a,b) => Number(b.named)-Number(a.named)||a.name.localeCompare(b.name,undefined,{numeric:true}));
-    directory.innerHTML = '<li><button type="button" data-landmark="main-gate">Main gate · Phase 1</button></li>'+buildings.map(b => `<li><button type="button" data-building="${escapeHtml(b.id)}" aria-current="false" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</button></li>`).join('');
-    directory.querySelector<HTMLButtonElement>('[data-landmark="main-gate"]')!.onclick=()=>scene?.gateView();
+    directory.innerHTML = '<li><button type="button" data-landmark="main-gate">Main gate · Phase 1</button></li><li><button type="button" data-landmark="phase2-gate">Phase 2 gate · Falex Rd</button></li>'+buildings.map(b => `<li><button type="button" data-building="${escapeHtml(b.id)}" aria-current="false" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</button></li>`).join('');
+    directory.querySelector<HTMLButtonElement>('[data-landmark="main-gate"]')!.onclick=()=>{scene?.gateView('main');if(compact)directory.closest('details')!.open=false;};
+    directory.querySelector<HTMLButtonElement>('[data-landmark="phase2-gate"]')!.onclick=()=>{scene?.gateView('phase2');if(compact)directory.closest('details')!.open=false;};
     directory.querySelectorAll<HTMLButtonElement>('[data-building]').forEach(button => {
       const id = button.dataset.building!;
       buttons.set(id,button);

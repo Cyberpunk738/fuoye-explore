@@ -970,6 +970,823 @@
       "checkedOn": "2026-10-11",
       "evidence": "Separate vegetation patch visible within the Phase 1 loop in cached east-detail.png. Approximate extent interpreted from the saved satellite view.",
       "accuracy": "Visual estimate, not surveyed or verified current. Edge kerbs, hedge species and planting heights are illustrative."
+    },
+    {
+      "id": "local/law-main",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31468987,
+          7.78188931
+        ],
+        [
+          5.31482399,
+          7.78187336
+        ],
+        [
+          5.31480789,
+          7.78176706
+        ],
+        [
+          5.31486154,
+          7.78175643
+        ],
+        [
+          5.31475961,
+          7.7812515
+        ],
+        [
+          5.31469524,
+          7.78125682
+        ],
+        [
+          5.31467378,
+          7.78116115
+        ],
+        [
+          5.31441629,
+          7.78119304
+        ],
+        [
+          5.31444311,
+          7.78137906
+        ],
+        [
+          5.3146255,
+          7.78135514
+        ],
+        [
+          5.31467915,
+          7.78176174
+        ],
+        [
+          5.31466842,
+          7.78188931
+        ],
+        [
+          5.31468987,
+          7.78188931
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "height": 5.2,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "law",
+        "frontBearing": 100
+      },
+      "evidence": "Main stepped Faculty of Law complex traced from Google Maps satellite view and verified against contributor photograph.",
+      "sourceUrl": "https://www.google.com/maps/@7.781521,5.314748,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view; portico details informed by contributor photo."
+    },
+    {
+      "id": "local/law-north-wing",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.3144592,
+          7.78216569
+        ],
+        [
+          5.31490982,
+          7.78209128
+        ],
+        [
+          5.31488568,
+          7.78196106
+        ],
+        [
+          5.31443775,
+          7.78203813
+        ],
+        [
+          5.3144592,
+          7.78216569
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "height": 5.4,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "gable",
+        "frontBearing": 190
+      },
+      "evidence": "Northern hall of the Faculty of Law compound visible in satellite view and background of Faculty of Law contributor photo.",
+      "sourceUrl": "https://www.google.com/maps/@7.781521,5.314748,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/law-lecture-west",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31442165,
+          7.78102296
+        ],
+        [
+          5.31453967,
+          7.78100435
+        ],
+        [
+          5.31450212,
+          7.78078644
+        ],
+        [
+          5.3143841,
+          7.78080504
+        ],
+        [
+          5.31442165,
+          7.78102296
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "wall": "cream",
+        "roof": "blue",
+        "roofForm": "hip",
+        "frontBearing": 100
+      },
+      "evidence": "Western twin lecture hall south of the main Faculty of Law complex in satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.78085,5.3144,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/law-lecture-east",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31461477,
+          7.78099638
+        ],
+        [
+          5.31472743,
+          7.78097778
+        ],
+        [
+          5.31469256,
+          7.78076783
+        ],
+        [
+          5.3145799,
+          7.78078644
+        ],
+        [
+          5.31461477,
+          7.78099638
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "wall": "cream",
+        "roof": "blue",
+        "roofForm": "hip",
+        "frontBearing": 100
+      },
+      "evidence": "Eastern twin lecture hall south of the main Faculty of Law complex in satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.78085,5.3144,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/law-south-annex",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.3145504,
+          7.78069874
+        ],
+        [
+          5.31466842,
+          7.78068279
+        ],
+        [
+          5.31463623,
+          7.78044893
+        ],
+        [
+          5.31451821,
+          7.78046488
+        ],
+        [
+          5.3145504,
+          7.78069874
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "wall": "cream",
+        "roof": "blue",
+        "roofForm": "hip",
+        "frontBearing": 10
+      },
+      "evidence": "Southern annex hall along the Faculty of Law southern access driveway in satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.7805,5.3145,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/chapel-transformation",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31574667,
+          7.78003436
+        ],
+        [
+          5.31598806,
+          7.78000247
+        ],
+        [
+          5.31592906,
+          7.77959321
+        ],
+        [
+          5.31569302,
+          7.77963042
+        ],
+        [
+          5.31570911,
+          7.77973406
+        ],
+        [
+          5.31555891,
+          7.77975798
+        ],
+        [
+          5.3155911,
+          7.77997058
+        ],
+        [
+          5.31573594,
+          7.77994932
+        ],
+        [
+          5.31574667,
+          7.78003436
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "height": 6.0,
+        "wall": "ivory",
+        "roof": "blue",
+        "roofForm": "compound",
+        "facade": "hall",
+        "frontBearing": 280
+      },
+      "evidence": "Chapel of Transformation auditorium footprint visible east of Phase 2 road in Google Maps satellite view.",
+      "sourceUrl": "https://www.google.com/maps/@7.77985,5.31582,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/chapel-annex",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31568766,
+          7.78039047
+        ],
+        [
+          5.31586468,
+          7.78034795
+        ],
+        [
+          5.3158325,
+          7.7802257
+        ],
+        [
+          5.31556964,
+          7.78028417
+        ],
+        [
+          5.31558573,
+          7.78034263
+        ],
+        [
+          5.31567156,
+          7.78032137
+        ],
+        [
+          5.31568766,
+          7.78039047
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "wall": "ivory",
+        "roof": "grey",
+        "roofForm": "compound",
+        "frontBearing": 280
+      },
+      "evidence": "Northern hall immediately adjacent to Chapel of Transformation compound in satellite view.",
+      "sourceUrl": "https://www.google.com/maps/@7.78028,5.31568,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/senate-west-courtyard",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31267285,
+          7.78043298
+        ],
+        [
+          5.31308055,
+          7.7804064
+        ],
+        [
+          5.31305909,
+          7.78013533
+        ],
+        [
+          5.31265676,
+          7.78016723
+        ],
+        [
+          5.31267285,
+          7.78043298
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 2,
+        "wall": "ivory",
+        "roof": "blue",
+        "roofForm": "compound",
+        "frontBearing": 180
+      },
+      "evidence": "Courtyard building complex northwest of New Senate Building visible in satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.78025,5.31288,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-18 satellite view."
+    },
+    {
+      "id": "local/senate-west-north",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31279087,
+          7.78059243
+        ],
+        [
+          5.31305909,
+          7.78057648
+        ],
+        [
+          5.31305373,
+          7.78049144
+        ],
+        [
+          5.31278551,
+          7.78050739
+        ],
+        [
+          5.31279087,
+          7.78059243
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "wall": "ivory",
+        "roof": "blue",
+        "roofForm": "hip",
+        "frontBearing": 180
+      },
+      "evidence": "Northern block of the western Senate complex visible in satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.78025,5.31288,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-18 satellite view."
+    },
+    {
+      "id": "local/senate-west-south",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31279624,
+          7.78010876
+        ],
+        [
+          5.31295717,
+          7.78009813
+        ],
+        [
+          5.31294107,
+          7.77990147
+        ],
+        [
+          5.31278014,
+          7.7799121
+        ],
+        [
+          5.31279624,
+          7.78010876
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "wall": "ivory",
+        "roof": "blue",
+        "roofForm": "hip",
+        "frontBearing": 90
+      },
+      "evidence": "Southern block of the western Senate complex visible in satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.78025,5.31288,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-18 satellite view."
+    },
+    {
+      "id": "local/caccf-auditorium",
+      "kind": "building",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31728625,
+          7.781007
+        ],
+        [
+          5.31762958,
+          7.7809007
+        ],
+        [
+          5.31757057,
+          7.78075188
+        ],
+        [
+          5.31723261,
+          7.78085818
+        ],
+        [
+          5.31728625,
+          7.781007
+        ]
+      ],
+      "tags": {},
+      "appearance": {
+        "floors": 1,
+        "height": 5.0,
+        "wall": "ivory",
+        "roof": "grey",
+        "roofForm": "gable",
+        "frontBearing": 200
+      },
+      "evidence": "CACCF FUOYE Auditorium roof visible at Google Maps pin east of Phase 2 boulevard.",
+      "sourceUrl": "https://www.google.com/maps/@7.78088,5.31751,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual roof trace from zoom-18 satellite view."
+    },
+    {
+      "id": "local/law-forecourt",
+      "kind": "land",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31479716,
+          7.78178035
+        ],
+        [
+          5.31504393,
+          7.7817458
+        ],
+        [
+          5.3149581,
+          7.78123024
+        ],
+        [
+          5.3147167,
+          7.78126213
+        ],
+        [
+          5.31479716,
+          7.78178035
+        ]
+      ],
+      "tags": {
+        "surface": "paving_stones"
+      },
+      "evidence": "Paved parking forecourt in front of Faculty of Law visible in satellite view and contributor photograph.",
+      "sourceUrl": "https://www.google.com/maps/@7.781521,5.314748,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/chapel-forecourt",
+      "kind": "land",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31547844,
+          7.78014066
+        ],
+        [
+          5.31609535,
+          7.7800503
+        ],
+        [
+          5.31602025,
+          7.77955601
+        ],
+        [
+          5.31539798,
+          7.77964636
+        ],
+        [
+          5.31547844,
+          7.78014066
+        ]
+      ],
+      "tags": {
+        "surface": "paving_stones"
+      },
+      "evidence": "Paved courtyard surrounding Chapel of Transformation visible in satellite view.",
+      "sourceUrl": "https://www.google.com/maps/@7.77985,5.31582,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/senate-forecourt",
+      "kind": "land",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31340778,
+          7.78004499
+        ],
+        [
+          5.31403542,
+          7.78003436
+        ],
+        [
+          5.31402469,
+          7.77957727
+        ],
+        [
+          5.31339169,
+          7.77959321
+        ],
+        [
+          5.31340778,
+          7.78004499
+        ]
+      ],
+      "tags": {
+        "surface": "compacted"
+      },
+      "evidence": "Cleared compound and parking apron surrounding New Senate Building in satellite view.",
+      "sourceUrl": "https://www.google.com/maps/@7.77965,5.31363,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual trace from zoom-19 satellite view."
+    },
+    {
+      "id": "local/phase2-boulevard-east",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.316415,
+          7.78408
+        ],
+        [
+          5.316008,
+          7.782585
+        ],
+        [
+          5.315908,
+          7.78228
+        ],
+        [
+          5.315404,
+          7.78064
+        ],
+        [
+          5.31507,
+          7.779245
+        ],
+        [
+          5.31504,
+          7.77908
+        ]
+      ],
+      "tags": {
+        "highway": "residential",
+        "surface": "asphalt",
+        "width": "6.5"
+      },
+      "evidence": "Eastern carriageway of the divided Phase 2 Gate boulevard visible in zoom-19 and zoom-20 satellite imagery.",
+      "sourceUrl": "https://www.google.com/maps/@7.7815,5.3156,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate centre line parallel to mapped western carriageway."
+    },
+    {
+      "id": "local/law-north-drive",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.315575,
+          7.78145347
+        ],
+        [
+          5.31492054,
+          7.78149599
+        ],
+        [
+          5.31485885,
+          7.78090337
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "paving_stones",
+        "width": "5"
+      },
+      "evidence": "Main concrete access driveway linking Phase 2 boulevard to Faculty of Law forecourt and parking spine.",
+      "sourceUrl": "https://www.google.com/maps/@7.781521,5.314748,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual centre line from zoom-19 satellite view."
+    },
+    {
+      "id": "local/law-south-drive",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31531215,
+          7.78056586
+        ],
+        [
+          5.31452358,
+          7.78074657
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "paving_stones",
+        "width": "4.5"
+      },
+      "evidence": "Southern concrete access road linking Phase 2 boulevard to the Faculty of Law twin lecture halls.",
+      "sourceUrl": "https://www.google.com/maps/@7.7807,5.3150,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual centre line from zoom-19 satellite view."
+    },
+    {
+      "id": "local/chapel-drive",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31524241,
+          7.77993337
+        ],
+        [
+          5.31546235,
+          7.77989617
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "paving_stones",
+        "width": "5"
+      },
+      "evidence": "Entrance driveway linking Phase 2 boulevard to Chapel of Transformation compound.",
+      "sourceUrl": "https://www.google.com/maps/@7.77985,5.31582,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual centre line from zoom-19 satellite view."
+    },
+    {
+      "id": "local/senate-access",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31371355,
+          7.77961447
+        ],
+        [
+          5.31370282,
+          7.77914675
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "paving_stones",
+        "width": "5"
+      },
+      "evidence": "Southern access driveway connecting New Senate Building compound to the main Phase 2 spine road.",
+      "sourceUrl": "https://www.google.com/maps/@7.7794,5.3137,19z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual centre line from zoom-19 satellite view."
+    },
+    {
+      "id": "local/phase2-west-ring",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31249046,
+          7.77917863
+        ],
+        [
+          5.31228662,
+          7.77992273
+        ],
+        [
+          5.31222224,
+          7.78045424
+        ],
+        [
+          5.31230807,
+          7.78109204
+        ],
+        [
+          5.31262994,
+          7.781783
+        ],
+        [
+          5.31309664,
+          7.78237828
+        ],
+        [
+          5.31357944,
+          7.78262277
+        ],
+        [
+          5.31416953,
+          7.78276628
+        ],
+        [
+          5.31459868,
+          7.78306924
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "compacted",
+        "width": "4.5"
+      },
+      "evidence": "Western perimeter access road linking main spine road past Senate West complex toward northern Phase 2 approach.",
+      "sourceUrl": "https://www.google.com/maps/@7.781,5.313,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual centre line from zoom-18 satellite view."
+    },
+    {
+      "id": "local/phase2-east-access",
+      "kind": "road",
+      "phase": 2,
+      "coordinates": [
+        [
+          5.31599343,
+          7.78262277
+        ],
+        [
+          5.31695902,
+          7.78248458
+        ],
+        [
+          5.31744182,
+          7.7815704
+        ],
+        [
+          5.31742573,
+          7.78099637
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "compacted",
+        "width": "4.5"
+      },
+      "evidence": "Northeast access road linking Phase 2 Gate approach to eastern campus buildings and CACCF Auditorium.",
+      "sourceUrl": "https://www.google.com/maps/@7.7815,5.317,18z/data=!3m1!1e3",
+      "checkedOn": "2026-10-17",
+      "accuracy": "Approximate visual centre line from zoom-18 satellite view."
     }
   ]
 }

@@ -5,9 +5,10 @@ import { sectionedRoof, groundPolygon } from './architecture';
 import { GeometryBatch } from './batch';
 import { makeMaterials } from './materials';
 import { createSignage } from './signage';
-import { addCampusEntrance, mainGatePosition } from './entrance';
+import { addCampusEntrance, addPhaseTwoEntrance, mainGatePosition, phase2GatePosition } from './entrance';
 import { addPhaseOnePlanting } from './phase-one';
 import { addPhaseOneSportsComplex } from './sports';
+import { addCampusTransitParks } from './transit-park';
 import { buildVegetation, sampleCover } from './vegetation';
 import type { LandCover } from './vegetation';
 import { clipSegment, hashSeed, nearestPoint, pointInRing, projectPosition, randomFrom, sampleElevation, unprojectPosition } from './math';
@@ -31,14 +32,18 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   const mid=bounds.getCenter(new THREE.Vector2()),size=bounds.getSize(new THREE.Vector2());
   const cameraBounds=bounds.clone().expandByScalar(130);
   const worldBounds=grid?new THREE.Box2().setFromPoints([project([grid.bbox[0],grid.bbox[1]]),project([grid.bbox[2],grid.bbox[3]])].map(p=>new THREE.Vector2(p.x,p.z))):cameraBounds.clone();
+  worldBounds.union(cameraBounds);
   // Grade foundations gradually, using polygon distance rather than a bounding-box pad.
   const buildingHeight=(x:number,z:number)=>{const p={x,z},h=rawHeight(x,z);let total=0,weighted=0,influence=0;for(const b of buildings){if(b.bounds.distanceToPoint(new THREE.Vector2(x,z))>=35)continue;const inside=pointInRing(p,b.ring);if(inside)return b.position.y;const distance=Math.min(...b.ring.map((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(x-q.x,z-q.z);}));if(distance>=35)continue;const falloff=1-THREE.MathUtils.smoothstep(distance,0,35),weight=falloff/(distance+1)**2;total+=weight;weighted+=b.position.y*weight;influence=Math.max(influence,falloff);}return total?h+(weighted/total-h)*influence:h;};
   const gateGround=project(mainGatePosition),gateBase=rawHeight(gateGround.x,gateGround.z);
+  const phase2Ground=project(phase2GatePosition),phase2Base=rawHeight(phase2Ground.x,phase2Ground.z);
   const sportsMinX = 575, sportsMaxX = 765, sportsMinZ = -530, sportsMaxZ = -380;
   const sportsLevelY = 1.4;
   const flatHeight=(x:number,z:number)=>{
     const distance=Math.hypot(x-gateGround.x,z-gateGround.z),base=buildingHeight(x,z),blend=1-THREE.MathUtils.smoothstep(distance,34,70);
-    const gateGraded = base+(gateBase-base)*blend;
+    const gate1Graded = base+(gateBase-base)*blend;
+    const distance2=Math.hypot(x-phase2Ground.x,z-phase2Ground.z),blend2=1-THREE.MathUtils.smoothstep(distance2,30,65);
+    const gateGraded = gate1Graded+(phase2Base-gate1Graded)*blend2;
     const dx = Math.max(0, sportsMinX - x, x - sportsMaxX);
     const dz = Math.max(0, sportsMinZ - z, z - sportsMaxZ);
     const sportsDist = Math.hypot(dx, dz);
@@ -77,24 +82,29 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   function car(p:Point,angle:number,color:number){const y=surfaceHeight(p.x,p.z)+.05;box(1.8,.7,4.1,p.x,y+.7,p.z,m.carPaint[color%m.carPaint.length],angle);box(1.55,.65,2.15,p.x,y+1.28,p.z,m.glass,angle);box(1.62,.12,1.65,p.x,y+1.63,p.z,m.carPaint[color%m.carPaint.length],angle);for(const side of [-1,1])for(const front of [-1,1]){const x=side*.9,z=front*1.25,wx=p.x+Math.cos(angle)*x+Math.sin(angle)*z,wz=p.z-Math.sin(angle)*x+Math.cos(angle)*z;const g=new THREE.CylinderGeometry(.33,.33,.18,6);g.rotateZ(Math.PI/2);g.rotateY(angle);g.translate(wx,y+.38,wz);batch.add(g,m.rubber);}for(const side of[-1,1]){const x=side*.55,z=2.07;box(.35,.18,.07,p.x+Math.cos(angle)*x+Math.sin(angle)*z,y+.7,p.z-Math.sin(angle)*x+Math.cos(angle)*z,m.glow,angle);}}
   function lamp(p:Point){const y=height(p.x,p.z);cyl(.075,.13,6,p.x,y+3,p.z,m.steel);box(1.2,.08,.1,p.x+.45,y+5.9,p.z,m.steel);box(.5,.1,.28,p.x+.95,y+5.85,p.z,m.glow);lamps.push(new THREE.Vector3(p.x+.95,y+5.8,p.z));}
   function bench(p:Point,angle:number){const y=height(p.x,p.z);box(2,.12,.5,p.x,y+.5,p.z,m.wood,angle);box(2,.55,.09,p.x+Math.sin(angle)*.25,y+.8,p.z+Math.cos(angle)*.25,m.wood,angle);for(const s of[-1,1])box(.12,.5,.45,p.x+Math.cos(angle)*s*.7,y+.25,p.z-Math.sin(angle)*s*.7,m.steel,angle);}
-  function sign(p:Point,text:string,angle=0){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d')!;ctx.fillStyle='#174c3d';ctx.fillRect(0,0,512,128);ctx.fillStyle='#f4eddc';ctx.font='bold 34px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,76,480);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const material=new THREE.MeshLambertMaterial({map:tex});material.userData.ownedTexture=tex;const mesh=new THREE.Mesh(new THREE.BoxGeometry(5,.95,.12),material);mesh.rotation.y=angle;mesh.position.set(p.x,height(p.x,p.z)+2,p.z);root.add(mesh);for(const s of[-1,1])cyl(.055,.055,1.55,p.x+Math.cos(angle)*s*2,height(p.x,p.z)+.8,p.z-Math.sin(angle)*s*2,m.steel);}
+  function sign(p:Point,text:string,angle=0){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d')!;ctx.fillStyle='#174c3d';ctx.fillRect(0,0,512,128);ctx.fillStyle='#f4eddc';ctx.font='bold 34px sans-serif';ctx.fillText(text,256,76,480);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const material=new THREE.MeshLambertMaterial({map:tex});material.userData.ownedTexture=tex;const mesh=new THREE.Mesh(new THREE.BoxGeometry(5,.95,.12),material);mesh.rotation.y=angle;mesh.position.set(p.x,height(p.x,p.z)+2,p.z);root.add(mesh);for(const s of[-1,1])cyl(.055,.055,1.55,p.x+Math.cos(angle)*s*2,height(p.x,p.z)+.8,p.z-Math.sin(angle)*s*2,m.steel);}
   const namedBuildings=buildings.filter(b=>b.named&&b.directory);
   const signs=createSignage([
     ...namedBuildings.map(b=>({key:b.id,lines:[b.name.toUpperCase()],stretch:4})),
     {key:'gate',lines:['FEDERAL UNIVERSITY OYE-EKITI'],footer:'EKITI STATE, NIGERIA',stretch:2.5,background:'#dfae25',color:'#163b2b'},
+    {key:'phase2-gate',lines:['FEDERAL UNIVERSITY OYE-EKITI'],footer:'PHASE 2 · MAIN CAMPUS ENTRANCE',stretch:2.3,background:'#174838',color:'#f5eedc'},
+    {key:'gate-monument',lines:['FEDERAL UNIVERSITY','OYE-EKITI'],footer:'INNOVATION AND CHARACTER FOR NATIONAL TRANSFORMATION',stretch:1.6,background:'#f2ecdc',color:'#163b2b'},
     {key:'gate-safety',lines:['SPEED LIMIT','30 KM/H'],footer:'DRIVE SAFE · SLOW DOWN'},
+    {key:'keke-park-1',lines:['CAMPUS KEKE & TAXI PARK'],footer:'SHUTTLE TO PHASE 1 · PHASE 2 · HOSTELS',stretch:2.2,background:'#dfae25',color:'#163b2b'},
+    {key:'keke-park-2',lines:['PHASE 2 KEKE & TAXI STOP'],footer:'CAMPUS TRANSIT · SENATE · FACULTIES',stretch:2.2,background:'#174838',color:'#f5eedc'},
     ...[1,2,3].map(phase=>({key:'phase-'+phase,lines:['PHASE '+phase],footer:'CAMPUS GUIDE',background:'#184c3b',color:'#fff9dc'}))
   ]);
   // Architectural profiles retain source outlines. Detail assemblies are illustrative.
   const heroIds=new Set(sourceBuildings.filter(f=>f.properties.campus?.id).map(f=>f.id));
   for(const [index,b] of buildings.entries()){
-    const f=sourceBuildings[index];if(f.geometry.type!=='Polygon')continue;const rng=randomFrom(hashSeed(b.id)),profile=f.properties.campus?.appearance;const wall=profile?.wall==='ivory'?m.ivory:m.walls[profile?.wall==='cream'?0:Math.floor(rng()*m.walls.length)];const roofIndex=({green:0,grey:1,red:2,blue:3,sand:4} as Record<string,number>)[profile?.roof??'']??(f.properties.campus?.phase===3?3:0);const roof=m.roofs[roofIndex];const y=b.position.y,h=b.height,hall=b.placeId==='phase1-auditorium',hostel=profile?.facade==='hostel',admin=profile?.facade==='admin',management=profile?.facade==='management';
+    const f=sourceBuildings[index];if(f.geometry.type!=='Polygon')continue;const rng=randomFrom(hashSeed(b.id)),profile=f.properties.campus?.appearance;const wall=profile?.wall==='ivory'?m.ivory:m.walls[profile?.wall==='cream'?0:Math.floor(rng()*m.walls.length)];const roofIndex=({green:0,grey:1,red:2,blue:3,sand:4} as Record<string,number>)[profile?.roof??'']??(f.properties.campus?.phase===3?3:0);const roof=m.roofs[roofIndex];const y=b.position.y,h=b.height;
+    const hall=b.placeId==='phase1-auditorium'||profile?.facade==='hall',hostel=profile?.facade==='hostel',admin=profile?.facade==='admin'||b.placeId==='senate',management=profile?.facade==='management',law=profile?.facade==='law',scienceLab=profile?.facade==='science-lab',arts=profile?.facade==='arts';
     const glazing=hostel?m.louvres:admin?m.adminWindows:m.windows;
     const shape=new THREE.Shape(b.ring.map(p=>new THREE.Vector2(p.x,-p.z)));for(const hole of f.geometry.coordinates.slice(1))shape.holes.push(new THREE.Path(hole.map(project).map(p=>new THREE.Vector2(p.x,-p.z))));
     const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});geo.rotateX(-Math.PI/2);geo.translate(0,y+.12,0);const body=new THREE.Mesh(geo,wall);body.castShadow=true;body.receiveShadow=false;body.userData.id=b.id;
     // Facade UVs are measured in metres, for consistent texture density.
     const pos=geo.attributes.position,normal=geo.attributes.normal,uv:number[]=[];for(let j=0;j<pos.count;j++)uv.push((Math.abs(normal.getX(j))>.5?pos.getZ(j):pos.getX(j))/6,pos.getY(j)/6);geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));root.add(body);pickables.push(body);
-    let longest=0,edge=new THREE.Vector2(1,0),front=0,best=Infinity;const center2=new THREE.Vector2(b.position.x,b.position.z);
+    let longest=0,edge=new THREE.Vector2(1,0),front=0,best=Infinity;
     for(let i=0;i<b.ring.length;i++){const a=b.ring[i],c=b.ring[(i+1)%b.ring.length];const length=Math.hypot(c.x-a.x,c.z-a.z);if(length>longest){longest=length;edge.set(c.x-a.x,c.z-a.z).normalize();}}
     for(let i=0;i<b.ring.length;i++){const a=b.ring[i],c=b.ring[(i+1)%b.ring.length],p={x:(a.x+c.x)/2,z:(a.z+c.z)/2};const length=Math.hypot(c.x-a.x,c.z-a.z);let score=nearestRoad(p).distance+(length<longest*.5?25:0);if(profile?.frontBearing!==undefined){const bearing=profile.frontBearing*Math.PI/180,dx=(c.x-a.x)/length,dz=(c.z-a.z)/length;let nx=-dz,nz=dx;if(pointInRing({x:p.x+nx*.3,z:p.z+nz*.3},b.ring)){nx=-nx;nz=-nz;}score=(1-(nx*Math.sin(bearing)-nz*Math.cos(bearing)))*1000-length;}if(score<best){best=score;front=i;}}
     const perpendicular=new THREE.Vector2(-edge.y,edge.x),u=b.ring.map(p=>p.x*edge.x+p.z*edge.y),v=b.ring.map(p=>p.x*perpendicular.x+p.z*perpendicular.y);const loU=Math.min(...u),hiU=Math.max(...u),loV=Math.min(...v),hiV=Math.max(...v),w=hiU-loU,d=hiV-loV,mU=(loU+hiU)/2,mV=(loV+hiV)/2;
@@ -113,20 +123,20 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
       if(b.named&&length>3){const aa={x:a.x+n.x*.5,z:a.z+n.y*.5},bb={x:c.x+n.x*.5,z:c.z+n.y*.5};ribbon(aa,bb,.7,m.pavers,.11);}
       if(roofType==='terrace')box(length,.55,.25,midEdge.x,y+h+.27,midEdge.y,m.walls[1],angle);
       for(let floor=1;floor<b.floors;floor++)box(length,.18,.32,midEdge.x,y+floor*3.6,midEdge.y,m.trim,angle);
-      const windowSpacing=hall?4.6:profile?.facade==='hostel'?3.1:heroIds.has(b.id)?3.7:4.8+rng();const count=Math.floor(length/windowSpacing);
+      const windowSpacing=hall?4.6:hostel?3.1:law?4.1:heroIds.has(b.id)?3.7:4.8+rng();const count=Math.floor(length/windowSpacing);
       for(let j=0;j<count;j++){
         const p=new THREE.Vector2(a.x,a.z).lerp(new THREE.Vector2(c.x,c.z),(j+.5)/count).addScaledVector(n,.1);
         for(let floor=0;floor<b.floors;floor++){
-          if(profile?.facade==='management'&&i===front&&floor>0)continue;
-          const yy=y+(hall?2.85:1.95)+floor*3.6;const ww=hall?1.6:admin?2.3:hostel?1.15:management?1.6:1.32,wh=hall?2.75:admin?1.1:hostel?1.7:management?2.0:1.48;
-          if(profile?.facade==='hostel'&&floor>0&&j%4<2)panel(2.9,2.8,p.x-n.x*.02,yy,p.y-n.y*.02,m.hostelInset,angle);
+          if(management&&i===front&&floor>0)continue;
+          const yy=y+(hall?2.85:law?2.45:1.95)+floor*3.6;const ww=hall?1.6:admin?2.3:hostel?1.15:management?1.6:law?1.5:1.32,wh=hall?2.75:admin?1.1:hostel?1.7:management?2.0:law?1.85:1.48;
+          if(hostel&&floor>0&&j%4<2)panel(2.9,2.8,p.x-n.x*.02,yy,p.y-n.y*.02,m.hostelInset,angle);
           panel(ww+.23,wh+.27,p.x,yy,p.y,m.trim,angle);panel(ww,wh,p.x+n.x*.035,yy,p.y+n.y*.035,glazing,angle);if(heroIds.has(b.id)){box(.055,wh,.2,p.x+n.x*.07,yy,p.y+n.y*.07,m.trim,angle);box(1.6,.1,.38,p.x+n.x*.1,yy-wh/2-.15,p.y+n.y*.1,m.base,angle);}
           if(b.named&&!hall){
             // Projecting reveals and hoods supply depth; unseen dimensions are estimates.
             box(ww+.36,.09,.38,p.x+n.x*.14,yy+wh/2+.16,p.y+n.y*.14,m.trim,angle);
             if(hostel&&floor===0&&j%4===2)box(.22,h-.35,.22,p.x-direction.x*1.5,y+h/2,p.y-direction.y*1.5,m.trim,angle);
           }
-          if(heroIds.has(b.id)&&(admin||management)&&(j+index)%5===0){box(.65,.42,.38,p.x+n.x*.4,y+.95+floor*3.6,p.y+n.y*.4,m.white,angle);box(.5,.27,.02,p.x+n.x*.6,y+.95+floor*3.6,p.y+n.y*.6,m.steel,angle);}
+          if(heroIds.has(b.id)&&(admin||management||scienceLab)&&(j+index)%5===0){box(.65,.42,.38,p.x+n.x*.4,y+.95+floor*3.6,p.y+n.y*.4,m.white,angle);box(.5,.27,.02,p.x+n.x*.6,y+.95+floor*3.6,p.y+n.y*.6,m.steel,angle);}
         }
       }
       if(hall){
@@ -136,20 +146,37 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
         box(length,.12,.62,midEdge.x+n.x*.12,y+h-.3,midEdge.y+n.y*.12,m.base,angle);
         for(let j=0;j<count;j++){const q=new THREE.Vector2(a.x,a.z).lerp(new THREE.Vector2(c.x,c.z),(j+.5)/count).addScaledVector(n,.2);box(1.95,.1,.65,q.x,y+4.35,q.y,m.trim,angle);}
       }
+      if(law&&length>5){
+        // Photographed Faculty of Law stepped cream veranda columns and green balustrade railings.
+        const bays=Math.max(2,Math.floor(length/4.2));
+        for(let j=0;j<=bays;j++){const q=midEdge.clone().addScaledVector(direction,(j/bays-.5)*length).addScaledVector(n,.42);box(.38,h-.2,.38,q.x,y+(h-.2)/2,q.y,m.ivory,angle);}
+        box(length,.26,.48,midEdge.x+n.x*.42,y+h-.25,midEdge.y+n.y*.42,m.green,angle);
+        box(length,.72,.12,midEdge.x+n.x*.42,y+.65,midEdge.y+n.y*.42,m.green,angle);
+      }
+      if((scienceLab||arts)&&length>5){
+        // Photographed ochre pilasters on 3-in-1 Science Lab and Faculty of Arts facades.
+        const ncols=Math.max(2,Math.floor(length/4.6));
+        for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.26);box(.42,h-.1,.55,q.x,y+(h-.1)/2,q.y,m.accent,angle);}
+        box(length,.24,.48,midEdge.x+n.x*.24,y+3.6,midEdge.y+n.y*.24,m.accent,angle);
+        if(arts)box(length,.82,.1,midEdge.x+n.x*.28,y+4.1,midEdge.y+n.y*.28,m.steel,angle);
+      }
       if(heroIds.has(b.id)&&length>6){for(const s of[-1,1]){const p=midEdge.clone().addScaledVector(direction,s*(length/2-.3)).addScaledVector(n,.2);cyl(.055,.055,h,p.x,y+h/2,p.y,m.steel,5);}}
-      if(profile?.facade==='admin'&&length>5){
+      if(admin&&length>5){
         const ncols=Math.max(2,Math.floor(length/5));
         for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.24);box(.45,h+.4,.85,q.x+n.x*.22,y+h/2,q.y+n.y*.22,m.accent,angle);}
         box(length,.75,.85,midEdge.x+n.x*.45,y+h-.05,midEdge.y+n.y*.45,m.accent,angle);
         box(length,.24,.55,midEdge.x+n.x*.35,y+3.6,midEdge.y+n.y*.35,m.accent,angle);
       }
-      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=profile?.facade==='management'?3.95:3.4;signs.add(batch,b.id,hall?Math.min(8,length*.65):Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
-        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=hall?Math.min(length*.65,8):large?Math.min(length*.6,15):3.5;
+      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=management||law?3.95:3.4;signs.add(batch,b.id,hall?Math.min(8,length*.65):Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
+        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=hall||law?Math.min(length*.65,9.5):large?Math.min(length*.6,15):3.5;
         if(!management)box(2,2.8,.2,midEdge.x+n.x*.13,y+1.4,midEdge.y+n.y*.13,m.glass,angle);
         const deck=midEdge.clone().addScaledVector(n,1.8);box(porticoWidth,.18,3.7,deck.x,y+.25,deck.y,m.pavers,angle);
-        const canopyHeight=management?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
-        const columnCount=large?5:2;for(let j=0;j<columnCount;j++){const p=midEdge.clone().addScaledVector(direction,(j/(columnCount-1)-.5)*(porticoWidth-.6)).addScaledVector(n,3.3);if(Math.abs(j/(columnCount-1)-.5)<.1)continue;if(profile?.facade==='management')box(.55,canopyHeight,.55,p.x,y+canopyHeight/2,p.y,wall,angle);else cyl(.17,.21,canopyHeight,p.x,y+canopyHeight/2,p.y,m.trim);}
-        if(profile?.facade==='management'){
+        const canopyHeight=management||law?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
+        const columnCount=large?5:2;for(let j=0;j<columnCount;j++){const p=midEdge.clone().addScaledVector(direction,(j/(columnCount-1)-.5)*(porticoWidth-.6)).addScaledVector(n,3.3);if(Math.abs(j/(columnCount-1)-.5)<.1)continue;if(management||law||scienceLab)box(.52,canopyHeight,.52,p.x,y+canopyHeight/2,p.y,law?m.ivory:wall,angle);else cyl(.17,.21,canopyHeight,p.x,y+canopyHeight/2,p.y,m.trim);}
+        if(law){
+          box(porticoWidth+.4,.55,3.9,deck.x,y+canopyHeight-.28,deck.y,m.green,angle);
+        }
+        if(management){
           box(porticoWidth,.28,3.7,deck.x,y+3.6,deck.y,wall,angle);
           // Two door bays under the photographed tall column/glazing composition.
           for(const side of [-1,1]){const q=midEdge.clone().addScaledVector(direction,side*1.3).addScaledVector(n,.18);box(1.35,2.65,.12,q.x,y+1.4,q.y,m.steel,angle);box(.045,.45,.08,q.x+direction.x*.48,y+1.45,q.y+direction.y*.48,m.trim,angle);}
@@ -157,13 +184,13 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
           for(let j=0;j<columns;j++){const q=midEdge.clone().addScaledVector(direction,(j+.5)/columns*porticoWidth-porticoWidth/2).addScaledVector(n,.22);panel(porticoWidth/columns-.08,2.9,q.x,y+5.25,q.y,m.windows,angle);}
 
         }
-        if(profile?.facade==='hostel'){
+        if(hostel){
           const balconyWidth=Math.min(10,length*.28),depth=2;
           for(let floor=1;floor<b.floors;floor++){const q=midEdge.clone().addScaledVector(n,depth/2);box(balconyWidth,.18,depth,q.x,y+floor*3.6,q.y,m.trim,angle);const rail=midEdge.clone().addScaledVector(n,depth);for(const offset of [.25,.5,.75,1.0])box(balconyWidth,.06,.07,rail.x,y+floor*3.6+offset,rail.y,m.trim,angle);for(let j=0;j<=8;j++){const post=rail.clone().addScaledVector(direction,(j/8-.5)*balconyWidth);box(.045,.95,.045,post.x,y+floor*3.6+.5,post.y,m.trim);}}
           const q=midEdge.clone().addScaledVector(n,1.2);box(balconyWidth+1,.2,3,q.x,y+h,q.y,roof,angle);
         }
-        if(large&&b.floors>1&&profile?.facade!=='management'&&profile?.facade!=='hostel'){box(porticoWidth,.13,3.7,deck.x,y+3.6,deck.y,m.trim,angle);const p=midEdge.clone().addScaledVector(n,3.5);box(porticoWidth,.07,.08,p.x,y+4.5,p.y,m.steel,angle);for(let j=0;j<Math.floor(porticoWidth/1.4);j++){const q=p.clone().addScaledVector(direction,(j+.5)*1.4-porticoWidth/2);box(.04,.9,.04,q.x,y+4.05,q.y,m.steel);} }
-        for(let j=0;j<(hall?4:3);j++){const p=midEdge.clone().addScaledVector(n,3.8+j*.3);box(b.named?Math.min(porticoWidth,6):3,.12,.5,p.x,y+.23-j*.07,p.y,m.pavers,angle);}
+        if(large&&b.floors>1&&!management&&!hostel){box(porticoWidth,.13,3.7,deck.x,y+3.6,deck.y,m.trim,angle);const p=midEdge.clone().addScaledVector(n,3.5);box(porticoWidth,.07,.08,p.x,y+4.5,p.y,m.steel,angle);for(let j=0;j<Math.floor(porticoWidth/1.4);j++){const q=p.clone().addScaledVector(direction,(j+.5)*1.4-porticoWidth/2);box(.04,.9,.04,q.x,y+4.05,q.y,m.steel);} }
+        for(let j=0;j<(hall||law?4:3);j++){const p=midEdge.clone().addScaledVector(n,3.8+j*.3);box(b.named?Math.min(porticoWidth,6):3,.12,.5,p.x,y+.23-j*.07,p.y,m.pavers,angle);}
 
       }
     }
@@ -183,8 +210,16 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   lamps.push(...sports.lamps);
   buildings.push(sports.building);
   pickables.push(sports.pickable);
-  const entrance=addCampusEntrance(batch,m,signs,center,height,{origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps});
+  const terrainClip={origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps};
+  const entrance=addCampusEntrance(batch,m,signs,center,height,terrainClip);
   structureBounds.push(...entrance.obstacles);
+  const phase2Entrance=addPhaseTwoEntrance(batch,m,signs,center,height,terrainClip);
+  structureBounds.push(...phase2Entrance.obstacles);
+  const transit=addCampusTransitParks(root,batch,m,signs,height,surfaceHeight);
+  structureBounds.push(...transit.obstacles);
+  lamps.push(...transit.lamps);
+  buildings.push(...transit.buildings);
+  pickables.push(...transit.pickables);
   // App-added phase markers at the campus road edges; not surveyed existing signs.
   for(const [phase,lon,lat] of [[1,5.32144,7.78042],[2,5.31596,7.77855],[3,5.31165,7.77734]]){
     const p=project([lon,lat]),road=nearestRoad(p);if(!road.point)continue;
@@ -206,20 +241,44 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
       }
     }
   }
+  const buildingDist=(pt:Point)=>{let d=Infinity;const v=new THREE.Vector2(pt.x,pt.z);for(const b of buildings){const bd=b.bounds.distanceToPoint(v);if(bd<d)d=bd;}return d;};
   const planting=addPhaseOnePlanting(features,center,batch,m,height,p=>!blocked(p,2)&&!onRoad(p,1));
-  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||sports.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m,planting.trees);
+  const vegetation=buildVegetation(
+    cover,
+    center,
+    height,
+    p=>entrance.reserved(p)||phase2Entrance.reserved(p)||sports.reserved(p)||transit.reserved(p)||blocked(p,7)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),
+    m,
+    planting.trees,
+    planting.bushes,
+    buildingDist,
+    p=>nearestRoad(p).distance
+  );
   root.add(vegetation.root);
-  const trees=vegetation.count,people=0,parkingLots=0;
-  // Terrain mesh with subtle natural variation, sampled at real metre scale.
+  const trees=vegetation.count,people=transit.peopleCount,parkingLots=transit.parkingLotsCount;
+  // Terrain mesh with subtle natural variation, blending forest floor into open campus grass & bushland near buildings/roads.
   const groundSize=worldBounds.getSize(new THREE.Vector2()),groundMid=worldBounds.getCenter(new THREE.Vector2());
   const terrain=new THREE.PlaneGeometry(groundSize.x,groundSize.y,terrainSteps,terrainSteps);terrain.rotateX(-Math.PI/2);terrain.translate(groundMid.x,0,groundMid.y);const p=terrain.attributes.position,colors:number[]=[];
-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);p.setY(i,height(x,z)-.025);const variation=Math.sin(x*.011)*Math.cos(z*.009)*.055+Math.sin(x*.05+z*.02)*.025;const [lon,lat]=unprojectPosition({x,z},center),land=sampleCover(cover,lon,lat);const color=new THREE.Color(land===10?'#66885d':land===40?'#acb28a':land===50?'#b9b7a6':land===60?'#b7a789':'#a0b58b').offsetHSL(0,0,variation*.4);colors.push(color.r,color.g,color.b);}
+  const turfColor=new THREE.Color('#98af7e'),scrubColor=new THREE.Color('#839c6d');
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i),z=p.getZ(i);p.setY(i,height(x,z)-.025);
+    const variation=Math.sin(x*.011)*Math.cos(z*.009)*.055+Math.sin(x*.05+z*.02)*.025;
+    const [lon,lat]=unprojectPosition({x,z},center),land=sampleCover(cover,lon,lat);
+    const color=new THREE.Color(land===10?'#66885d':land===40?'#acb28a':land===50?'#b9b7a6':land===60?'#b7a789':'#9db284');
+    if(land===10){
+      const bDist=buildingDist({x,z}),rDist=nearestRoad({x,z}).distance;
+      const clearBlend=Math.max(1-THREE.MathUtils.smoothstep(bDist,10,48),1-THREE.MathUtils.smoothstep(rDist,4,22)*.75);
+      const scrubBlend=1-THREE.MathUtils.smoothstep(bDist,32,78);
+      color.lerp(scrubColor,scrubBlend*.55).lerp(turfColor,clearBlend*.75);
+    }
+    color.offsetHSL(0,0,variation*.4);colors.push(color.r,color.g,color.b);
+  }
   terrain.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));const tuv=[];for(let i=0;i<p.count;i++)tuv.push(p.getX(i)/8,p.getZ(i)/8);terrain.setAttribute('uv',new THREE.Float32BufferAttribute(tuv,2));terrain.computeVertexNormals();m.grass.vertexColors=true;const ground=new THREE.Mesh(terrain,m.grass);ground.receiveShadow=true;root.add(ground);
   // A low terrain skirt keeps the landscape readable as a continuous model.
   const distant=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),new THREE.MeshLambertMaterial({color:'#b3bea0'}));distant.rotation.x=-Math.PI/2;distant.position.set(mid.x,-85,mid.y);distant.material.userData.ownedMaterial=true;root.add(distant);
   batch.finish(root);
   const selected=buildings.find(b=>b.placeId==='science')??buildings[0];
-  return {root,ground,entrance,updateVegetation:vegetation.updateDetail,vegetationDetail:()=>vegetation.root.userData.detailedTrees??0,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>(vegetation.root.userData.sharedGeometries??[]);root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
+  return {root,ground,entrance,phase2Entrance,updateVegetation:vegetation.updateDetail,vegetationDetail:()=>vegetation.root.userData.detailedTrees??0,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>(vegetation.root.userData.sharedGeometries??[]);root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
 }
 export type World=ReturnType<typeof buildWorld>;
 

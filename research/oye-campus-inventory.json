@@ -16,15 +16,23 @@
     ],
     [
       5.312,
-      7.7811
+      7.7818
     ],
     [
-      5.3154,
-      7.781
+      5.314,
+      7.7828
     ],
     [
       5.3168,
-      7.77925
+      7.7832
+    ],
+    [
+      5.3186,
+      7.7824
+    ],
+    [
+      5.3185,
+      7.7802
     ],
     [
       5.3201,
@@ -315,6 +323,138 @@
         "roof": "grey",
         "roofForm": "compound",
         "evidence": "Main hall and adjacent annex visible in the satellite view. Height/facade estimated."
+      }
+    },
+    {
+      "id": "faculty-of-law",
+      "name": "Faculty of Law",
+      "phase": 2,
+      "featureIds": [
+        "local/law-main",
+        "local/law-north-wing",
+        "local/law-lecture-west",
+        "local/law-lecture-east",
+        "local/law-south-annex"
+      ],
+      "position": [
+        5.314748,
+        7.781521
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/FACULTY+OF+LAW/data=!4m7!3m6!1s0x10480b04fed199d7:0xed0cb8b469c4a46b!8m2!3d7.781521!4d5.314748",
+      "checkedOn": "2026-10-17",
+      "appearance": {
+        "floors": 1,
+        "height": 5.2,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "law",
+        "frontBearing": 100,
+        "evidence": "Google Maps contributor photo and zoom-19 satellite view show cream walls, green pitched roof, projecting columned entrance portico with green veranda railings and FACULTY OF LAW fascia sign."
+      }
+    },
+    {
+      "id": "chapel-of-transformation",
+      "name": "Chapel of Transformation",
+      "phase": 2,
+      "featureIds": [
+        "local/chapel-transformation",
+        "local/chapel-annex"
+      ],
+      "position": [
+        5.31582,
+        7.77985
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/search/Chapel+of+Transformation+Oye+Campus+FUOYE",
+      "checkedOn": "2026-10-17",
+      "appearance": {
+        "floors": 1,
+        "height": 6.0,
+        "wall": "ivory",
+        "roof": "blue",
+        "roofForm": "compound",
+        "facade": "hall",
+        "frontBearing": 280,
+        "evidence": "Cruciform blue-roofed auditorium and paved courtyard east of Phase 2 Gate road observed in Google Maps satellite view."
+      }
+    },
+    {
+      "id": "science-lab",
+      "name": "3-in-1 Science Laboratory",
+      "phase": 2,
+      "featureIds": [
+        "ms/6293854d4aa5f750",
+        "ms/f605d973992c6aac",
+        "ms/2e78f56617b34808"
+      ],
+      "position": [
+        5.3146615,
+        7.7769497
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/3+IN+1+SCIENCE+LABORATORY+BUILDING/data=!4m7!3m6!1s0x10480bb72a131a67:0xf5a573ccca2206cc!8m2!3d7.7769497!4d5.3146615",
+      "checkedOn": "2026-10-17",
+      "appearance": {
+        "floors": 2,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "science-lab",
+        "frontBearing": 0,
+        "evidence": "Google Maps contributor photos show two-storey cream wings, green corrugated roofs, deep square-columned entrance portico and warm ochre vertical pilasters."
+      }
+    },
+    {
+      "id": "science-lecture-hall-2",
+      "name": "Science Lecture Hall 2",
+      "phase": 2,
+      "featureIds": [
+        "ms/6139b9dd843eff6e",
+        "ms/bb49de2e076ff741"
+      ],
+      "position": [
+        5.314149,
+        7.776015
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/LECTURE+HALL+2+FACULTY+OF+SCIENCE/data=!4m7!3m6!1s0x10480b94109bcb6d:0x1e3bf0c0dd12dcb1!8m2!3d7.776015!4d5.314149",
+      "checkedOn": "2026-10-17",
+      "appearance": {
+        "floors": 1,
+        "height": 5.2,
+        "wall": "cream",
+        "roof": "grey",
+        "roofForm": "hip",
+        "facade": "hall",
+        "frontBearing": 90,
+        "evidence": "Google Maps pin and satellite footprint southwest of Faculty of Science."
+      }
+    },
+    {
+      "id": "faculty-of-arts",
+      "name": "Faculty of Arts",
+      "phase": 1,
+      "featureIds": [
+        "way/951581882",
+        "way/951581883"
+      ],
+      "position": [
+        5.321542,
+        7.778892
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/Faculty+Of+Arts/data=!4m7!3m6!1s0x10480a3ca6fe101b:0xa3d69eaf7b64a374!8m2!3d7.778892!4d5.321542",
+      "checkedOn": "2026-10-17",
+      "appearance": {
+        "floors": 2,
+        "wall": "cream",
+        "roof": "green",
+        "roofForm": "compound",
+        "facade": "arts",
+        "frontBearing": 270,
+        "evidence": "Google Maps contributor photo shows two-storey cream facade, green pitched roof, ochre colonnade piers and dark recessed veranda railings."
       }
     }
   ],

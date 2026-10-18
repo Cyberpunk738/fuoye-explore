@@ -48,7 +48,7 @@ let panel: 'landmarks' | 'notes' = 'landmarks';
 let mode: 'map' | 'scene' = 'map';
 let scene: ReturnType<typeof createScene> | undefined;
 let sceneRequest = 0;
-let sceneBounds = L.latLngBounds([[7.7727, 5.309], [7.7811, 5.3238]]);
+let sceneBounds = L.latLngBounds([[7.7727, 5.3089], [7.7832, 5.3238]]);
 const terrainRequest = fetch('/data/terrain.json').then(r => r.ok ? r.json() as Promise<TerrainGrid> : undefined).catch(() => undefined);
 let buildingLayer: L.GeoJSON | undefined;
 let roadsLayer: L.GeoJSON | undefined;

@@ -26,6 +26,7 @@ export function makeMaterials() {
     trim:plain('#f6eee0'),base:plain('#a6997f'),wood:plain('#796043'),steel:plain('#364c48'),white:plain('#eeeede'),green:plain('#226746'),turf:[surface('grass','#8ba366',8),surface('grass','#98ac75',8)],rubber:plain('#262b29'),glass:new THREE.MeshLambertMaterial({color:'#678a91'}),
     leaves:[plain('#3e673f'),plain('#779658'),plain('#62884b'),plain('#779351'),plain('#365c40')],
     carPaint:[plain('#b5b6a8',.3),plain('#284a58',.3),plain('#aa5c47',.3),plain('#ebe8db',.3),plain('#49514d',.3)],
+    kekeYellow:plain('#ebb820',.35),
     people:[plain('#af674c'),plain('#3c6d90'),plain('#e5d3a1'),plain('#526544')],skin:plain('#6b4735'),
     flowers:[plain('#bd7290'),plain('#d2b55d'),plain('#c66c42')],
     glow:new THREE.MeshLambertMaterial({color:'#fff4d3',emissive:'#ffc269',emissiveIntensity:0}),

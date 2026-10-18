@@ -4,19 +4,35 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 /** Shared silhouettes, not species identifications. Detail is chosen per grove. */
 export function broadleafCrown(detailed:boolean) {
   const lobes=detailed?[
-    [0,1.85,0,1.1,.9,1.05],[-.85,1.55,.15,.9,.67,.92],
-    [.75,1.62,.35,.97,.7,.85],[.15,1.5,-.8,.92,.7,.9],[-.2,2.35,-.1,.8,.65,.78]
+    [0,1.92,0,1.15,.92,1.1],[-.88,1.58,.18,.94,.68,.94],
+    [.78,1.64,.36,.98,.72,.88],[.16,1.52,-.82,.94,.72,.92],[-.18,2.42,-.08,.84,.68,.82]
   ]:[[0,1.8,0,1.65,1.05,1.55]];
   const pieces=lobes.map(([x,y,z,sx,sy,sz])=>{
     const g=new THREE.IcosahedronGeometry(1,0),p=g.attributes.position,n=g.attributes.normal,colors:number[]=[];
     for(let i=0;i<p.count;i++){
       // Smooth individual lobes, retaining their asymmetrical outline.
       const normal=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize();n.setXYZ(i,normal.x,normal.y,normal.z);
-      const light=.72+(p.getY(i)+1)*.14;colors.push(light*.95,light,light*.87);
+      const light=.68+(p.getY(i)+1)*.16;colors.push(light*.94,light,light*.85);
     }
     g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.scale(sx,sy,sz);g.translate(x,y,z);return g;
   });
   const crown=mergeGeometries(pieces)!;pieces.forEach(g=>g.dispose());return crown;
+}
+
+/** Low-slung multi-lobe shrub and bush cluster geometry with ground-hugging ambient shading. */
+export function bushCrown(detailed:boolean) {
+  const lobes=detailed?[
+    [0,.44,0,.86,.5,.82],[-.56,.33,.2,.64,.39,.58],[.52,.36,-.18,.66,.41,.6]
+  ]:[[0,.42,0,1.12,.48,1.04]];
+  const pieces=lobes.map(([x,y,z,sx,sy,sz])=>{
+    const g=new THREE.IcosahedronGeometry(1,0),p=g.attributes.position,n=g.attributes.normal,colors:number[]=[];
+    for(let i=0;i<p.count;i++){
+      const normal=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize();n.setXYZ(i,normal.x,normal.y,normal.z);
+      const light=.62+(p.getY(i)+1)*.19;colors.push(light*.96,light,light*.82);
+    }
+    g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.scale(sx,sy,sz);g.translate(x,y,z);return g;
+  });
+  const bush=mergeGeometries(pieces)!;pieces.forEach(g=>g.dispose());return bush;
 }
 
 export function broadleafWood(){

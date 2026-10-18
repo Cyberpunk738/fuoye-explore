@@ -110,8 +110,21 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   function resize(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;camera.aspect=width/height;renderer.setPixelRatio(Math.min(renderScale,1280/width,720/height));renderer.setSize(width,height,false);if(width>640&&mode==='orbit')camera.setViewOffset(width,height,-165,0,width,height);else camera.clearViewOffset();camera.updateProjectionMatrix();request();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);
   function fly(to:THREE.Vector3,target:THREE.Vector3){clearStartPoint();flight={from:camera.position.clone(),to,targetFrom:controls.target.clone(),targetTo:target,t:0};request();}
-  function highlight(id?:string){const mesh=world.pickables.find(m=>m.userData.id===id);if(mesh===hovered)return;if(hovered){hovered.material=(hovered.userData.originalMaterial as THREE.Material);delete hovered.userData.originalMaterial;}hovered=mesh;if(mesh){mesh.userData.originalMaterial=mesh.material;mesh.material=highlightMaterial;}request();}
   const highlightMaterial=new THREE.MeshLambertMaterial({color:'#f0dfae'});
+  function highlight(id?:string){
+    const mesh=id?world.pickables.find(m=>m.userData.id===id&&!m.userData.noHighlight&&!m.userData.invisible&&m.userData.kind!=='transit-park'):undefined;
+    if(mesh===hovered)return;
+    if(hovered&&hovered.userData.originalMaterial){
+      hovered.material=(hovered.userData.originalMaterial as THREE.Material);
+      delete hovered.userData.originalMaterial;
+    }
+    hovered=mesh;
+    if(mesh&&(mesh.material as THREE.Material).visible!==false){
+      mesh.userData.originalMaterial=mesh.material;
+      mesh.material=highlightMaterial;
+    }
+    request();
+  }
   function orbit(){flight=undefined;mode='orbit';delete app.dataset.mode;speed=lateral=0;keys.clear();stickInput.set(0,0);vehicle.visible=false;headlights.visible=false;beacon.visible=arrow.visible=false;driveHud.hidden=walkHud.hidden=true;controls.enabled=true;camera.fov=38;camera.near=.15;camera.updateProjectionMatrix();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();resize();onSelect('');}
   function exitMode(){
     if(mode==='orbit')return;
@@ -170,7 +183,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   driveHud.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(b=>{listen(b,'pointerdown',((e:PointerEvent)=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key!);request();})as EventListener);for(const type of ['pointerup','pointercancel','lostpointercapture'])listen(b,type,()=>{keys.delete(b.dataset.key!);request();});});
   let down={x:0,y:0},dragPointer:number|undefined,last={x:0,y:0},movePointer:number|undefined,lookPointer:number|undefined,stickOrigin={x:0,y:0},lastHover=0;
   const raycaster=new THREE.Raycaster();
-  function pick(e:PointerEvent){const r=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);return raycaster.intersectObjects(world.pickables,false)[0]?.object.userData.id as string|undefined;}
+  function pick(e:PointerEvent){const r=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const valid=world.pickables.filter(m=>!m.userData.noHighlight&&!m.userData.invisible&&m.userData.kind!=='transit-park');return raycaster.intersectObjects(valid,false)[0]?.object.userData.id as string|undefined;}
   function focusGround(e:PointerEvent){
     const r=renderer.domElement.getBoundingClientRect();
     raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);
@@ -237,19 +250,21 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
     fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);fps.dataset.nameplates=String(world.signageCount);fps.dataset.detailedTrees=String(world.vegetationDetail());
     return moving;
   },24);
-  function gateView(){
+  function gateView(which:'main'|'phase2'='main'){
     orbit();highlight();tip.hidden=true;
-    const target=world.entrance.position.clone().add(new THREE.Vector3(0,4.5,0));
+    const gate=which==='phase2'?world.phase2Entrance:world.entrance;
+    const target=gate.position.clone().add(new THREE.Vector3(0,4.5,0));
     fitShadow(target,220);
-    fly(world.entrance.approach.clone().add(new THREE.Vector3(10,14,10)),target);
-    walkPoint={x:world.entrance.approach.x,z:world.entrance.approach.z};
+    fly(gate.approach.clone().add(new THREE.Vector3(10,14,10)),target);
+    walkPoint={x:gate.approach.x,z:gate.approach.z};
   }
+  function phase2GateView(){gateView('phase2');}
   const gateTarget=world.entrance.position.clone().add(new THREE.Vector3(0,4.5,0));
   walkPoint={x:world.entrance.approach.x,z:world.entrance.approach.z};
   controls.target.copy(gateTarget);camera.position.copy(world.entrance.approach).add(new THREE.Vector3(10,14,10));
   fitShadow(gateTarget,220);controls.update();renderer.shadowMap.needsUpdate=true;resize();active();
   return {
-    getBuildings:()=>world.buildings,focusFeature,highlight,reset,gateView,
+    getBuildings:()=>world.buildings,focusFeature,highlight,reset,gateView,phase2GateView,
     destroy(){loop?.dispose();resizeObserver.disconnect();visibilityObserver.disconnect();removers.forEach(remove=>remove());controls.dispose();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();highlight();world.dispose();scene.remove(world.root);const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Points){geometries.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());glowTexture.dispose();glowMaterial.dispose();highlightMaterial.dispose();renderer.dispose();renderer.forceContextLoss();host.replaceChildren();},
   };
 }
