@@ -1,0 +1,1240 @@
+diff --git a/src/explorer-scene.ts b/src/explorer-scene.ts
+index bab290b..6e7b003 100644
+--- a/src/explorer-scene.ts
++++ b/src/explorer-scene.ts
+@@ -110,8 +110,21 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
+   function resize(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;camera.aspect=width/height;renderer.setPixelRatio(Math.min(renderScale,1280/width,720/height));renderer.setSize(width,height,false);if(width>640&&mode==='orbit')camera.setViewOffset(width,height,-165,0,width,height);else camera.clearViewOffset();camera.updateProjectionMatrix();request();}
+   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);
+   function fly(to:THREE.Vector3,target:THREE.Vector3){clearStartPoint();flight={from:camera.position.clone(),to,targetFrom:controls.target.clone(),targetTo:target,t:0};request();}
+-  function highlight(id?:string){const mesh=world.pickables.find(m=>m.userData.id===id);if(mesh===hovered)return;if(hovered){hovered.material=(hovered.userData.originalMaterial as THREE.Material);delete hovered.userData.originalMaterial;}hovered=mesh;if(mesh){mesh.userData.originalMaterial=mesh.material;mesh.material=highlightMaterial;}request();}
+   const highlightMaterial=new THREE.MeshLambertMaterial({color:'#f0dfae'});
++  function highlight(id?:string){
++    const mesh=id?world.pickables.find(m=>m.userData.id===id&&!m.userData.noHighlight&&!m.userData.invisible&&m.userData.kind!=='transit-park'):undefined;
++    if(mesh===hovered)return;
++    if(hovered&&hovered.userData.originalMaterial){
++      hovered.material=(hovered.userData.originalMaterial as THREE.Material);
++      delete hovered.userData.originalMaterial;
++    }
++    hovered=mesh;
++    if(mesh&&(mesh.material as THREE.Material).visible!==false){
++      mesh.userData.originalMaterial=mesh.material;
++      mesh.material=highlightMaterial;
++    }
++    request();
++  }
+   function orbit(){flight=undefined;mode='orbit';delete app.dataset.mode;speed=lateral=0;keys.clear();stickInput.set(0,0);vehicle.visible=false;headlights.visible=false;beacon.visible=arrow.visible=false;driveHud.hidden=walkHud.hidden=true;controls.enabled=true;camera.fov=38;camera.near=.15;camera.updateProjectionMatrix();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();resize();onSelect('');}
+   function exitMode(){
+     if(mode==='orbit')return;
+@@ -170,7 +183,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
+   driveHud.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(b=>{listen(b,'pointerdown',((e:PointerEvent)=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key!);request();})as EventListener);for(const type of ['pointerup','pointercancel','lostpointercapture'])listen(b,type,()=>{keys.delete(b.dataset.key!);request();});});
+   let down={x:0,y:0},dragPointer:number|undefined,last={x:0,y:0},movePointer:number|undefined,lookPointer:number|undefined,stickOrigin={x:0,y:0},lastHover=0;
+   const raycaster=new THREE.Raycaster();
+-  function pick(e:PointerEvent){const r=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);return raycaster.intersectObjects(world.pickables,false)[0]?.object.userData.id as string|undefined;}
++  function pick(e:PointerEvent){const r=renderer.domElement.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const valid=world.pickables.filter(m=>!m.userData.noHighlight&&!m.userData.invisible&&m.userData.kind!=='transit-park');return raycaster.intersectObjects(valid,false)[0]?.object.userData.id as string|undefined;}
+   function focusGround(e:PointerEvent){
+     const r=renderer.domElement.getBoundingClientRect();
+     raycaster.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);
+@@ -237,19 +250,21 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
+     fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);fps.dataset.nameplates=String(world.signageCount);fps.dataset.detailedTrees=String(world.vegetationDetail());
+     return moving;
+   },24);
+-  function gateView(){
++  function gateView(which:'main'|'phase2'='main'){
+     orbit();highlight();tip.hidden=true;
+-    const target=world.entrance.position.clone().add(new THREE.Vector3(0,4.5,0));
++    const gate=which==='phase2'?world.phase2Entrance:world.entrance;
++    const target=gate.position.clone().add(new THREE.Vector3(0,4.5,0));
+     fitShadow(target,220);
+-    fly(world.entrance.approach.clone().add(new THREE.Vector3(10,14,10)),target);
+-    walkPoint={x:world.entrance.approach.x,z:world.entrance.approach.z};
++    fly(gate.approach.clone().add(new THREE.Vector3(10,14,10)),target);
++    walkPoint={x:gate.approach.x,z:gate.approach.z};
+   }
++  function phase2GateView(){gateView('phase2');}
+   const gateTarget=world.entrance.position.clone().add(new THREE.Vector3(0,4.5,0));
+   walkPoint={x:world.entrance.approach.x,z:world.entrance.approach.z};
+   controls.target.copy(gateTarget);camera.position.copy(world.entrance.approach).add(new THREE.Vector3(10,14,10));
+   fitShadow(gateTarget,220);controls.update();renderer.shadowMap.needsUpdate=true;resize();active();
+   return {
+-    getBuildings:()=>world.buildings,focusFeature,highlight,reset,gateView,
++    getBuildings:()=>world.buildings,focusFeature,highlight,reset,gateView,phase2GateView,
+     destroy(){loop?.dispose();resizeObserver.disconnect();visibilityObserver.disconnect();removers.forEach(remove=>remove());controls.dispose();if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();highlight();world.dispose();scene.remove(world.root);const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();scene.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Points){geometries.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());glowTexture.dispose();glowMaterial.dispose();highlightMaterial.dispose();renderer.dispose();renderer.forceContextLoss();host.replaceChildren();},
+   };
+ }
+diff --git a/src/explorer.ts b/src/explorer.ts
+index 70aa8f1..5968193 100644
+--- a/src/explorer.ts
++++ b/src/explorer.ts
+@@ -50,8 +50,9 @@ async function start() {
+     document.querySelector('#place-count')!.textContent=`${placeCount} named places have source records.`;
+     scene = module.createExplorerScene(document.querySelector('#scene')!, dataset.features, [5.3163,7.7772], readNotes(), select, terrain, cover);
+     const buildings = [...scene.getBuildings()].filter(b=>b.directory).sort((a,b) => Number(b.named)-Number(a.named)||a.name.localeCompare(b.name,undefined,{numeric:true}));
+-    directory.innerHTML = '<li><button type="button" data-landmark="main-gate">Main gate · Phase 1</button></li>'+buildings.map(b => `<li><button type="button" data-building="${escapeHtml(b.id)}" aria-current="false" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</button></li>`).join('');
+-    directory.querySelector<HTMLButtonElement>('[data-landmark="main-gate"]')!.onclick=()=>scene?.gateView();
++    directory.innerHTML = '<li><button type="button" data-landmark="main-gate">Main gate · Phase 1</button></li><li><button type="button" data-landmark="phase2-gate">Phase 2 gate · Falex Rd</button></li>'+buildings.map(b => `<li><button type="button" data-building="${escapeHtml(b.id)}" aria-current="false" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</button></li>`).join('');
++    directory.querySelector<HTMLButtonElement>('[data-landmark="main-gate"]')!.onclick=()=>{scene?.gateView('main');if(compact)directory.closest('details')!.open=false;};
++    directory.querySelector<HTMLButtonElement>('[data-landmark="phase2-gate"]')!.onclick=()=>{scene?.gateView('phase2');if(compact)directory.closest('details')!.open=false;};
+     directory.querySelectorAll<HTMLButtonElement>('[data-building]').forEach(button => {
+       const id = button.dataset.building!;
+       buttons.set(id,button);
+diff --git a/src/review.ts b/src/review.ts
+index 9611fc4..6f21468 100644
+--- a/src/review.ts
++++ b/src/review.ts
+@@ -48,7 +48,7 @@ let panel: 'landmarks' | 'notes' = 'landmarks';
+ let mode: 'map' | 'scene' = 'map';
+ let scene: ReturnType<typeof createScene> | undefined;
+ let sceneRequest = 0;
+-let sceneBounds = L.latLngBounds([[7.7727, 5.309], [7.7811, 5.3238]]);
++let sceneBounds = L.latLngBounds([[7.7727, 5.3089], [7.7832, 5.3238]]);
+ const terrainRequest = fetch('/data/terrain.json').then(r => r.ok ? r.json() as Promise<TerrainGrid> : undefined).catch(() => undefined);
+ let buildingLayer: L.GeoJSON | undefined;
+ let roadsLayer: L.GeoJSON | undefined;
+diff --git a/src/world/build.ts b/src/world/build.ts
+index 008a2d6..4e2b243 100644
+--- a/src/world/build.ts
++++ b/src/world/build.ts
+@@ -5,9 +5,10 @@ import { sectionedRoof, groundPolygon } from './architecture';
+ import { GeometryBatch } from './batch';
+ import { makeMaterials } from './materials';
+ import { createSignage } from './signage';
+-import { addCampusEntrance, mainGatePosition } from './entrance';
++import { addCampusEntrance, addPhaseTwoEntrance, mainGatePosition, phase2GatePosition } from './entrance';
+ import { addPhaseOnePlanting } from './phase-one';
+ import { addPhaseOneSportsComplex } from './sports';
++import { addCampusTransitParks } from './transit-park';
+ import { buildVegetation, sampleCover } from './vegetation';
+ import type { LandCover } from './vegetation';
+ import { clipSegment, hashSeed, nearestPoint, pointInRing, projectPosition, randomFrom, sampleElevation, unprojectPosition } from './math';
+@@ -31,14 +32,18 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+   const mid=bounds.getCenter(new THREE.Vector2()),size=bounds.getSize(new THREE.Vector2());
+   const cameraBounds=bounds.clone().expandByScalar(130);
+   const worldBounds=grid?new THREE.Box2().setFromPoints([project([grid.bbox[0],grid.bbox[1]]),project([grid.bbox[2],grid.bbox[3]])].map(p=>new THREE.Vector2(p.x,p.z))):cameraBounds.clone();
++  worldBounds.union(cameraBounds);
+   // Grade foundations gradually, using polygon distance rather than a bounding-box pad.
+   const buildingHeight=(x:number,z:number)=>{const p={x,z},h=rawHeight(x,z);let total=0,weighted=0,influence=0;for(const b of buildings){if(b.bounds.distanceToPoint(new THREE.Vector2(x,z))>=35)continue;const inside=pointInRing(p,b.ring);if(inside)return b.position.y;const distance=Math.min(...b.ring.map((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(x-q.x,z-q.z);}));if(distance>=35)continue;const falloff=1-THREE.MathUtils.smoothstep(distance,0,35),weight=falloff/(distance+1)**2;total+=weight;weighted+=b.position.y*weight;influence=Math.max(influence,falloff);}return total?h+(weighted/total-h)*influence:h;};
+   const gateGround=project(mainGatePosition),gateBase=rawHeight(gateGround.x,gateGround.z);
++  const phase2Ground=project(phase2GatePosition),phase2Base=rawHeight(phase2Ground.x,phase2Ground.z);
+   const sportsMinX = 575, sportsMaxX = 765, sportsMinZ = -530, sportsMaxZ = -380;
+   const sportsLevelY = 1.4;
+   const flatHeight=(x:number,z:number)=>{
+     const distance=Math.hypot(x-gateGround.x,z-gateGround.z),base=buildingHeight(x,z),blend=1-THREE.MathUtils.smoothstep(distance,34,70);
+-    const gateGraded = base+(gateBase-base)*blend;
++    const gate1Graded = base+(gateBase-base)*blend;
++    const distance2=Math.hypot(x-phase2Ground.x,z-phase2Ground.z),blend2=1-THREE.MathUtils.smoothstep(distance2,30,65);
++    const gateGraded = gate1Graded+(phase2Base-gate1Graded)*blend2;
+     const dx = Math.max(0, sportsMinX - x, x - sportsMaxX);
+     const dz = Math.max(0, sportsMinZ - z, z - sportsMaxZ);
+     const sportsDist = Math.hypot(dx, dz);
+@@ -77,24 +82,29 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+   function car(p:Point,angle:number,color:number){const y=surfaceHeight(p.x,p.z)+.05;box(1.8,.7,4.1,p.x,y+.7,p.z,m.carPaint[color%m.carPaint.length],angle);box(1.55,.65,2.15,p.x,y+1.28,p.z,m.glass,angle);box(1.62,.12,1.65,p.x,y+1.63,p.z,m.carPaint[color%m.carPaint.length],angle);for(const side of [-1,1])for(const front of [-1,1]){const x=side*.9,z=front*1.25,wx=p.x+Math.cos(angle)*x+Math.sin(angle)*z,wz=p.z-Math.sin(angle)*x+Math.cos(angle)*z;const g=new THREE.CylinderGeometry(.33,.33,.18,6);g.rotateZ(Math.PI/2);g.rotateY(angle);g.translate(wx,y+.38,wz);batch.add(g,m.rubber);}for(const side of[-1,1]){const x=side*.55,z=2.07;box(.35,.18,.07,p.x+Math.cos(angle)*x+Math.sin(angle)*z,y+.7,p.z-Math.sin(angle)*x+Math.cos(angle)*z,m.glow,angle);}}
+   function lamp(p:Point){const y=height(p.x,p.z);cyl(.075,.13,6,p.x,y+3,p.z,m.steel);box(1.2,.08,.1,p.x+.45,y+5.9,p.z,m.steel);box(.5,.1,.28,p.x+.95,y+5.85,p.z,m.glow);lamps.push(new THREE.Vector3(p.x+.95,y+5.8,p.z));}
+   function bench(p:Point,angle:number){const y=height(p.x,p.z);box(2,.12,.5,p.x,y+.5,p.z,m.wood,angle);box(2,.55,.09,p.x+Math.sin(angle)*.25,y+.8,p.z+Math.cos(angle)*.25,m.wood,angle);for(const s of[-1,1])box(.12,.5,.45,p.x+Math.cos(angle)*s*.7,y+.25,p.z-Math.sin(angle)*s*.7,m.steel,angle);}
+-  function sign(p:Point,text:string,angle=0){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d')!;ctx.fillStyle='#174c3d';ctx.fillRect(0,0,512,128);ctx.fillStyle='#f4eddc';ctx.font='bold 34px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,76,480);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const material=new THREE.MeshLambertMaterial({map:tex});material.userData.ownedTexture=tex;const mesh=new THREE.Mesh(new THREE.BoxGeometry(5,.95,.12),material);mesh.rotation.y=angle;mesh.position.set(p.x,height(p.x,p.z)+2,p.z);root.add(mesh);for(const s of[-1,1])cyl(.055,.055,1.55,p.x+Math.cos(angle)*s*2,height(p.x,p.z)+.8,p.z-Math.sin(angle)*s*2,m.steel);}
++  function sign(p:Point,text:string,angle=0){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d')!;ctx.fillStyle='#174c3d';ctx.fillRect(0,0,512,128);ctx.fillStyle='#f4eddc';ctx.font='bold 34px sans-serif';ctx.fillText(text,256,76,480);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const material=new THREE.MeshLambertMaterial({map:tex});material.userData.ownedTexture=tex;const mesh=new THREE.Mesh(new THREE.BoxGeometry(5,.95,.12),material);mesh.rotation.y=angle;mesh.position.set(p.x,height(p.x,p.z)+2,p.z);root.add(mesh);for(const s of[-1,1])cyl(.055,.055,1.55,p.x+Math.cos(angle)*s*2,height(p.x,p.z)+.8,p.z-Math.sin(angle)*s*2,m.steel);}
+   const namedBuildings=buildings.filter(b=>b.named&&b.directory);
+   const signs=createSignage([
+     ...namedBuildings.map(b=>({key:b.id,lines:[b.name.toUpperCase()],stretch:4})),
+     {key:'gate',lines:['FEDERAL UNIVERSITY OYE-EKITI'],footer:'EKITI STATE, NIGERIA',stretch:2.5,background:'#dfae25',color:'#163b2b'},
++    {key:'phase2-gate',lines:['FEDERAL UNIVERSITY OYE-EKITI'],footer:'PHASE 2 · MAIN CAMPUS ENTRANCE',stretch:2.3,background:'#174838',color:'#f5eedc'},
++    {key:'gate-monument',lines:['FEDERAL UNIVERSITY','OYE-EKITI'],footer:'INNOVATION AND CHARACTER FOR NATIONAL TRANSFORMATION',stretch:1.6,background:'#f2ecdc',color:'#163b2b'},
+     {key:'gate-safety',lines:['SPEED LIMIT','30 KM/H'],footer:'DRIVE SAFE · SLOW DOWN'},
++    {key:'keke-park-1',lines:['CAMPUS KEKE & TAXI PARK'],footer:'SHUTTLE TO PHASE 1 · PHASE 2 · HOSTELS',stretch:2.2,background:'#dfae25',color:'#163b2b'},
++    {key:'keke-park-2',lines:['PHASE 2 KEKE & TAXI STOP'],footer:'CAMPUS TRANSIT · SENATE · FACULTIES',stretch:2.2,background:'#174838',color:'#f5eedc'},
+     ...[1,2,3].map(phase=>({key:'phase-'+phase,lines:['PHASE '+phase],footer:'CAMPUS GUIDE',background:'#184c3b',color:'#fff9dc'}))
+   ]);
+   // Architectural profiles retain source outlines. Detail assemblies are illustrative.
+   const heroIds=new Set(sourceBuildings.filter(f=>f.properties.campus?.id).map(f=>f.id));
+   for(const [index,b] of buildings.entries()){
+-    const f=sourceBuildings[index];if(f.geometry.type!=='Polygon')continue;const rng=randomFrom(hashSeed(b.id)),profile=f.properties.campus?.appearance;const wall=profile?.wall==='ivory'?m.ivory:m.walls[profile?.wall==='cream'?0:Math.floor(rng()*m.walls.length)];const roofIndex=({green:0,grey:1,red:2,blue:3,sand:4} as Record<string,number>)[profile?.roof??'']??(f.properties.campus?.phase===3?3:0);const roof=m.roofs[roofIndex];const y=b.position.y,h=b.height,hall=b.placeId==='phase1-auditorium',hostel=profile?.facade==='hostel',admin=profile?.facade==='admin',management=profile?.facade==='management';
++    const f=sourceBuildings[index];if(f.geometry.type!=='Polygon')continue;const rng=randomFrom(hashSeed(b.id)),profile=f.properties.campus?.appearance;const wall=profile?.wall==='ivory'?m.ivory:m.walls[profile?.wall==='cream'?0:Math.floor(rng()*m.walls.length)];const roofIndex=({green:0,grey:1,red:2,blue:3,sand:4} as Record<string,number>)[profile?.roof??'']??(f.properties.campus?.phase===3?3:0);const roof=m.roofs[roofIndex];const y=b.position.y,h=b.height;
++    const hall=b.placeId==='phase1-auditorium'||profile?.facade==='hall',hostel=profile?.facade==='hostel',admin=profile?.facade==='admin'||b.placeId==='senate',management=profile?.facade==='management',law=profile?.facade==='law',scienceLab=profile?.facade==='science-lab',arts=profile?.facade==='arts';
+     const glazing=hostel?m.louvres:admin?m.adminWindows:m.windows;
+     const shape=new THREE.Shape(b.ring.map(p=>new THREE.Vector2(p.x,-p.z)));for(const hole of f.geometry.coordinates.slice(1))shape.holes.push(new THREE.Path(hole.map(project).map(p=>new THREE.Vector2(p.x,-p.z))));
+     const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});geo.rotateX(-Math.PI/2);geo.translate(0,y+.12,0);const body=new THREE.Mesh(geo,wall);body.castShadow=true;body.receiveShadow=false;body.userData.id=b.id;
+     // Facade UVs are measured in metres, for consistent texture density.
+     const pos=geo.attributes.position,normal=geo.attributes.normal,uv:number[]=[];for(let j=0;j<pos.count;j++)uv.push((Math.abs(normal.getX(j))>.5?pos.getZ(j):pos.getX(j))/6,pos.getY(j)/6);geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));root.add(body);pickables.push(body);
+-    let longest=0,edge=new THREE.Vector2(1,0),front=0,best=Infinity;const center2=new THREE.Vector2(b.position.x,b.position.z);
++    let longest=0,edge=new THREE.Vector2(1,0),front=0,best=Infinity;
+     for(let i=0;i<b.ring.length;i++){const a=b.ring[i],c=b.ring[(i+1)%b.ring.length];const length=Math.hypot(c.x-a.x,c.z-a.z);if(length>longest){longest=length;edge.set(c.x-a.x,c.z-a.z).normalize();}}
+     for(let i=0;i<b.ring.length;i++){const a=b.ring[i],c=b.ring[(i+1)%b.ring.length],p={x:(a.x+c.x)/2,z:(a.z+c.z)/2};const length=Math.hypot(c.x-a.x,c.z-a.z);let score=nearestRoad(p).distance+(length<longest*.5?25:0);if(profile?.frontBearing!==undefined){const bearing=profile.frontBearing*Math.PI/180,dx=(c.x-a.x)/length,dz=(c.z-a.z)/length;let nx=-dz,nz=dx;if(pointInRing({x:p.x+nx*.3,z:p.z+nz*.3},b.ring)){nx=-nx;nz=-nz;}score=(1-(nx*Math.sin(bearing)-nz*Math.cos(bearing)))*1000-length;}if(score<best){best=score;front=i;}}
+     const perpendicular=new THREE.Vector2(-edge.y,edge.x),u=b.ring.map(p=>p.x*edge.x+p.z*edge.y),v=b.ring.map(p=>p.x*perpendicular.x+p.z*perpendicular.y);const loU=Math.min(...u),hiU=Math.max(...u),loV=Math.min(...v),hiV=Math.max(...v),w=hiU-loU,d=hiV-loV,mU=(loU+hiU)/2,mV=(loV+hiV)/2;
+@@ -113,20 +123,20 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+       if(b.named&&length>3){const aa={x:a.x+n.x*.5,z:a.z+n.y*.5},bb={x:c.x+n.x*.5,z:c.z+n.y*.5};ribbon(aa,bb,.7,m.pavers,.11);}
+       if(roofType==='terrace')box(length,.55,.25,midEdge.x,y+h+.27,midEdge.y,m.walls[1],angle);
+       for(let floor=1;floor<b.floors;floor++)box(length,.18,.32,midEdge.x,y+floor*3.6,midEdge.y,m.trim,angle);
+-      const windowSpacing=hall?4.6:profile?.facade==='hostel'?3.1:heroIds.has(b.id)?3.7:4.8+rng();const count=Math.floor(length/windowSpacing);
++      const windowSpacing=hall?4.6:hostel?3.1:law?4.1:heroIds.has(b.id)?3.7:4.8+rng();const count=Math.floor(length/windowSpacing);
+       for(let j=0;j<count;j++){
+         const p=new THREE.Vector2(a.x,a.z).lerp(new THREE.Vector2(c.x,c.z),(j+.5)/count).addScaledVector(n,.1);
+         for(let floor=0;floor<b.floors;floor++){
+-          if(profile?.facade==='management'&&i===front&&floor>0)continue;
+-          const yy=y+(hall?2.85:1.95)+floor*3.6;const ww=hall?1.6:admin?2.3:hostel?1.15:management?1.6:1.32,wh=hall?2.75:admin?1.1:hostel?1.7:management?2.0:1.48;
+-          if(profile?.facade==='hostel'&&floor>0&&j%4<2)panel(2.9,2.8,p.x-n.x*.02,yy,p.y-n.y*.02,m.hostelInset,angle);
++          if(management&&i===front&&floor>0)continue;
++          const yy=y+(hall?2.85:law?2.45:1.95)+floor*3.6;const ww=hall?1.6:admin?2.3:hostel?1.15:management?1.6:law?1.5:1.32,wh=hall?2.75:admin?1.1:hostel?1.7:management?2.0:law?1.85:1.48;
++          if(hostel&&floor>0&&j%4<2)panel(2.9,2.8,p.x-n.x*.02,yy,p.y-n.y*.02,m.hostelInset,angle);
+           panel(ww+.23,wh+.27,p.x,yy,p.y,m.trim,angle);panel(ww,wh,p.x+n.x*.035,yy,p.y+n.y*.035,glazing,angle);if(heroIds.has(b.id)){box(.055,wh,.2,p.x+n.x*.07,yy,p.y+n.y*.07,m.trim,angle);box(1.6,.1,.38,p.x+n.x*.1,yy-wh/2-.15,p.y+n.y*.1,m.base,angle);}
+           if(b.named&&!hall){
+             // Projecting reveals and hoods supply depth; unseen dimensions are estimates.
+             box(ww+.36,.09,.38,p.x+n.x*.14,yy+wh/2+.16,p.y+n.y*.14,m.trim,angle);
+             if(hostel&&floor===0&&j%4===2)box(.22,h-.35,.22,p.x-direction.x*1.5,y+h/2,p.y-direction.y*1.5,m.trim,angle);
+           }
+-          if(heroIds.has(b.id)&&(admin||management)&&(j+index)%5===0){box(.65,.42,.38,p.x+n.x*.4,y+.95+floor*3.6,p.y+n.y*.4,m.white,angle);box(.5,.27,.02,p.x+n.x*.6,y+.95+floor*3.6,p.y+n.y*.6,m.steel,angle);}
++          if(heroIds.has(b.id)&&(admin||management||scienceLab)&&(j+index)%5===0){box(.65,.42,.38,p.x+n.x*.4,y+.95+floor*3.6,p.y+n.y*.4,m.white,angle);box(.5,.27,.02,p.x+n.x*.6,y+.95+floor*3.6,p.y+n.y*.6,m.steel,angle);}
+         }
+       }
+       if(hall){
+@@ -136,20 +146,37 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+         box(length,.12,.62,midEdge.x+n.x*.12,y+h-.3,midEdge.y+n.y*.12,m.base,angle);
+         for(let j=0;j<count;j++){const q=new THREE.Vector2(a.x,a.z).lerp(new THREE.Vector2(c.x,c.z),(j+.5)/count).addScaledVector(n,.2);box(1.95,.1,.65,q.x,y+4.35,q.y,m.trim,angle);}
+       }
++      if(law&&length>5){
++        // Photographed Faculty of Law stepped cream veranda columns and green balustrade railings.
++        const bays=Math.max(2,Math.floor(length/4.2));
++        for(let j=0;j<=bays;j++){const q=midEdge.clone().addScaledVector(direction,(j/bays-.5)*length).addScaledVector(n,.42);box(.38,h-.2,.38,q.x,y+(h-.2)/2,q.y,m.ivory,angle);}
++        box(length,.26,.48,midEdge.x+n.x*.42,y+h-.25,midEdge.y+n.y*.42,m.green,angle);
++        box(length,.72,.12,midEdge.x+n.x*.42,y+.65,midEdge.y+n.y*.42,m.green,angle);
++      }
++      if((scienceLab||arts)&&length>5){
++        // Photographed ochre pilasters on 3-in-1 Science Lab and Faculty of Arts facades.
++        const ncols=Math.max(2,Math.floor(length/4.6));
++        for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.26);box(.42,h-.1,.55,q.x,y+(h-.1)/2,q.y,m.accent,angle);}
++        box(length,.24,.48,midEdge.x+n.x*.24,y+3.6,midEdge.y+n.y*.24,m.accent,angle);
++        if(arts)box(length,.82,.1,midEdge.x+n.x*.28,y+4.1,midEdge.y+n.y*.28,m.steel,angle);
++      }
+       if(heroIds.has(b.id)&&length>6){for(const s of[-1,1]){const p=midEdge.clone().addScaledVector(direction,s*(length/2-.3)).addScaledVector(n,.2);cyl(.055,.055,h,p.x,y+h/2,p.y,m.steel,5);}}
+-      if(profile?.facade==='admin'&&length>5){
++      if(admin&&length>5){
+         const ncols=Math.max(2,Math.floor(length/5));
+         for(let j=0;j<=ncols;j++){const q=midEdge.clone().addScaledVector(direction,(j/ncols-.5)*length).addScaledVector(n,.24);box(.45,h+.4,.85,q.x+n.x*.22,y+h/2,q.y+n.y*.22,m.accent,angle);}
+         box(length,.75,.85,midEdge.x+n.x*.45,y+h-.05,midEdge.y+n.y*.45,m.accent,angle);
+         box(length,.24,.55,midEdge.x+n.x*.35,y+3.6,midEdge.y+n.y*.35,m.accent,angle);
+       }
+-      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=profile?.facade==='management'?3.95:3.4;signs.add(batch,b.id,hall?Math.min(8,length*.65):Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
+-        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=hall?Math.min(length*.65,8):large?Math.min(length*.6,15):3.5;
++      if(i===front){if(b.named&&b.directory){const q=midEdge.clone().addScaledVector(n,4.05),signY=management||law?3.95:3.4;signs.add(batch,b.id,hall?Math.min(8,length*.65):Math.min(15,length*.6),1.15,new THREE.Vector3(q.x,y+signY,q.y),Math.atan2(n.x,n.y));}
++        const entry=midEdge.clone().addScaledVector(n,3.7);b.entrance.set(entry.x,height(entry.x,entry.y),entry.y);if(f.properties.area<110)continue;const large=f.properties.area>300,porticoWidth=hall||law?Math.min(length*.65,9.5):large?Math.min(length*.6,15):3.5;
+         if(!management)box(2,2.8,.2,midEdge.x+n.x*.13,y+1.4,midEdge.y+n.y*.13,m.glass,angle);
+         const deck=midEdge.clone().addScaledVector(n,1.8);box(porticoWidth,.18,3.7,deck.x,y+.25,deck.y,m.pavers,angle);
+-        const canopyHeight=management?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
+-        const columnCount=large?5:2;for(let j=0;j<columnCount;j++){const p=midEdge.clone().addScaledVector(direction,(j/(columnCount-1)-.5)*(porticoWidth-.6)).addScaledVector(n,3.3);if(Math.abs(j/(columnCount-1)-.5)<.1)continue;if(profile?.facade==='management')box(.55,canopyHeight,.55,p.x,y+canopyHeight/2,p.y,wall,angle);else cyl(.17,.21,canopyHeight,p.x,y+canopyHeight/2,p.y,m.trim);}
+-        if(profile?.facade==='management'){
++        const canopyHeight=management||law?h-.15:large?3.55:2.9;box(porticoWidth+.6,.2,4,deck.x,y+canopyHeight,deck.y,roof,angle);
++        const columnCount=large?5:2;for(let j=0;j<columnCount;j++){const p=midEdge.clone().addScaledVector(direction,(j/(columnCount-1)-.5)*(porticoWidth-.6)).addScaledVector(n,3.3);if(Math.abs(j/(columnCount-1)-.5)<.1)continue;if(management||law||scienceLab)box(.52,canopyHeight,.52,p.x,y+canopyHeight/2,p.y,law?m.ivory:wall,angle);else cyl(.17,.21,canopyHeight,p.x,y+canopyHeight/2,p.y,m.trim);}
++        if(law){
++          box(porticoWidth+.4,.55,3.9,deck.x,y+canopyHeight-.28,deck.y,m.green,angle);
++        }
++        if(management){
+           box(porticoWidth,.28,3.7,deck.x,y+3.6,deck.y,wall,angle);
+           // Two door bays under the photographed tall column/glazing composition.
+           for(const side of [-1,1]){const q=midEdge.clone().addScaledVector(direction,side*1.3).addScaledVector(n,.18);box(1.35,2.65,.12,q.x,y+1.4,q.y,m.steel,angle);box(.045,.45,.08,q.x+direction.x*.48,y+1.45,q.y+direction.y*.48,m.trim,angle);}
+@@ -157,13 +184,13 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+           for(let j=0;j<columns;j++){const q=midEdge.clone().addScaledVector(direction,(j+.5)/columns*porticoWidth-porticoWidth/2).addScaledVector(n,.22);panel(porticoWidth/columns-.08,2.9,q.x,y+5.25,q.y,m.windows,angle);}
+ 
+         }
+-        if(profile?.facade==='hostel'){
++        if(hostel){
+           const balconyWidth=Math.min(10,length*.28),depth=2;
+           for(let floor=1;floor<b.floors;floor++){const q=midEdge.clone().addScaledVector(n,depth/2);box(balconyWidth,.18,depth,q.x,y+floor*3.6,q.y,m.trim,angle);const rail=midEdge.clone().addScaledVector(n,depth);for(const offset of [.25,.5,.75,1.0])box(balconyWidth,.06,.07,rail.x,y+floor*3.6+offset,rail.y,m.trim,angle);for(let j=0;j<=8;j++){const post=rail.clone().addScaledVector(direction,(j/8-.5)*balconyWidth);box(.045,.95,.045,post.x,y+floor*3.6+.5,post.y,m.trim);}}
+           const q=midEdge.clone().addScaledVector(n,1.2);box(balconyWidth+1,.2,3,q.x,y+h,q.y,roof,angle);
+         }
+-        if(large&&b.floors>1&&profile?.facade!=='management'&&profile?.facade!=='hostel'){box(porticoWidth,.13,3.7,deck.x,y+3.6,deck.y,m.trim,angle);const p=midEdge.clone().addScaledVector(n,3.5);box(porticoWidth,.07,.08,p.x,y+4.5,p.y,m.steel,angle);for(let j=0;j<Math.floor(porticoWidth/1.4);j++){const q=p.clone().addScaledVector(direction,(j+.5)*1.4-porticoWidth/2);box(.04,.9,.04,q.x,y+4.05,q.y,m.steel);} }
+-        for(let j=0;j<(hall?4:3);j++){const p=midEdge.clone().addScaledVector(n,3.8+j*.3);box(b.named?Math.min(porticoWidth,6):3,.12,.5,p.x,y+.23-j*.07,p.y,m.pavers,angle);}
++        if(large&&b.floors>1&&!management&&!hostel){box(porticoWidth,.13,3.7,deck.x,y+3.6,deck.y,m.trim,angle);const p=midEdge.clone().addScaledVector(n,3.5);box(porticoWidth,.07,.08,p.x,y+4.5,p.y,m.steel,angle);for(let j=0;j<Math.floor(porticoWidth/1.4);j++){const q=p.clone().addScaledVector(direction,(j+.5)*1.4-porticoWidth/2);box(.04,.9,.04,q.x,y+4.05,q.y,m.steel);} }
++        for(let j=0;j<(hall||law?4:3);j++){const p=midEdge.clone().addScaledVector(n,3.8+j*.3);box(b.named?Math.min(porticoWidth,6):3,.12,.5,p.x,y+.23-j*.07,p.y,m.pavers,angle);}
+ 
+       }
+     }
+@@ -183,8 +210,16 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+   lamps.push(...sports.lamps);
+   buildings.push(sports.building);
+   pickables.push(sports.pickable);
+-  const entrance=addCampusEntrance(batch,m,signs,center,height,{origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps});
++  const terrainClip={origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps};
++  const entrance=addCampusEntrance(batch,m,signs,center,height,terrainClip);
+   structureBounds.push(...entrance.obstacles);
++  const phase2Entrance=addPhaseTwoEntrance(batch,m,signs,center,height,terrainClip);
++  structureBounds.push(...phase2Entrance.obstacles);
++  const transit=addCampusTransitParks(root,batch,m,signs,height,surfaceHeight);
++  structureBounds.push(...transit.obstacles);
++  lamps.push(...transit.lamps);
++  buildings.push(...transit.buildings);
++  pickables.push(...transit.pickables);
+   // App-added phase markers at the campus road edges; not surveyed existing signs.
+   for(const [phase,lon,lat] of [[1,5.32144,7.78042],[2,5.31596,7.77855],[3,5.31165,7.77734]]){
+     const p=project([lon,lat]),road=nearestRoad(p);if(!road.point)continue;
+@@ -206,20 +241,44 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
+       }
+     }
+   }
++  const buildingDist=(pt:Point)=>{let d=Infinity;const v=new THREE.Vector2(pt.x,pt.z);for(const b of buildings){const bd=b.bounds.distanceToPoint(v);if(bd<d)d=bd;}return d;};
+   const planting=addPhaseOnePlanting(features,center,batch,m,height,p=>!blocked(p,2)&&!onRoad(p,1));
+-  const vegetation=buildVegetation(cover,center,height,p=>entrance.reserved(p)||sports.reserved(p)||blocked(p,8)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),m,planting.trees);
++  const vegetation=buildVegetation(
++    cover,
++    center,
++    height,
++    p=>entrance.reserved(p)||phase2Entrance.reserved(p)||sports.reserved(p)||transit.reserved(p)||blocked(p,7)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),
++    m,
++    planting.trees,
++    planting.bushes,
++    buildingDist,
++    p=>nearestRoad(p).distance
++  );
+   root.add(vegetation.root);
+-  const trees=vegetation.count,people=0,parkingLots=0;
+-  // Terrain mesh with subtle natural variation, sampled at real metre scale.
++  const trees=vegetation.count,people=transit.peopleCount,parkingLots=transit.parkingLotsCount;
++  // Terrain mesh with subtle natural variation, blending forest floor into open campus grass & bushland near buildings/roads.
+   const groundSize=worldBounds.getSize(new THREE.Vector2()),groundMid=worldBounds.getCenter(new THREE.Vector2());
+   const terrain=new THREE.PlaneGeometry(groundSize.x,groundSize.y,terrainSteps,terrainSteps);terrain.rotateX(-Math.PI/2);terrain.translate(groundMid.x,0,groundMid.y);const p=terrain.attributes.position,colors:number[]=[];
+-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);p.setY(i,height(x,z)-.025);const variation=Math.sin(x*.011)*Math.cos(z*.009)*.055+Math.sin(x*.05+z*.02)*.025;const [lon,lat]=unprojectPosition({x,z},center),land=sampleCover(cover,lon,lat);const color=new THREE.Color(land===10?'#66885d':land===40?'#acb28a':land===50?'#b9b7a6':land===60?'#b7a789':'#a0b58b').offsetHSL(0,0,variation*.4);colors.push(color.r,color.g,color.b);}
++  const turfColor=new THREE.Color('#98af7e'),scrubColor=new THREE.Color('#839c6d');
++  for(let i=0;i<p.count;i++){
++    const x=p.getX(i),z=p.getZ(i);p.setY(i,height(x,z)-.025);
++    const variation=Math.sin(x*.011)*Math.cos(z*.009)*.055+Math.sin(x*.05+z*.02)*.025;
++    const [lon,lat]=unprojectPosition({x,z},center),land=sampleCover(cover,lon,lat);
++    const color=new THREE.Color(land===10?'#66885d':land===40?'#acb28a':land===50?'#b9b7a6':land===60?'#b7a789':'#9db284');
++    if(land===10){
++      const bDist=buildingDist({x,z}),rDist=nearestRoad({x,z}).distance;
++      const clearBlend=Math.max(1-THREE.MathUtils.smoothstep(bDist,10,48),1-THREE.MathUtils.smoothstep(rDist,4,22)*.75);
++      const scrubBlend=1-THREE.MathUtils.smoothstep(bDist,32,78);
++      color.lerp(scrubColor,scrubBlend*.55).lerp(turfColor,clearBlend*.75);
++    }
++    color.offsetHSL(0,0,variation*.4);colors.push(color.r,color.g,color.b);
++  }
+   terrain.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));const tuv=[];for(let i=0;i<p.count;i++)tuv.push(p.getX(i)/8,p.getZ(i)/8);terrain.setAttribute('uv',new THREE.Float32BufferAttribute(tuv,2));terrain.computeVertexNormals();m.grass.vertexColors=true;const ground=new THREE.Mesh(terrain,m.grass);ground.receiveShadow=true;root.add(ground);
+   // A low terrain skirt keeps the landscape readable as a continuous model.
+   const distant=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),new THREE.MeshLambertMaterial({color:'#b3bea0'}));distant.rotation.x=-Math.PI/2;distant.position.set(mid.x,-85,mid.y);distant.material.userData.ownedMaterial=true;root.add(distant);
+   batch.finish(root);
+   const selected=buildings.find(b=>b.placeId==='science')??buildings[0];
+-  return {root,ground,entrance,updateVegetation:vegetation.updateDetail,vegetationDetail:()=>vegetation.root.userData.detailedTrees??0,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>(vegetation.root.userData.sharedGeometries??[]);root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
++  return {root,ground,entrance,phase2Entrance,updateVegetation:vegetation.updateDetail,vegetationDetail:()=>vegetation.root.userData.detailedTrees??0,signageCount:namedBuildings.length,materials:m,buildings,pickables,roads,lamps,treeTrunks:vegetation.trunks,sites,bounds:worldBounds,cameraBounds,focus:selected,height,surfaceHeight,baseElevation,stats:{trees,people,buildings:buildings.length,roads:roads.length,parkingLots},blocked,dispose(){const geometries=new Set<THREE.BufferGeometry>(vegetation.root.userData.sharedGeometries??[]);root.traverse(o=>{if(o instanceof THREE.Mesh){geometries.add(o.geometry);const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){if(material.userData.ownedMaterial)material.dispose();if(material.userData.ownedTexture){material.userData.ownedTexture.dispose();material.dispose();}}}});geometries.forEach(g=>g.dispose());m.dispose();root.clear();}};
+ }
+ export type World=ReturnType<typeof buildWorld>;
+ 
+diff --git a/src/world/entrance.ts b/src/world/entrance.ts
+index 0a3abb5..f62a8c7 100644
+--- a/src/world/entrance.ts
++++ b/src/world/entrance.ts
+@@ -9,6 +9,9 @@ import type { createSignage } from './signage';
+ // Phase 1 entrance, visually located on Maps satellite, 11 Oct 2026.
+ // See research/entrance-and-identification.md for evidence and limitations.
+ export const mainGatePosition:Position=[5.32330,7.78057];
++// Phase 2 northern entrance (Falex Road boulevard), visually located on zoom-20 Maps satellite, 17 Oct 2026.
++export const phase2GatePosition:Position=[5.3159531,7.782590];
++
+ export function addCampusEntrance(batch:GeometryBatch,m:Materials,signs:ReturnType<typeof createSignage>,center:Position,height:(x:number,z:number)=>number,terrain:{origin:{x:number;z:number};cell:{x:number;z:number};steps:number}) {
+   const p=projectPosition(mainGatePosition,center),y=height(p.x,p.z),angle=Math.PI/2;
+   // Local +z faces University Road (east); +x is north.
+@@ -76,3 +79,103 @@ export function addCampusEntrance(batch:GeometryBatch,m:Materials,signs:ReturnTy
+   const position=new THREE.Vector3(p.x,y,p.z),approach=world(-1,37);
+   return {position,approach:new THREE.Vector3(approach.x,height(approach.x,approach.z),approach.z),obstacles,reserved:(q:{x:number;z:number})=>Math.abs(q.x-p.x)<52&&Math.abs(q.z-p.z)<33};
+ }
++
++/**
++ * Phase 2 Gate (Falex Road northern boulevard entrance).
++ * Modeled from zoom-20 satellite view (three blue-grey hipped roof pavilions spanning the divided
++ * boulevard) and the roadside FUOYE monument wall photo. Both carriageways remain clear for driving/walking.
++ */
++export function addPhaseTwoEntrance(batch:GeometryBatch,m:Materials,signs:ReturnType<typeof createSignage>,center:Position,height:(x:number,z:number)=>number,terrain:{origin:{x:number;z:number};cell:{x:number;z:number};steps:number}) {
++  const p=projectPosition(phase2GatePosition,center),y=height(p.x,p.z);
++  // Road unit direction (+z faces NNE toward Falex/town; +x faces ESE across the two carriageways).
++  const ux=0.26796,uz=-0.96343,nx=-uz,nz=ux;
++  const angle=Math.atan2(ux,uz);
++  const world=(x:number,z:number)=>({x:p.x+x*nx+z*ux,z:p.z+x*nz+z*uz});
++  const box=(w:number,h:number,d:number,x:number,yy:number,z:number,material:THREE.Material,rot=angle)=>{const q=world(x,z);batch.box(w,h,d,q.x,y+yy,q.z,material,rot);};
++  const obstacles:THREE.Box2[]=[];
++  const obstacle=(x:number,z:number,r:number)=>{const q=world(x,z);obstacles.push(new THREE.Box2(new THREE.Vector2(q.x-r,q.z-r),new THREE.Vector2(q.x+r,q.z+r)));};
++  const roof=m.roofs[3]; // Blue-grey roof observed in zoom-20 satellite view
++
++  function hipRoof(cx:number,cz:number,w:number,d:number,baseY:number,rise:number){
++    const inset=Math.min(w,d)*.28;
++    const v=(lx:number,ly:number,lz:number)=>{const q=world(cx+lx,cz+lz);return [q.x,y+ly,q.z];};
++    const c0=v(-w/2,baseY,-d/2),c1=v(w/2,baseY,-d/2),c2=v(w/2,baseY,d/2),c3=v(-w/2,baseY,d/2);
++    const r0=v(-w/2+inset,baseY+rise,0),r1=v(w/2-inset,baseY+rise,0);
++    const verts=[...c0,...c1,...r1,...c0,...r1,...r0,...c1,...c2,...r1,...c2,...c3,...r0,...c2,...r0,...r1,...c3,...c0,...r0];
++    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.computeVertexNormals();
++    roof.side=THREE.DoubleSide;batch.add(g,roof);
++  }
++
++  // Paved gate apron across both carriageways
++  const apronRing=[world(-17,-22),world(17,-22),world(17,24),world(-17,24)];
++  batch.add(groundPolygon([apronRing],(x,z)=>height(x,z)+.065,terrain.origin,terrain.cell,terrain.steps),m.asphalt);
++
++  // Central median island and central security lodge (x = 0, leaving lanes at x = -6.0 and x = +6.0 clear)
++  box(3.8,.36,24,0,.18,0,m.stone);
++  box(3.2,.08,23,0,.38,0,m.turf[0]);
++  box(3.8,3.8,6.2,0,1.9,0,m.ivory);
++  box(4.0,.25,6.4,0,3.75,0,m.trim);
++  for(const sx of [-1.85,1.85])for(const sz of [-2.9,2.9])box(.32,3.8,.32,sx,1.9,sz,m.accent);
++  for(const sz of [-3.12,3.12]){
++    box(1.5,1.1,.08,0,2.3,sz,m.windows);
++    box(1.7,.12,.18,0,1.7,sz,m.white);
++  }
++  for(const sx of [-1.92,1.92])box(.08,2.3,1.0,sx,1.2,0,m.green);
++  hipRoof(0,0,4.8,7.2,3.85,1.65);
++  for(const z of [-4,0,4])obstacle(0,z,1.85);
++
++  // West (-12.5) and East (+12.5) outer gatehouse pavilions observed in satellite imagery
++  for(const side of [-1,1]){
++    const cx=side*12.5;
++    box(4.8,3.8,6.2,cx,1.9,0,m.ivory);
++    box(5.0,.25,6.4,cx,3.75,0,m.trim);
++    for(const sx of [-2.25,2.25])for(const sz of [-2.9,2.9])box(.32,3.8,.32,cx+sx,1.9,sz,m.accent);
++    for(const sz of [-3.12,3.12])box(1.6,1.1,.08,cx,2.3,sz,m.windows);
++    hipRoof(cx,0,5.8,7.2,3.85,1.7);
++    for(const z of [-2.2,2.2])obstacle(cx,z,2.1);
++
++    // Portal support piers framing each 7.6m vehicle lane (at x = ±2.0 and x = ±9.9)
++    for(const px of [side*2.0,side*9.9]){
++      box(.75,6.6,.85,px,3.3,0,m.accent);
++      box(.92,.35,1.0,px,6.55,0,m.trim);
++      obstacle(px,0,.45);
++    }
++
++    // Open white-and-green metal gate leaves folded back along the piers
++    for(const edge of [side*2.35,side*9.55]){
++      box(.1,3.1,2.8,edge,1.6,-1.5,m.white);
++      box(.14,1.2,1.2,edge,1.8,-1.5,m.green);
++    }
++
++    // White/cream perimeter boundary walls extending along the campus boundary
++    box(8.5,1.2,.45,side*19.0,.6,0,m.ivory);
++    box(8.5,.08,.12,side*19.0,2.1,0,m.steel);
++    for(let i=0;i<=14;i++)box(.045,1.0,.045,side*(15.0+i*.55),1.6,0,m.steel);
++    obstacle(side*18.5,0,1.8);
++  }
++
++  // Overhead structural portal beam spanning across both lanes with Phase 2 Gate signage
++  box(21.6,1.25,.85,0,6.25,0,m.ivory);
++  box(22.0,.22,1.05,0,6.92,0,m.accent);
++  box(22.0,.18,1.0,0,5.6,0,m.trim);
++  const frontTitle=world(0,.46),backTitle=world(0,-.46);
++  signs.add(batch,'phase2-gate',10.5,1.08,new THREE.Vector3(frontTitle.x,y+6.25,frontTitle.z),angle);
++  signs.add(batch,'phase2-gate',10.5,1.08,new THREE.Vector3(backTitle.x,y+6.25,backTitle.z),angle+Math.PI);
++
++  // Photographed cream roadside FUOYE monument wall on brick plinth at the entrance approach
++  const mx=-11.6,mz=12.5;
++  box(4.8,.85,.75,mx,.42,mz,m.brick,angle+.22);
++  box(5.4,2.15,.48,mx,1.88,mz,m.ivory,angle+.22);
++  box(5.75,.18,.68,mx,3.02,mz,m.trim,angle+.22);
++  const mw=world(mx-.12,mz+.28);
++  signs.add(batch,'gate-monument',4.8,1.55,new THREE.Vector3(mw.x,y+1.92,mw.z),angle+.22);
++  obstacle(mx,mz,1.6);
++
++  const position=new THREE.Vector3(p.x,y,p.z),approach=world(-5.8,34);
++  return {
++    position,
++    approach:new THREE.Vector3(approach.x,height(approach.x,approach.z),approach.z),
++    obstacles,
++    reserved:(q:{x:number;z:number})=>Math.hypot(q.x-p.x,q.z-p.z)<42
++  };
++}
+diff --git a/src/world/materials.ts b/src/world/materials.ts
+index 518dcca..24e9ee9 100644
+--- a/src/world/materials.ts
++++ b/src/world/materials.ts
+@@ -26,6 +26,7 @@ export function makeMaterials() {
+     trim:plain('#f6eee0'),base:plain('#a6997f'),wood:plain('#796043'),steel:plain('#364c48'),white:plain('#eeeede'),green:plain('#226746'),turf:[surface('grass','#8ba366',8),surface('grass','#98ac75',8)],rubber:plain('#262b29'),glass:new THREE.MeshLambertMaterial({color:'#678a91'}),
+     leaves:[plain('#3e673f'),plain('#779658'),plain('#62884b'),plain('#779351'),plain('#365c40')],
+     carPaint:[plain('#b5b6a8',.3),plain('#284a58',.3),plain('#aa5c47',.3),plain('#ebe8db',.3),plain('#49514d',.3)],
++    kekeYellow:plain('#ebb820',.35),
+     people:[plain('#af674c'),plain('#3c6d90'),plain('#e5d3a1'),plain('#526544')],skin:plain('#6b4735'),
+     flowers:[plain('#bd7290'),plain('#d2b55d'),plain('#c66c42')],
+     glow:new THREE.MeshLambertMaterial({color:'#fff4d3',emissive:'#ffc269',emissiveIntensity:0}),
+diff --git a/src/world/phase-one.ts b/src/world/phase-one.ts
+index 4d7c7a4..e693cd1 100644
+--- a/src/world/phase-one.ts
++++ b/src/world/phase-one.ts
+@@ -1,4 +1,4 @@
+-﻿import * as THREE from 'three';
++import * as THREE from 'three';
+ import type { Feature, Position } from '../data';
+ import type { Point } from './math';
+ import { projectPosition, pointInRing, randomFrom } from './math';
+@@ -37,5 +37,42 @@ export function addPhaseOnePlanting(features:Feature[],center:Position,batch:Geo
+   }
+   // Scattered crowns visible inside the southern lawn, not decorative flower beds.
+   for(const p of [[5.32204,7.77972],[5.32229,7.77964],[5.32220,7.77947]] as Position[]){const q=projectPosition(p,center);if(clear(q))trees.push(q);}
+-  return {trees,lawns:lawns.length};
++
++  // Phase 2 Gate divided boulevard: avenue trees along outer verges and low median shrubs.
++  const bushes:Point[]=[];
++  for(let i=0;i<16;i++){
++    const t=i/15;
++    // Median ornamental shrubs between the western and eastern carriageways
++    const medLon=5.31499+t*(5.31586-5.31499),medLat=7.77918+t*(7.78222-7.77918);
++    const mp=projectPosition([medLon,medLat],center);
++    if(clear(mp))bushes.push(mp);
++    if(i%2===0){
++      // Outer boulevard avenue shade trees (west and east verges)
++      const westVerge=projectPosition([medLon-0.00012,medLat+0.00003],center);
++      const eastVerge=projectPosition([medLon+0.00013,medLat-0.00003],center);
++      if(clear(westVerge))trees.push(westVerge);
++      if(clear(eastVerge))trees.push(eastVerge);
++    }else{
++      const westBush=projectPosition([medLon-0.00010,medLat+0.00002],center);
++      const eastBush=projectPosition([medLon+0.00011,medLat-0.00002],center);
++      if(clear(westBush))bushes.push(westBush);
++      if(clear(eastBush))bushes.push(eastBush);
++    }
++  }
++  // Framing shade trees and shrubs around Senate, Central Admin, and Faculty of Law approaches
++  for(const pos of [
++    [5.31342,7.77948],[5.31398,7.77948],[5.31432,7.77892],[5.31482,7.77892],
++    [5.31502,7.78122],[5.31508,7.78168],[5.31545,7.77962],[5.31552,7.78012],
++    [5.31618,7.77582],[5.31655,7.77582],[5.31462,7.77745],[5.31515,7.77742]
++  ] as Position[]){
++    const q=projectPosition(pos,center);if(clear(q))trees.push(q);
++  }
++  for(const pos of [
++    [5.31355,7.77952],[5.31385,7.77952],[5.31445,7.77888],[5.31468,7.77888],
++    [5.31496,7.78135],[5.31499,7.78158],[5.31542,7.77975],[5.31546,7.78002],
++    [5.32145,7.78048],[5.32175,7.78049],[5.32205,7.78051]
++  ] as Position[]){
++    const q=projectPosition(pos,center);if(clear(q))bushes.push(q);
++  }
++  return {trees,bushes,lawns:lawns.length};
+ }
+diff --git a/src/world/sports.ts b/src/world/sports.ts
+index b741a52..00b85c5 100644
+--- a/src/world/sports.ts
++++ b/src/world/sports.ts
+@@ -501,6 +501,7 @@ export function addPhaseOneSportsComplex(
+   const standPickMesh = new THREE.Mesh(standPickGeo, standPickMat);
+   standPickMesh.position.set(standCenterX, groundY + 2.5, standCenterZ);
+   standPickMesh.userData.id = 'local/phase1-sports-complex';
++  standPickMesh.userData.noHighlight = true;
+   root.add(standPickMesh);
+ 
+   // ==============================================================
+diff --git a/src/world/transit-park.ts b/src/world/transit-park.ts
+new file mode 100644
+index 0000000..d4d246f
+--- /dev/null
++++ b/src/world/transit-park.ts
+@@ -0,0 +1,481 @@
++import * as THREE from 'three';
++import type { Point } from './math';
++import type { GeometryBatch } from './batch';
++import type { Materials } from './materials';
++import type { createSignage } from './signage';
++import type { BuildingAsset } from './build';
++
++export interface TransitParksResult {
++  obstacles: THREE.Box2[];
++  reserved: (p: Point) => boolean;
++  lamps: THREE.Vector3[];
++  buildings: BuildingAsset[];
++  pickables: THREE.Mesh[];
++  peopleCount: number;
++  parkingLotsCount: number;
++}
++
++/**
++ * Adds FUOYE's Campus Keke Napep (tricycle) & Taxi Mini-Parks:
++ * 1. Phase 1 Main Gate Keke & Taxi Mini-Park (in the open turnaround bay just inside Phase 1 Gate,
++ *    east of FUOYE Security Unit and Phase 1 Main Auditorium, at x = 654.5, z = -310.5).
++ * 2. Phase 2 Junction & Boulevard Keke & Taxi Shuttle Park (at the Phase 2 Boulevard / Central Admin
++ *    junction bay at x = -216.0, z = -148.0, plus an arrival lay-by inside the Phase 2 Gate).
++ */
++export function addCampusTransitParks(
++  root: THREE.Group,
++  batch: GeometryBatch,
++  m: Materials,
++  signs: ReturnType<typeof createSignage>,
++  height: (x: number, z: number) => number,
++  surfaceHeight: (x: number, z: number) => number
++): TransitParksResult {
++  const obstacles: THREE.Box2[] = [];
++  const lamps: THREE.Vector3[] = [];
++  const buildings: BuildingAsset[] = [];
++  const pickables: THREE.Mesh[] = [];
++  const reservedBoxes: THREE.Box2[] = [];
++  let peopleCount = 0;
++
++  const box = (...args: Parameters<GeometryBatch['box']>) => batch.box(...args);
++  const cyl = (...args: Parameters<GeometryBatch['cylinder']>) => batch.cylinder(...args);
++
++  const addObstacle = (cx: number, cz: number, rx: number, rz: number) => {
++    obstacles.push(new THREE.Box2(new THREE.Vector2(cx - rx, cz - rz), new THREE.Vector2(cx + rx, cz + rz)));
++  };
++
++  const toWorld = (cx: number, cz: number, lx: number, lz: number, angle: number) => {
++    const c = Math.cos(angle), s = Math.sin(angle);
++    return {
++      x: cx + lx * c + lz * s,
++      z: cz - lx * s + lz * c
++    };
++  };
++
++  /**
++   * Batches an authentic low-poly Nigerian Keke Napep (commercial passenger tricycle).
++   * Local +z is forward; local +x is right.
++   */
++  function addKeke(cx: number, cz: number, angle: number, greenCanopy = false) {
++    const y = surfaceHeight(cx, cz) + 0.03;
++    const partBox = (w: number, h: number, d: number, lx: number, ly: number, lz: number, mat: THREE.Material) => {
++      const p = toWorld(cx, cz, lx, lz, angle);
++      box(w, h, d, p.x, y + ly, p.z, mat, angle);
++    };
++    const partWheel = (r: number, w: number, lx: number, ly: number, lz: number) => {
++      const p = toWorld(cx, cz, lx, lz, angle);
++      const g = new THREE.CylinderGeometry(r, r, w, 8);
++      g.rotateZ(Math.PI / 2);
++      g.rotateY(angle);
++      g.translate(p.x, y + ly, p.z);
++      batch.add(g, m.rubber);
++      const hub = new THREE.CylinderGeometry(r * 0.48, r * 0.48, w + 0.015, 6);
++      hub.rotateZ(Math.PI / 2);
++      hub.rotateY(angle);
++      hub.translate(p.x, y + ly, p.z);
++      batch.add(hub, m.white);
++    };
++
++    const canopyMat = greenCanopy ? m.green : m.rubber;
++
++    // 1. Three Wheels: 1 front wheel (lz = +0.98) + 2 rear wheels (lx = ±0.58, lz = -0.78)
++    partWheel(0.23, 0.14, 0, 0.23, 0.98);
++    partWheel(0.24, 0.15, -0.58, 0.24, -0.78);
++    partWheel(0.24, 0.15, 0.58, 0.24, -0.78);
++
++    // 2. Front mudguard, steering column, and yellow nose apron
++    partBox(0.28, 0.16, 0.44, 0, 0.44, 0.96, m.kekeYellow);
++    partBox(0.76, 0.66, 0.36, 0, 0.62, 0.66, m.kekeYellow);
++    partBox(0.54, 0.07, 0.08, 0, 0.96, 0.50, m.rubber); // handlebar
++
++    // Central round headlight & front white plate
++    partBox(0.18, 0.18, 0.07, 0, 0.66, 0.85, m.glow);
++    partBox(0.32, 0.10, 0.04, 0, 0.40, 0.85, m.white);
++
++    // 3. Angled front windshield & yellow header visor
++    partBox(0.92, 0.48, 0.06, 0, 1.18, 0.62, m.glass);
++    partBox(1.02, 0.14, 0.12, 0, 1.46, 0.62, m.kekeYellow);
++
++    // 4. Lower chassis floor & yellow rear passenger body tub
++    partBox(1.24, 0.12, 1.75, 0, 0.28, -0.14, m.steel);
++    // Rear engine/tail panel
++    partBox(1.28, 0.76, 0.38, 0, 0.68, -0.86, m.kekeYellow);
++    // Left and right rear wheel-arch side panels (leaving open side doorways at lz = -0.05)
++    for (const side of [-1, 1]) {
++      partBox(0.10, 0.68, 0.72, side * 0.60, 0.64, -0.68, m.kekeYellow);
++      partBox(0.10, 0.34, 0.58, side * 0.60, 0.47, 0.02, m.kekeYellow);
++      // Side mirror
++      partBox(0.12, 0.08, 0.05, side * 0.52, 1.08, 0.62, m.steel);
++    }
++
++    // 5. Interior driver & passenger cushioned bench seats
++    partBox(0.42, 0.14, 0.34, 0, 0.62, 0.24, m.rubber); // driver seat
++    partBox(1.10, 0.16, 0.44, 0, 0.66, -0.54, m.rubber); // passenger seat cushion
++    partBox(1.10, 0.38, 0.10, 0, 0.90, -0.72, m.rubber); // passenger backrest
++
++    // 6. Steel canopy support struts & arched tarpaulin roof
++    for (const side of [-1, 1]) {
++      for (const zPos of [0.54, -0.18, -0.94]) {
++        partBox(0.045, 0.78, 0.045, side * 0.58, 1.24, zPos, m.steel);
++      }
++      // Side weather valence flap along roof edge
++      partBox(0.05, 0.16, 1.78, side * 0.62, 1.58, -0.16, canopyMat);
++    }
++    partBox(1.28, 0.12, 1.82, 0, 1.66, -0.16, canopyMat);
++    partBox(1.14, 0.07, 1.62, 0, 1.73, -0.16, canopyMat);
++    // Rear tarpaulin back curtain with small clear window
++    partBox(1.22, 0.62, 0.06, 0, 1.32, -1.03, canopyMat);
++    partBox(0.64, 0.26, 0.08, 0, 1.36, -1.03, m.glass);
++
++    // 7. Rear bumper & taillights
++    partBox(1.24, 0.10, 0.08, 0, 0.34, -1.06, m.steel);
++    for (const side of [-1, 1]) {
++      partBox(0.22, 0.12, 0.06, side * 0.42, 0.56, -1.06, m.tail);
++    }
++    partBox(0.36, 0.14, 0.05, 0, 0.54, -1.06, m.white);
++
++    addObstacle(cx, cz, 1.15, 1.15);
++  }
++
++  /**
++   * Batches a Campus Shuttle Taxi with commercial yellow/green stripe and rooftop TAXI light box.
++   */
++  function addCampusTaxi(cx: number, cz: number, angle: number, paintIdx: number) {
++    const y = surfaceHeight(cx, cz) + 0.04;
++    const partBox = (w: number, h: number, d: number, lx: number, ly: number, lz: number, mat: THREE.Material) => {
++      const p = toWorld(cx, cz, lx, lz, angle);
++      box(w, h, d, p.x, y + ly, p.z, mat, angle);
++    };
++    const bodyMat = m.carPaint[paintIdx % m.carPaint.length];
++
++    // Main lower body & commercial yellow belt stripe
++    partBox(1.80, 0.68, 4.10, 0, 0.68, 0, bodyMat);
++    partBox(1.83, 0.16, 3.85, 0, 0.72, 0, m.kekeYellow);
++
++    // Greenhouse cabin & roof
++    partBox(1.56, 0.62, 2.15, 0, 1.26, -0.10, m.glass);
++    partBox(1.62, 0.12, 1.72, 0, 1.61, -0.10, bodyMat);
++
++    // Rooftop TAXI sign box
++    partBox(0.68, 0.20, 0.24, 0, 1.76, 0.08, m.kekeYellow);
++    partBox(0.62, 0.14, 0.26, 0, 1.76, 0.08, m.glow);
++
++    // Wheels
++    for (const side of [-1, 1]) {
++      for (const front of [-1, 1]) {
++        const p = toWorld(cx, cz, side * 0.90, front * 1.25, angle);
++        const g = new THREE.CylinderGeometry(0.33, 0.33, 0.18, 8);
++        g.rotateZ(Math.PI / 2);
++        g.rotateY(angle);
++        g.translate(p.x, y + 0.36, p.z);
++        batch.add(g, m.rubber);
++        const hub = new THREE.CylinderGeometry(0.16, 0.16, 0.20, 6);
++        hub.rotateZ(Math.PI / 2);
++        hub.rotateY(angle);
++        hub.translate(p.x, y + 0.36, p.z);
++        batch.add(hub, m.white);
++      }
++      // Headlights & Taillights
++      partBox(0.34, 0.16, 0.08, side * 0.56, 0.70, 2.06, m.glow);
++      partBox(0.34, 0.16, 0.08, side * 0.56, 0.72, -2.06, m.tail);
++    }
++    // Bumpers & number plates
++    partBox(1.72, 0.12, 0.12, 0, 0.42, 2.06, m.steel);
++    partBox(1.72, 0.12, 0.12, 0, 0.42, -2.06, m.steel);
++    partBox(0.48, 0.14, 0.06, 0, 0.56, 2.07, m.white);
++    partBox(0.48, 0.14, 0.06, 0, 0.56, -2.07, m.white);
++
++    addObstacle(cx, cz, 1.35, 1.85);
++  }
++
++  /**
++   * Batches a waiting student/passenger figure with a backpack.
++   */
++  function addPassenger(cx: number, cz: number, angle: number, colorIdx: number) {
++    const y = surfaceHeight(cx, cz);
++    const shirt = m.people[colorIdx % m.people.length];
++    cyl(0.19, 0.22, 0.68, cx, y + 0.98, cz, shirt, 7);
++    const head = new THREE.SphereGeometry(0.15, 7, 5);
++    head.translate(cx, y + 1.50, cz);
++    batch.add(head, m.skin);
++    // Backpack
++    const bp = toWorld(cx, cz, 0, -0.18, angle);
++    box(0.28, 0.36, 0.14, bp.x, y + 1.02, bp.z, m.steel, angle);
++    for (const s of [-1, 1]) {
++      const lp = toWorld(cx, cz, s * 0.11, 0, angle);
++      box(0.12, 0.64, 0.14, lp.x, y + 0.32, lp.z, m.rubber, angle);
++    }
++    peopleCount++;
++  }
++
++  /**
++   * Batches a solar/LED park streetlamp.
++   */
++  function addParkLamp(lx: number, lz: number, armDir = 1) {
++    const y = height(lx, lz);
++    cyl(0.075, 0.12, 6.2, lx, y + 3.1, lz, m.steel, 6);
++    box(1.2, 0.08, 0.12, lx + armDir * 0.48, y + 6.1, lz, m.steel);
++    box(0.52, 0.10, 0.30, lx + armDir * 0.95, y + 6.04, lz, m.glow);
++    lamps.push(new THREE.Vector3(lx + armDir * 0.95, y + 6.0, lz));
++    addObstacle(lx, lz, 0.25, 0.25);
++  }
++
++  // ============================================================================
++  // 1. PHASE 1 MAIN GATE KEKE & TAXI MINI-PARK (x = 751.0, z = -354.0)
++  // ============================================================================
++  // Situated at the exact roadside park location (751, -352) along the main entrance
++  // approach road by the Main Gate, where town taxis and Keke Napep tricycles convey
++  // students arriving and departing from FUOYE Phase 1.
++  const p1X = 751.0;
++  const p1Z = -354.0;
++  const p1W = 18.0;
++  const p1D = 12.0;
++  const p1Y = height(p1X, p1Z) + 0.10;
++
++  // Main asphalt parking & maneuvering apron
++  box(p1W, 0.08, p1D, p1X, p1Y, p1Z, m.asphalt);
++  // Turnout driveway connecting park apron directly to the road
++  box(14.0, 0.08, 3.5, p1X, p1Y, p1Z - p1D / 2 - 1.75, m.asphalt);
++
++  // Paved student promenade along the South edge where the waiting shelter sits
++  box(p1W - 2.0, 0.12, 3.2, p1X, p1Y + 0.04, p1Z + p1D / 2 - 1.6, m.pavers);
++
++  // Perimeter kerbs
++  box(p1W, 0.18, 0.24, p1X, p1Y + 0.06, p1Z + p1D / 2, m.base); // South kerb behind shelter
++  box(0.24, 0.18, p1D, p1X - p1W / 2, p1Y + 0.06, p1Z, m.base); // West kerb facing gate
++  box(0.24, 0.18, p1D, p1X + p1W / 2, p1Y + 0.06, p1Z, m.base); // East kerb facing University Rd
++
++  // Painted white parking bay markings for Taxis & Keke Napep
++  for (let i = 0; i <= 4; i++) {
++    const bx = p1X - 6.0 + i * 3.0;
++    // Taxi bays (North row, facing North)
++    box(0.12, 0.03, 4.4, bx, p1Y + 0.05, p1Z - 2.2, m.white);
++    if (i < 4) {
++      box(1.8, 0.14, 0.22, bx + 1.5, p1Y + 0.08, p1Z - 4.3, m.stone);
++    }
++  }
++  for (let i = 0; i <= 6; i++) {
++    const bx = p1X - 7.5 + i * 2.5;
++    // Keke bays (Central loading row)
++    box(0.10, 0.03, 2.8, bx, p1Y + 0.05, p1Z + 1.0, m.white);
++  }
++
++  // Covered Student Waiting & Dispatch Shelter Pavilion along South edge (facing North)
++  const shX = p1X;
++  const shZ = p1Z + p1D / 2 - 1.6;
++  const shLen = 12.0;
++  const shDepth = 2.4;
++  const shH = 3.2;
++
++  // Shelter dwarf back wall & accent band (on the South side)
++  box(shLen, 1.25, 0.24, shX, p1Y + 0.68, shZ + shDepth / 2 - 0.15, m.ivory);
++  box(shLen + 0.1, 0.18, 0.28, shX, p1Y + 1.32, shZ + shDepth / 2 - 0.15, m.accent);
++
++  // Steel shelter columns along back and front
++  for (let i = 0; i <= 4; i++) {
++    const cx = shX - shLen / 2 + 0.4 + (i / 4) * (shLen - 0.8);
++    cyl(0.07, 0.07, shH, cx, p1Y + shH / 2, shZ + shDepth / 2 - 0.25, m.steel, 6);
++    cyl(0.07, 0.07, shH - 0.15, cx, p1Y + (shH - 0.15) / 2, shZ - shDepth / 2 + 0.25, m.steel, 6);
++  }
++
++  // Sloped green shelter roof & fascia trim
++  box(shLen + 0.8, 0.16, shDepth + 0.8, shX, p1Y + shH, shZ, m.roofs[0]);
++  box(shLen + 0.9, 0.14, shDepth + 0.9, shX, p1Y + shH - 0.10, shZ, m.trim);
++
++  // Overhead Park Signboard facing North toward arriving students and the open park
++  signs.add(
++    batch,
++    'keke-park-1',
++    7.5,
++    0.95,
++    new THREE.Vector3(shX, p1Y + shH + 0.42, shZ - shDepth / 2 - 0.18),
++    Math.PI
++  );
++  box(7.7, 1.02, 0.12, shX, p1Y + shH + 0.42, shZ - shDepth / 2 - 0.10, m.steel);
++
++  // Waiting benches inside shelter facing North
++  for (const bx of [shX - 3.4, shX, shX + 3.4]) {
++    box(2.0, 0.10, 0.48, bx, p1Y + 0.48, shZ + 0.15, m.wood);
++    box(2.0, 0.45, 0.08, bx, p1Y + 0.76, shZ + 0.38, m.wood);
++    for (const s of [-0.75, 0.75]) {
++      box(0.08, 0.45, 0.44, bx + s, p1Y + 0.25, shZ + 0.15, m.steel);
++    }
++  }
++  addObstacle(shX, shZ, shLen / 2 + 0.2, shDepth / 2 + 0.2);
++
++  // 4 Parked Campus Taxis in the North Row facing North (rotated 180 degrees)
++  addCampusTaxi(p1X - 4.5, p1Z - 2.2, Math.PI, 1);
++  addCampusTaxi(p1X - 1.5, p1Z - 2.2, Math.PI, 3);
++  addCampusTaxi(p1X + 1.5, p1Z - 2.2, Math.PI, 0);
++  addCampusTaxi(p1X + 4.5, p1Z - 2.2, Math.PI, 2);
++
++  // 6 Keke Napep Tricycles in loading queue facing North (rotated 180 degrees)
++  addKeke(p1X - 6.25, p1Z + 1.0, Math.PI, false);
++  addKeke(p1X - 3.75, p1Z + 1.0, Math.PI, true);
++  addKeke(p1X - 1.25, p1Z + 1.0, Math.PI, false);
++  addKeke(p1X + 1.25, p1Z + 1.0, Math.PI, false);
++  addKeke(p1X + 3.75, p1Z + 1.0, Math.PI, true);
++  addKeke(p1X + 6.25, p1Z + 1.0, Math.PI, false);
++
++  // Waiting Students & Passengers facing North
++  addPassenger(shX - 3.4, shZ - 0.3, Math.PI, 0);
++  addPassenger(shX - 1.2, shZ - 0.4, Math.PI, 1);
++  addPassenger(shX + 1.2, shZ - 0.3, Math.PI, 2);
++  addPassenger(shX + 3.4, shZ - 0.4, Math.PI, 3);
++  addPassenger(p1X - 4.2, p1Z - 0.6, Math.PI, 1);
++  addPassenger(p1X + 2.4, p1Z - 0.6, Math.PI, 0);
++
++  // Park Streetlamps
++  addParkLamp(p1X - p1W / 2 + 1.0, p1Z - p1D / 2 + 1.0, 1);
++  addParkLamp(p1X + p1W / 2 - 1.0, p1Z - p1D / 2 + 1.0, -1);
++
++  const p1Bounds = new THREE.Box2(
++    new THREE.Vector2(p1X - p1W / 2 - 1, p1Z - p1D / 2 - 1),
++    new THREE.Vector2(p1X + p1W / 2 + 1, p1Z + p1D / 2 + 1)
++  );
++  reservedBoxes.push(p1Bounds);
++
++  buildings.push({
++    id: 'local/phase1-keke-park',
++    name: 'Phase 1 Main Gate Keke & Taxi Mini-Park',
++    position: new THREE.Vector3(p1X, p1Y, p1Z),
++    ring: [
++      { x: p1X - p1W / 2, z: p1Z - p1D / 2 },
++      { x: p1X + p1W / 2, z: p1Z - p1D / 2 },
++      { x: p1X + p1W / 2, z: p1Z + p1D / 2 },
++      { x: p1X - p1W / 2, z: p1Z + p1D / 2 }
++    ],
++    bounds: p1Bounds,
++    height: 3.8,
++    floors: 1,
++    style: 'campus tricycle (keke) & taxi transit hub',
++    entrance: new THREE.Vector3(p1X, p1Y, p1Z - p1D / 2),
++    source: 'Campus transit observation & Phase 1 main gate entry park',
++    directory: true,
++    named: true,
++    placeId: 'phase1-keke-park'
++  });
++
++  // ============================================================================
++  // 2. PHASE 2 JUNCTION & BOULEVARD KEKE & TAXI SHUTTLE PARK (x = -216, z = -148)
++  // ============================================================================
++  // Located on the open eastern transit bay of local/admin-forecourt right at the
++  // Phase 2 Boulevard & Central Administration junction where satellite imagery
++  // shows rows of waiting campus shuttles, plus a drop-off lay-by inside Phase 2 Gate.
++  const p2X = -216.0;
++  const p2Z = -148.0;
++  const p2W = 20.0;
++  const p2D = 16.0;
++  const p2Y = height(p2X, p2Z) + 0.10;
++
++  box(p2W, 0.08, p2D, p2X, p2Y, p2Z, m.asphalt);
++  box(p2W - 1.0, 0.12, 3.4, p2X, p2Y + 0.04, p2Z + p2D / 2 - 1.7, m.pavers);
++
++  // Bay stripes at Phase 2 Junction Park
++  for (let i = 0; i <= 5; i++) {
++    const bx = p2X - 7.5 + i * 3.0;
++    box(0.11, 0.03, 4.2, bx, p2Y + 0.05, p2Z - 3.6, m.white);
++  }
++
++  // Phase 2 Transit Shelter Canopy along the South edge of the bay
++  const sh2Z = p2Z + p2D / 2 - 1.6;
++  const sh2W = 10.5;
++  const sh2D = 2.8;
++  const sh2H = 3.0;
++  box(sh2W, 1.15, 0.22, p2X, p2Y + 0.62, sh2Z + sh2D / 2 - 0.15, m.ivory);
++  box(sh2W + 0.1, 0.16, 0.26, p2X, p2Y + 1.22, sh2Z + sh2D / 2 - 0.15, m.accent);
++  for (let i = 0; i <= 3; i++) {
++    const cx = p2X - sh2W / 2 + 0.4 + (i / 3) * (sh2W - 0.8);
++    cyl(0.065, 0.065, sh2H, cx, p2Y + sh2H / 2, sh2Z + sh2D / 2 - 0.2, m.steel, 6);
++    cyl(0.065, 0.065, sh2H - 0.1, cx, p2Y + (sh2H - 0.1) / 2, sh2Z - sh2D / 2 + 0.2, m.steel, 6);
++  }
++  box(sh2W + 0.7, 0.16, sh2D + 0.6, p2X, p2Y + sh2H, sh2Z, m.roofs[0]);
++  box(sh2W + 0.8, 0.12, sh2D + 0.7, p2X, p2Y + sh2H - 0.09, sh2Z, m.trim);
++  signs.add(
++    batch,
++    'keke-park-2',
++    6.8,
++    0.90,
++    new THREE.Vector3(p2X, p2Y + sh2H + 0.38, sh2Z - sh2D / 2 - 0.15),
++    Math.PI
++  );
++  box(7.0, 0.96, 0.12, p2X, p2Y + sh2H + 0.38, sh2Z - sh2D / 2 - 0.08, m.steel);
++  addObstacle(p2X, sh2Z, sh2W / 2 + 0.2, sh2D / 2 + 0.2);
++
++  // Waiting benches inside Phase 2 shelter
++  for (const bx of [p2X - 2.6, p2X + 2.6]) {
++    box(2.2, 0.10, 0.48, bx, p2Y + 0.46, sh2Z + 0.25, m.wood);
++    for (const s of [-0.8, 0.8]) {
++      box(0.08, 0.44, 0.44, bx + s, p2Y + 0.24, sh2Z + 0.25, m.steel);
++    }
++  }
++
++  // 4 Keke Napep & 2 Campus Taxis at Phase 2 Junction Park
++  addKeke(p2X - 6.0, p2Z - 3.6, 0.06, false);
++  addKeke(p2X - 3.2, p2Z - 3.6, 0.0, true);
++  addKeke(p2X - 0.4, p2Z - 3.6, -0.05, false);
++  addKeke(p2X + 2.2, p2Z - 0.6, Math.PI / 2, true);
++  addCampusTaxi(p2X + 3.2, p2Z - 3.6, 0.0, 1);
++  addCampusTaxi(p2X + 6.4, p2Z - 3.6, -0.04, 3);
++
++  addPassenger(p2X - 3.2, sh2Z - 0.6, Math.PI, 2);
++  addPassenger(p2X - 1.4, sh2Z - 0.5, Math.PI, 0);
++  addPassenger(p2X + 1.5, sh2Z - 0.6, Math.PI, 3);
++  addParkLamp(p2X - p2W / 2 + 0.8, p2Z + p2D / 2 - 0.8, 1);
++
++  const p2Bounds = new THREE.Box2(
++    new THREE.Vector2(p2X - p2W / 2 - 1, p2Z - p2D / 2 - 1),
++    new THREE.Vector2(p2X + p2W / 2 + 1, p2Z + p2D / 2 + 1)
++  );
++  reservedBoxes.push(p2Bounds);
++
++
++
++  buildings.push({
++    id: 'local/phase2-keke-park',
++    name: 'Phase 2 Keke & Taxi Shuttle Park',
++    position: new THREE.Vector3(p2X, p2Y, p2Z),
++    ring: [
++      { x: p2X - p2W / 2, z: p2Z - p2D / 2 },
++      { x: p2X + p2W / 2, z: p2Z - p2D / 2 },
++      { x: p2X + p2W / 2, z: p2Z + p2D / 2 },
++      { x: p2X - p2W / 2, z: p2Z + p2D / 2 }
++    ],
++    bounds: p2Bounds,
++    height: 3.6,
++    floors: 1,
++    style: 'campus tricycle (keke) & taxi transit hub',
++    entrance: new THREE.Vector3(p2X, p2Y, p2Z - p2D / 2),
++    source: 'Campus transit observation & Phase 2 junction parking bay',
++    directory: true,
++    named: true,
++    placeId: 'phase2-keke-park'
++  });
++
++  // ============================================================================
++  // 3. PHASE 2 GATE ROADSIDE KEKE & TAXI LAY-BY (x = -114.5, z = -516.0)
++  // ============================================================================
++  // Situated on the western roadside shoulder just inside Phase 2 Gate (Falex Rd),
++  // completely clear of the divided carriageways so incoming students can board.
++  const g2Angle = Math.atan2(0.26796, -0.96343); // matches Phase 2 Boulevard angle
++  const g2X = -114.5;
++  const g2Z = -516.0;
++  const g2Y = height(g2X, g2Z) + 0.08;
++  box(5.2, 0.08, 15.5, g2X, g2Y, g2Z, m.pavers, g2Angle);
++  addKeke(g2X + 1.1, g2Z - 4.2, g2Angle + Math.PI, false);
++  addKeke(g2X + 0.2, g2Z - 0.8, g2Angle + Math.PI, true);
++  addCampusTaxi(g2X - 1.0, g2Z + 3.8, g2Angle + Math.PI, 2);
++  addPassenger(g2X - 1.2, g2Z - 2.2, g2Angle + Math.PI / 2, 1);
++  addPassenger(g2X - 1.8, g2Z + 0.5, g2Angle + Math.PI / 2, 0);
++  reservedBoxes.push(new THREE.Box2(new THREE.Vector2(g2X - 6, g2Z - 9), new THREE.Vector2(g2X + 6, g2Z + 9)));
++
++  return {
++    obstacles,
++    reserved: (p: Point) => reservedBoxes.some(b => b.containsPoint(new THREE.Vector2(p.x, p.z))),
++    lamps,
++    buildings,
++    pickables,
++    peopleCount,
++    parkingLotsCount: 2
++  };
++}
+diff --git a/src/world/tree-shapes.ts b/src/world/tree-shapes.ts
+index d6f30e3..0fab389 100644
+--- a/src/world/tree-shapes.ts
++++ b/src/world/tree-shapes.ts
+@@ -4,21 +4,37 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+ /** Shared silhouettes, not species identifications. Detail is chosen per grove. */
+ export function broadleafCrown(detailed:boolean) {
+   const lobes=detailed?[
+-    [0,1.85,0,1.1,.9,1.05],[-.85,1.55,.15,.9,.67,.92],
+-    [.75,1.62,.35,.97,.7,.85],[.15,1.5,-.8,.92,.7,.9],[-.2,2.35,-.1,.8,.65,.78]
++    [0,1.92,0,1.15,.92,1.1],[-.88,1.58,.18,.94,.68,.94],
++    [.78,1.64,.36,.98,.72,.88],[.16,1.52,-.82,.94,.72,.92],[-.18,2.42,-.08,.84,.68,.82]
+   ]:[[0,1.8,0,1.65,1.05,1.55]];
+   const pieces=lobes.map(([x,y,z,sx,sy,sz])=>{
+     const g=new THREE.IcosahedronGeometry(1,0),p=g.attributes.position,n=g.attributes.normal,colors:number[]=[];
+     for(let i=0;i<p.count;i++){
+       // Smooth individual lobes, retaining their asymmetrical outline.
+       const normal=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize();n.setXYZ(i,normal.x,normal.y,normal.z);
+-      const light=.72+(p.getY(i)+1)*.14;colors.push(light*.95,light,light*.87);
++      const light=.68+(p.getY(i)+1)*.16;colors.push(light*.94,light,light*.85);
+     }
+     g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.scale(sx,sy,sz);g.translate(x,y,z);return g;
+   });
+   const crown=mergeGeometries(pieces)!;pieces.forEach(g=>g.dispose());return crown;
+ }
+ 
++/** Low-slung multi-lobe shrub and bush cluster geometry with ground-hugging ambient shading. */
++export function bushCrown(detailed:boolean) {
++  const lobes=detailed?[
++    [0,.44,0,.86,.5,.82],[-.56,.33,.2,.64,.39,.58],[.52,.36,-.18,.66,.41,.6]
++  ]:[[0,.42,0,1.12,.48,1.04]];
++  const pieces=lobes.map(([x,y,z,sx,sy,sz])=>{
++    const g=new THREE.IcosahedronGeometry(1,0),p=g.attributes.position,n=g.attributes.normal,colors:number[]=[];
++    for(let i=0;i<p.count;i++){
++      const normal=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i)).normalize();n.setXYZ(i,normal.x,normal.y,normal.z);
++      const light=.62+(p.getY(i)+1)*.19;colors.push(light*.96,light,light*.82);
++    }
++    g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.scale(sx,sy,sz);g.translate(x,y,z);return g;
++  });
++  const bush=mergeGeometries(pieces)!;pieces.forEach(g=>g.dispose());return bush;
++}
++
+ export function broadleafWood(){
+   const pieces:THREE.BufferGeometry[]=[];
+   const branch=(a:THREE.Vector3,b:THREE.Vector3,r:number)=>{const direction=b.clone().sub(a),g=new THREE.CylinderGeometry(r*.55,r,direction.length(),4);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize()));g.translate(...a.clone().add(b).multiplyScalar(.5).toArray());pieces.push(g);};
+diff --git a/src/world/vegetation.ts b/src/world/vegetation.ts
+index aebe6c5..b782724 100644
+--- a/src/world/vegetation.ts
++++ b/src/world/vegetation.ts
+@@ -3,7 +3,7 @@ import type { Position } from '../data';
+ import type { Point } from './math';
+ import { projectPosition, randomFrom } from './math';
+ import type { Materials } from './materials';
+-import { broadleafCrown, broadleafWood } from './tree-shapes';
++import { broadleafCrown, broadleafWood, bushCrown } from './tree-shapes';
+ 
+ export interface LandCover {
+   bbox: [number,number,number,number]; width:number; height:number; values:number[];
+@@ -18,27 +18,83 @@ export function sampleCover(cover:LandCover|undefined,lon:number,lat:number) {
+   return cover.values[y*cover.width+x]??30;
+ }
+ 
+-export function buildVegetation(cover:LandCover|undefined,center:Position,height:(x:number,z:number)=>number,reserved:(p:Point)=>boolean,m:Materials,planted:Point[]=[]) {
++export function buildVegetation(
++  cover:LandCover|undefined,
++  center:Position,
++  height:(x:number,z:number)=>number,
++  reserved:(p:Point)=>boolean,
++  m:Materials,
++  planted:Point[]=[],
++  plantedBushes:Point[]=[],
++  buildingDistance?:(p:Point)=>number,
++  roadDistance?:(p:Point)=>number
++) {
+   const root=new THREE.Group(),rng=randomFrom(91273),trunks:Point[]=[];
+   if(!cover)return {root,trunks,count:0,updateDetail:(_camera:THREE.Vector3)=>false};
+   const [west,south,east,north]=cover.bbox;
+-  const candidates:Point[]=[];
+-  // The raster establishes tree-cover areas, not surveyed individual trees.
++  const treeCandidates:Point[]=[],bushCandidates:Point[]=[];
++  // Separate the campus into cleared academic precincts, bush/scrub transition zones, and outer woodland groves.
+   for(let row=0;row<cover.height;row+=2)for(let col=0;col<cover.width;col+=2){
+-    if(cover.values[row*cover.width+col]!==10)continue;
+-    const lon=west+(col+.2+rng()*.6)/cover.width*(east-west),lat=north-(row+.2+rng()*.6)/cover.height*(north-south);
++    const val=cover.values[row*cover.width+col];
++    if(val!==10&&val!==20&&val!==30&&val!==40)continue;
++    const lon=west+(col+.18+rng()*.64)/cover.width*(east-west),lat=north-(row+.18+rng()*.64)/cover.height*(north-south);
+     const p=projectPosition([lon,lat],center);
+-    if(!reserved(p))candidates.push(p);
++    if(reserved(p))continue;
++    const bDist=buildingDistance?buildingDistance(p):120;
++    const rDist=roadDistance?roadDistance(p):120;
++    // Smooth spatial grove wave clumps woodland trees naturally and leaves open bush/grass glades between groves.
++    const groveWave=Math.sin(p.x*.026+p.z*.017)*Math.cos(p.z*.029-p.x*.015)+Math.sin((p.x-p.z)*.011)*.45;
++
++    if(bDist<28){
++      // Zone 1: Cleared Campus Core — keep sightlines open around buildings; only place low verge/compound shrubs.
++      if(bDist>9&&(rDist<14||rng()<.28)){
++        bushCandidates.push(p);
++      }
++    }else if(bDist<72||rDist<15||val!==10){
++      // Zone 2: Scrub & Bushland Transition (between Phase 1, Phase 2, and Phase 3, and along roads).
++      if(val===10&&groveWave>.38&&rDist>8&&rng()<.34){
++        treeCandidates.push(p);
++      }else if(rng()<.78){
++        bushCandidates.push(p);
++        // Spawn a tight 2–3 shrub thicket around the bush point for organic scrub patches.
++        const thicketCount=1+Math.floor(rng()*2);
++        for(let k=0;k<thicketCount;k++){
++          const angle=rng()*Math.PI*2,dist=2.2+rng()*3.2;
++          const q={x:p.x+Math.cos(angle)*dist,z:p.z+Math.sin(angle)*dist};
++          if(!reserved(q))bushCandidates.push(q);
++        }
++      }
++    }else{
++      // Zone 3: Outer Perimeter Woodland & Valleys — clumped forest groves with bushland borders.
++      if(groveWave>-.22){
++        treeCandidates.push(p);
++        if(groveWave>.45&&rng()<.35){
++          const angle=rng()*Math.PI*2,dist=4.5+rng()*4.5;
++          const q={x:p.x+Math.cos(angle)*dist,z:p.z+Math.sin(angle)*dist};
++          if(!reserved(q))treeCandidates.push(q);
++        }
++      }else if(rng()<.65){
++        bushCandidates.push(p);
++      }
++    }
+   }
+-  // Spread a bounded sample across the full area rather than filling one corner.
+-  for(let i=candidates.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
++  for(let i=treeCandidates.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[treeCandidates[i],treeCandidates[j]]=[treeCandidates[j],treeCandidates[i]];}
++  for(let i=bushCandidates.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[bushCandidates[i],bushCandidates[j]]=[bushCandidates[j],bushCandidates[i]];}
++
+   // 480m cells bound full-view draw calls while retaining spatial culling nearby.
+-  const points=[...planted,...candidates.slice(0,Math.max(0,3200-planted.length))],clusters=new Map<string,Point[]>();
++  const plantedSet=new Set(planted);
++  const points=[...planted,...treeCandidates.slice(0,Math.max(0,1900-planted.length))],clusters=new Map<string,Point[]>();
+   for(const p of points){const key=`${Math.floor(p.x/480)},${Math.floor(p.z/480)}`;const group=clusters.get(key)??[];group.push(p);clusters.set(key,group);}
++  const bushPoints=[...plantedBushes,...bushCandidates.slice(0,Math.max(0,1300-plantedBushes.length))],bushClusters=new Map<string,Point[]>();
++  for(const p of bushPoints){const key=`${Math.floor(p.x/1400)},${Math.floor(p.z/1400)}`;const group=bushClusters.get(key)??[];group.push(p);bushClusters.set(key,group);}
++
+   const crown=broadleafCrown(false),nearCrown=broadleafCrown(true),nearTrunk=broadleafWood();
++  const bushLow=bushCrown(false),bushHigh=bushCrown(true);
+   const trunk=new THREE.CylinderGeometry(.07,.12,1.5,3);trunk.translate(0,.75,0);
++  m.leaves[0].vertexColors=true;
+   m.leaves[1].vertexColors=true;
+   const groves:{leaves:THREE.InstancedMesh;wood:THREE.InstancedMesh;center:THREE.Vector3;count:number}[]=[];
++  const bushGroves:{mesh:THREE.InstancedMesh;center:THREE.Vector3}[]=[];
+   const palmTrunk=new THREE.CylinderGeometry(.065,.1,2.7,4);palmTrunk.translate(0,1.35,0);
+   const palmPositions:number[]=[],palmUV:number[]=[];
+   for(let leaf=0;leaf<7;leaf++){
+@@ -49,30 +105,73 @@ export function buildVegetation(cover:LandCover|undefined,center:Position,height
+   }
+   const palmCrown=new THREE.BufferGeometry();palmCrown.setAttribute('position',new THREE.Float32BufferAttribute(palmPositions,3));palmCrown.setAttribute('uv',new THREE.Float32BufferAttribute(palmUV,2));palmCrown.computeVertexNormals();
+   const dummy=new THREE.Object3D(),color=new THREE.Color();
++  const allPalms:Point[]=[];
+   for(const group of clusters.values()){
+-    const palms:Point[]=[],broadleaf:Point[]=[];group.forEach(p=>(!planted.includes(p)&&rng()<.12?palms:broadleaf).push(p));
+-    for(const [points,isPalm] of [[broadleaf,false],[palms,true]] as [Point[],boolean][]){
+-      if(!points.length)continue;
+-      const leaves=new THREE.InstancedMesh(isPalm?palmCrown:crown,isPalm?m.palmLeaves[1]:m.leaves[1],points.length),wood:THREE.InstancedMesh=new THREE.InstancedMesh(isPalm?palmTrunk:trunk,m.wood,points.length);
+-      points.forEach((p,i)=>{
+-        const scale=isPalm?3.1+rng()*1.4:3.2+rng()*2.1,y=height(p.x,p.z);
+-        dummy.position.set(p.x,y,p.z);dummy.rotation.y=rng()*Math.PI*2;dummy.scale.set(scale,scale*(.9+rng()*.3),scale);dummy.updateMatrix();
+-        leaves.setMatrixAt(i,dummy.matrix);wood.setMatrixAt(i,dummy.matrix);
+-        leaves.setColorAt(i,color.setHSL(.23+rng()*.075,.16+rng()*.22,.75+rng()*.22));trunks.push(p);
+-      });
+-      leaves.castShadow=true;wood.castShadow=true;
+-      leaves.computeBoundingSphere();wood.computeBoundingSphere();root.add(leaves,wood);if(!isPalm){leaves.geometry=nearCrown;leaves.computeBoundingSphere();wood.geometry=nearTrunk;wood.computeBoundingSphere();leaves.geometry=crown;wood.geometry=trunk;groves.push({leaves,wood,center:leaves.boundingSphere!.center.clone(),count:points.length});}
+-    }
++    const broadleaf:Point[]=[];group.forEach(p=>(!plantedSet.has(p)&&rng()<.13?allPalms:broadleaf).push(p));
++    if(!broadleaf.length)continue;
++    const leaves=new THREE.InstancedMesh(crown,m.leaves[1],broadleaf.length),wood:THREE.InstancedMesh=new THREE.InstancedMesh(trunk,m.wood,broadleaf.length);
++    broadleaf.forEach((p,i)=>{
++      const isAvenue=plantedSet.has(p);
++      const bDist=buildingDistance?buildingDistance(p):100;
++      const scale=isAvenue?3.3+rng()*.85:bDist<70?2.6+rng()*1.45:3.1+rng()*2.3,y=height(p.x,p.z);
++      dummy.position.set(p.x,y,p.z);dummy.rotation.y=rng()*Math.PI*2;dummy.scale.set(scale*(.92+rng()*.18),scale*(.88+rng()*.28),scale*(.92+rng()*.18));dummy.updateMatrix();
++      leaves.setMatrixAt(i,dummy.matrix);wood.setMatrixAt(i,dummy.matrix);
++      leaves.setColorAt(i,color.setHSL(.22+rng()*.085,.18+rng()*.24,.72+rng()*.23));trunks.push(p);
++    });
++    leaves.castShadow=true;wood.castShadow=true;
++    leaves.computeBoundingSphere();wood.computeBoundingSphere();root.add(leaves,wood);
++    leaves.geometry=nearCrown;leaves.computeBoundingSphere();wood.geometry=nearTrunk;wood.computeBoundingSphere();leaves.geometry=crown;wood.geometry=trunk;
++    groves.push({leaves,wood,center:leaves.boundingSphere!.center.clone(),count:broadleaf.length});
++  }
++  if(allPalms.length){
++    const leaves=new THREE.InstancedMesh(palmCrown,m.palmLeaves[1],allPalms.length),wood:THREE.InstancedMesh=new THREE.InstancedMesh(palmTrunk,m.wood,allPalms.length);
++    allPalms.forEach((p,i)=>{
++      const scale=3.1+rng()*1.4,y=height(p.x,p.z);
++      dummy.position.set(p.x,y,p.z);dummy.rotation.y=rng()*Math.PI*2;dummy.scale.set(scale,scale*(.9+rng()*.3),scale);dummy.updateMatrix();
++      leaves.setMatrixAt(i,dummy.matrix);wood.setMatrixAt(i,dummy.matrix);
++      leaves.setColorAt(i,color.setHSL(.23+rng()*.075,.16+rng()*.22,.75+rng()*.22));trunks.push(p);
++    });
++    leaves.castShadow=true;wood.castShadow=true;
++    leaves.computeBoundingSphere();wood.computeBoundingSphere();root.add(leaves,wood);
+   }
+-  root.userData.sharedGeometries=[crown,nearCrown,trunk,nearTrunk,palmCrown,palmTrunk];
++  // Low-slung bush and scrub layer: grouped into large spatial cells for minimal draw calls.
++  const plantedBushSet=new Set(plantedBushes);
++  for(const group of bushClusters.values()){
++    if(!group.length)continue;
++    const mesh=new THREE.InstancedMesh(bushLow,m.leaves[0],group.length);
++    group.forEach((p,i)=>{
++      const isOrnamental=plantedBushSet.has(p);
++      const sx=isOrnamental?1.15+rng()*.45:1.35+rng()*1.65;
++      const sy=isOrnamental?.85+rng()*.35:.75+rng()*1.05;
++      const sz=isOrnamental?1.15+rng()*.45:1.3+rng()*1.6;
++      const y=height(p.x,p.z);
++      dummy.position.set(p.x,y-.04,p.z);dummy.rotation.y=rng()*Math.PI*2;dummy.scale.set(sx,sy,sz);dummy.updateMatrix();
++      mesh.setMatrixAt(i,dummy.matrix);
++      // Varied olive, sage, and warm guinea-savanna scrub tints distinguish bushes from tall tree crowns.
++      const hue=isOrnamental?.26+rng()*.05:.20+rng()*.095;
++      const sat=isOrnamental?.24+rng()*.16:.16+rng()*.24;
++      const lum=isOrnamental?.74+rng()*.16:.68+rng()*.24;
++      mesh.setColorAt(i,color.setHSL(hue,sat,lum));
++    });
++    mesh.castShadow=true;mesh.receiveShadow=true;
++    mesh.computeBoundingSphere();root.add(mesh);
++    mesh.geometry=bushHigh;mesh.computeBoundingSphere();mesh.geometry=bushLow;
++    bushGroves.push({mesh,center:mesh.boundingSphere!.center.clone()});
++  }
++  root.userData.sharedGeometries=[crown,nearCrown,trunk,nearTrunk,palmCrown,palmTrunk,bushLow,bushHigh];
+   let lastCamera=new THREE.Vector3(Infinity,Infinity,Infinity);
+   function updateDetail(camera:THREE.Vector3){
+     if(lastCamera.distanceToSquared(camera)<25)return false;lastCamera.copy(camera);let budget=480,changed=false;
++    const camHeight=camera.y-height(camera.x,camera.z);
+     for(const grove of [...groves].sort((a,b)=>a.center.distanceToSquared(camera)-b.center.distanceToSquared(camera))){
+-      const close=grove.center.distanceTo(camera)<380&&camera.y-height(camera.x,camera.z)<110&&grove.count<=budget;
++      const close=grove.center.distanceTo(camera)<380&&camHeight<110&&grove.count<=budget;
+       const next=close?nearCrown:crown;changed ||= grove.leaves.geometry!==next;grove.leaves.geometry=next;grove.wood.geometry=close?nearTrunk:trunk;if(close)budget-=grove.count;
+     }
++    for(const bg of bushGroves){
++      const close=bg.center.distanceTo(camera)<340&&camHeight<110;
++      const next=close?bushHigh:bushLow;changed ||= bg.mesh.geometry!==next;bg.mesh.geometry=next;
++    }
+     root.userData.detailedTrees=480-budget;return changed;
+   }
+-  return {root,trunks,count:points.length,updateDetail};
++  return {root,trunks,count:points.length+bushPoints.length,updateDetail};
+ }

@@ -501,6 +501,7 @@ export function addPhaseOneSportsComplex(
   const standPickMesh = new THREE.Mesh(standPickGeo, standPickMat);
   standPickMesh.position.set(standCenterX, groundY + 2.5, standCenterZ);
   standPickMesh.userData.id = 'local/phase1-sports-complex';
+  standPickMesh.userData.noHighlight = true;
   root.add(standPickMesh);
 
   // ==============================================================

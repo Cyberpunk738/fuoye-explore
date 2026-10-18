@@ -1,4 +1,4 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {compoundRoof,groundPolygon} from '../src/world/architecture.ts';
@@ -10,8 +10,12 @@ test('campus inventory has unique source-backed identities and exactly one prima
  const byId=new Map(data.features.map((f:any)=>[f.id,f]));assert.equal(byId.size,data.features.length);
  assert.ok(readFileSync(new URL('../public/data/campus.geojson',import.meta.url)).byteLength<200000);
  for(const place of inventory.places){assert.match(place.source,/^https:\/\/www.google.com\/maps\//);let primary=0;for(const id of place.featureIds){const f:any=byId.get(id);assert.ok(f,`${place.name}: ${id}`);assert.equal(f.properties.campus.id,place.id);assert.equal(f.properties.campus.primaryId,place.featureIds[0]);if(f.properties.campus.directory)primary++;}assert.equal(primary,1,place.name);}
- for(const f of data.features){if(f.properties.source==='observation'){assert.match(f.id,/^local\//);assert.ok(f.properties.evidence&&f.properties.accuracy);assert.ok(f.properties.sources[0].startsWith('https://www.google.com/maps/'));}if(f.properties.kind==='building'){const [lon,lat]=f.properties.center;assert.ok(lon>5.30&&lon<5.325&&lat>7.77&&lat<7.782);}}
- assert.ok(inventory.places.some((p:any)=>p.phase===1));assert.ok(!inventory.places.some((p:any)=>/Ikole|Tourism|ICT|Library/i.test(p.name)));
+ for(const f of data.features){if(f.properties.source==='observation'){assert.match(f.id,/^local\//);assert.ok(f.properties.evidence&&f.properties.accuracy);assert.ok(f.properties.sources[0].startsWith('https://www.google.com/maps/'));}if(f.properties.kind==='building'){const [lon,lat]=f.properties.center;assert.ok(lon>5.30&&lon<5.325&&lat>7.77&&lat<7.7835);}}
+ assert.ok(inventory.places.some((p:any)=>p.phase===1));
+ assert.ok(inventory.places.some((p:any)=>p.id==='faculty-of-law'&&p.phase===2));
+ assert.ok(inventory.places.some((p:any)=>p.id==='chapel-of-transformation'&&p.phase===2));
+ assert.ok(inventory.places.some((p:any)=>p.id==='science-lab'&&p.phase===2));
+ assert.ok(!inventory.places.some((p:any)=>/Ikole|Tourism|ICT|Library/i.test(p.name)));
 });
 
 test('compound roofs preserve a courtyard, keep boundary elevations and have a bounded mesh',()=>{
