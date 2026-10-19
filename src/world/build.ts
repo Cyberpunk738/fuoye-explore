@@ -8,6 +8,7 @@ import { createSignage } from './signage';
 import { addCampusEntrance, addPhaseTwoEntrance, mainGatePosition, phase2GatePosition } from './entrance';
 import { addPhaseOnePlanting } from './phase-one';
 import { addPhaseOneSportsComplex } from './sports';
+import { addPhaseOneMosque } from './mosque';
 import { addCampusTransitParks } from './transit-park';
 import { buildVegetation, sampleCover } from './vegetation';
 import type { LandCover } from './vegetation';
@@ -37,7 +38,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   const buildingHeight=(x:number,z:number)=>{const p={x,z},h=rawHeight(x,z);let total=0,weighted=0,influence=0;for(const b of buildings){if(b.bounds.distanceToPoint(new THREE.Vector2(x,z))>=35)continue;const inside=pointInRing(p,b.ring);if(inside)return b.position.y;const distance=Math.min(...b.ring.map((a,i)=>{const q=nearestPoint(p,a,b.ring[(i+1)%b.ring.length]);return Math.hypot(x-q.x,z-q.z);}));if(distance>=35)continue;const falloff=1-THREE.MathUtils.smoothstep(distance,0,35),weight=falloff/(distance+1)**2;total+=weight;weighted+=b.position.y*weight;influence=Math.max(influence,falloff);}return total?h+(weighted/total-h)*influence:h;};
   const gateGround=project(mainGatePosition),gateBase=rawHeight(gateGround.x,gateGround.z);
   const phase2Ground=project(phase2GatePosition),phase2Base=rawHeight(phase2Ground.x,phase2Ground.z);
-  const sportsMinX = 575, sportsMaxX = 765, sportsMinZ = -530, sportsMaxZ = -380;
+  const sportsMinX = 575, sportsMaxX = 765, sportsMinZ = -540, sportsMaxZ = -380;
   const sportsLevelY = 1.4;
   const flatHeight=(x:number,z:number)=>{
     const distance=Math.hypot(x-gateGround.x,z-gateGround.z),base=buildingHeight(x,z),blend=1-THREE.MathUtils.smoothstep(distance,34,70);
@@ -92,6 +93,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
     {key:'gate-safety',lines:['SPEED LIMIT','30 KM/H'],footer:'DRIVE SAFE · SLOW DOWN'},
     {key:'keke-park-1',lines:['CAMPUS KEKE & TAXI PARK'],footer:'SHUTTLE TO PHASE 1 · PHASE 2 · HOSTELS',stretch:2.2,background:'#dfae25',color:'#163b2b'},
     {key:'keke-park-2',lines:['PHASE 2 KEKE & TAXI STOP'],footer:'CAMPUS TRANSIT · SENATE · FACULTIES',stretch:2.2,background:'#174838',color:'#f5eedc'},
+    {key:'phase1-mosque-sign',lines:['FUOYE CENTRAL MOSQUE'],footer:'PHASE 1 · PRAYER HALL & WUDU COURTYARD',stretch:2.2,background:'#174838',color:'#f5eedc'},
     ...[1,2,3].map(phase=>({key:'phase-'+phase,lines:['PHASE '+phase],footer:'CAMPUS GUIDE',background:'#184c3b',color:'#fff9dc'}))
   ]);
   // Architectural profiles retain source outlines. Detail assemblies are illustrative.
@@ -210,6 +212,11 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
   lamps.push(...sports.lamps);
   buildings.push(sports.building);
   pickables.push(sports.pickable);
+  const mosque=addPhaseOneMosque(root,batch,m,signs,height);
+  structureBounds.push(...mosque.obstacles);
+  lamps.push(...mosque.lamps);
+  buildings.push(mosque.building);
+  pickables.push(mosque.pickable);
   const terrainClip={origin:{x:worldBounds.min.x,z:worldBounds.min.y},cell:{x:terrainSize.x/terrainSteps,z:terrainSize.y/terrainSteps},steps:terrainSteps};
   const entrance=addCampusEntrance(batch,m,signs,center,height,terrainClip);
   structureBounds.push(...entrance.obstacles);
@@ -247,7 +254,7 @@ export function buildWorld(features:Feature[],center:Position,notes:Notes,grid?:
     cover,
     center,
     height,
-    p=>entrance.reserved(p)||phase2Entrance.reserved(p)||sports.reserved(p)||transit.reserved(p)||blocked(p,7)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),
+    p=>entrance.reserved(p)||phase2Entrance.reserved(p)||sports.reserved(p)||mosque.reserved(p)||transit.reserved(p)||blocked(p,7)||onRoad(p,3)||groundSites.some(site=>pointInRing(p,site.ring)),
     m,
     planting.trees,
     planting.bushes,

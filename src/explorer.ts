@@ -12,8 +12,13 @@ app.innerHTML = `
   <div id="scene" class="scene" aria-label="Interactive 3D model of FUOYE Oye campus"></div>
   <aside class="panel" aria-label="Campus building directory">
     <header><h1>FUOYE<span>.</span></h1><p class="where">Oye-Ekiti, Nigeria</p></header>
+    <button type="button" class="tour-banner" id="start-guided-tour">
+      <span class="tour-banner-kicker">NEW STUDENT &amp; VISITOR GUIDE</span>
+      <strong>Start Guided Campus Tour →</strong>
+      <small>Phase 1 Gate · Admin · Library · Faculties · Hostels</small>
+    </button>
     <details class="list" ${compact ? '' : 'open'}><summary>Campus buildings</summary><ul id="building-list"></ul></details>
-    <p class="hint">${matchMedia('(pointer: coarse)').matches ? 'Drag to turn, pinch to zoom. Tap open ground to center your view and set a starting point.' : 'Drag to orbit, right-drag to pan, scroll to zoom. Click open ground to move your view; click buildings to inspect. W to walk, D to drive.'}</p>
+    <p class="hint">${matchMedia('(pointer: coarse)').matches ? 'Drag to turn, pinch to zoom. Tap open ground to center your view and set a starting point.' : 'Drag to orbit, right-drag to pan, scroll to zoom. Click open ground to move your view; click buildings to inspect. T for tour, W to walk, D to drive.'}</p>
   </aside>
   <p class="credit">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> / <a href="https://github.com/microsoft/GlobalMLBuildingFootprints" target="_blank" rel="noopener">Microsoft</a>. Elevation: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Terrain Tiles</a>. Trees: <a href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener">ESA WorldCover</a>. <button id="about-open">About</button></p>
   <p class="loading" role="status">Building the campus…</p>
@@ -50,7 +55,9 @@ async function start() {
     document.querySelector('#place-count')!.textContent=`${placeCount} named places have source records.`;
     scene = module.createExplorerScene(document.querySelector('#scene')!, dataset.features, [5.3163,7.7772], readNotes(), select, terrain, cover);
     const buildings = [...scene.getBuildings()].filter(b=>b.directory).sort((a,b) => Number(b.named)-Number(a.named)||a.name.localeCompare(b.name,undefined,{numeric:true}));
-    directory.innerHTML = '<li><button type="button" data-landmark="main-gate">Main gate · Phase 1</button></li><li><button type="button" data-landmark="phase2-gate">Phase 2 gate · Falex Rd</button></li>'+buildings.map(b => `<li><button type="button" data-building="${escapeHtml(b.id)}" aria-current="false" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</button></li>`).join('');
+    directory.innerHTML = '<li><button type="button" data-landmark="guided-tour">Guided tour · All 10 stops</button></li><li><button type="button" data-landmark="main-gate">Main gate · Phase 1</button></li><li><button type="button" data-landmark="phase2-gate">Phase 2 gate · Falex Rd</button></li>'+buildings.map(b => `<li><button type="button" data-building="${escapeHtml(b.id)}" aria-current="false" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</button></li>`).join('');
+    document.querySelector<HTMLButtonElement>('#start-guided-tour')!.onclick=()=>{scene?.startTour(0);if(compact)directory.closest('details')!.open=false;};
+    directory.querySelector<HTMLButtonElement>('[data-landmark="guided-tour"]')!.onclick=()=>{scene?.startTour(0);if(compact)directory.closest('details')!.open=false;};
     directory.querySelector<HTMLButtonElement>('[data-landmark="main-gate"]')!.onclick=()=>{scene?.gateView('main');if(compact)directory.closest('details')!.open=false;};
     directory.querySelector<HTMLButtonElement>('[data-landmark="phase2-gate"]')!.onclick=()=>{scene?.gateView('phase2');if(compact)directory.closest('details')!.open=false;};
     directory.querySelectorAll<HTMLButtonElement>('[data-building]').forEach(button => {

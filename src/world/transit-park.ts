@@ -357,103 +357,7 @@ export function addCampusTransitParks(
   });
 
   // ============================================================================
-  // 2. PHASE 2 JUNCTION & BOULEVARD KEKE & TAXI SHUTTLE PARK (x = -216, z = -148)
-  // ============================================================================
-  // Located on the open eastern transit bay of local/admin-forecourt right at the
-  // Phase 2 Boulevard & Central Administration junction where satellite imagery
-  // shows rows of waiting campus shuttles, plus a drop-off lay-by inside Phase 2 Gate.
-  const p2X = -216.0;
-  const p2Z = -148.0;
-  const p2W = 20.0;
-  const p2D = 16.0;
-  const p2Y = height(p2X, p2Z) + 0.10;
-
-  box(p2W, 0.08, p2D, p2X, p2Y, p2Z, m.asphalt);
-  box(p2W - 1.0, 0.12, 3.4, p2X, p2Y + 0.04, p2Z + p2D / 2 - 1.7, m.pavers);
-
-  // Bay stripes at Phase 2 Junction Park
-  for (let i = 0; i <= 5; i++) {
-    const bx = p2X - 7.5 + i * 3.0;
-    box(0.11, 0.03, 4.2, bx, p2Y + 0.05, p2Z - 3.6, m.white);
-  }
-
-  // Phase 2 Transit Shelter Canopy along the South edge of the bay
-  const sh2Z = p2Z + p2D / 2 - 1.6;
-  const sh2W = 10.5;
-  const sh2D = 2.8;
-  const sh2H = 3.0;
-  box(sh2W, 1.15, 0.22, p2X, p2Y + 0.62, sh2Z + sh2D / 2 - 0.15, m.ivory);
-  box(sh2W + 0.1, 0.16, 0.26, p2X, p2Y + 1.22, sh2Z + sh2D / 2 - 0.15, m.accent);
-  for (let i = 0; i <= 3; i++) {
-    const cx = p2X - sh2W / 2 + 0.4 + (i / 3) * (sh2W - 0.8);
-    cyl(0.065, 0.065, sh2H, cx, p2Y + sh2H / 2, sh2Z + sh2D / 2 - 0.2, m.steel, 6);
-    cyl(0.065, 0.065, sh2H - 0.1, cx, p2Y + (sh2H - 0.1) / 2, sh2Z - sh2D / 2 + 0.2, m.steel, 6);
-  }
-  box(sh2W + 0.7, 0.16, sh2D + 0.6, p2X, p2Y + sh2H, sh2Z, m.roofs[0]);
-  box(sh2W + 0.8, 0.12, sh2D + 0.7, p2X, p2Y + sh2H - 0.09, sh2Z, m.trim);
-  signs.add(
-    batch,
-    'keke-park-2',
-    6.8,
-    0.90,
-    new THREE.Vector3(p2X, p2Y + sh2H + 0.38, sh2Z - sh2D / 2 - 0.15),
-    Math.PI
-  );
-  box(7.0, 0.96, 0.12, p2X, p2Y + sh2H + 0.38, sh2Z - sh2D / 2 - 0.08, m.steel);
-  addObstacle(p2X, sh2Z, sh2W / 2 + 0.2, sh2D / 2 + 0.2);
-
-  // Waiting benches inside Phase 2 shelter
-  for (const bx of [p2X - 2.6, p2X + 2.6]) {
-    box(2.2, 0.10, 0.48, bx, p2Y + 0.46, sh2Z + 0.25, m.wood);
-    for (const s of [-0.8, 0.8]) {
-      box(0.08, 0.44, 0.44, bx + s, p2Y + 0.24, sh2Z + 0.25, m.steel);
-    }
-  }
-
-  // 4 Keke Napep & 2 Campus Taxis at Phase 2 Junction Park
-  addKeke(p2X - 6.0, p2Z - 3.6, 0.06, false);
-  addKeke(p2X - 3.2, p2Z - 3.6, 0.0, true);
-  addKeke(p2X - 0.4, p2Z - 3.6, -0.05, false);
-  addKeke(p2X + 2.2, p2Z - 0.6, Math.PI / 2, true);
-  addCampusTaxi(p2X + 3.2, p2Z - 3.6, 0.0, 1);
-  addCampusTaxi(p2X + 6.4, p2Z - 3.6, -0.04, 3);
-
-  addPassenger(p2X - 3.2, sh2Z - 0.6, Math.PI, 2);
-  addPassenger(p2X - 1.4, sh2Z - 0.5, Math.PI, 0);
-  addPassenger(p2X + 1.5, sh2Z - 0.6, Math.PI, 3);
-  addParkLamp(p2X - p2W / 2 + 0.8, p2Z + p2D / 2 - 0.8, 1);
-
-  const p2Bounds = new THREE.Box2(
-    new THREE.Vector2(p2X - p2W / 2 - 1, p2Z - p2D / 2 - 1),
-    new THREE.Vector2(p2X + p2W / 2 + 1, p2Z + p2D / 2 + 1)
-  );
-  reservedBoxes.push(p2Bounds);
-
-
-
-  buildings.push({
-    id: 'local/phase2-keke-park',
-    name: 'Phase 2 Keke & Taxi Shuttle Park',
-    position: new THREE.Vector3(p2X, p2Y, p2Z),
-    ring: [
-      { x: p2X - p2W / 2, z: p2Z - p2D / 2 },
-      { x: p2X + p2W / 2, z: p2Z - p2D / 2 },
-      { x: p2X + p2W / 2, z: p2Z + p2D / 2 },
-      { x: p2X - p2W / 2, z: p2Z + p2D / 2 }
-    ],
-    bounds: p2Bounds,
-    height: 3.6,
-    floors: 1,
-    style: 'campus tricycle (keke) & taxi transit hub',
-    entrance: new THREE.Vector3(p2X, p2Y, p2Z - p2D / 2),
-    source: 'Campus transit observation & Phase 2 junction parking bay',
-    directory: true,
-    named: true,
-    placeId: 'phase2-keke-park'
-  });
-
-  // ============================================================================
-  // 3. PHASE 2 GATE ROADSIDE KEKE & TAXI LAY-BY (x = -114.5, z = -516.0)
+  // 2. PHASE 2 GATE ROADSIDE KEKE & TAXI LAY-BY (x = -114.5, z = -516.0)
   // ============================================================================
   // Situated on the western roadside shoulder just inside Phase 2 Gate (Falex Rd),
   // completely clear of the divided carriageways so incoming students can board.
@@ -476,6 +380,6 @@ export function addCampusTransitParks(
     buildings,
     pickables,
     peopleCount,
-    parkingLotsCount: 2
+    parkingLotsCount: 1
   };
 }
