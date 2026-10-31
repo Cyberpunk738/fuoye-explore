@@ -20,7 +20,7 @@ The project starts at the **main entrance beside Phase 1** and covers Phases 1, 
 
 | Campus coverage | Named places | Building directory | Ways to explore |
 | :---: | :---: | :---: | :---: |
-| **108** building polygons | **11** matched places | **62** building entries | **Orbit · Walk · Drive** |
+| **108** building polygons | **14** matched places | **62** building entries | **Orbit · Walk · Drive · Tour** |
 
 > **Project status:** a working reconstruction under active refinement. This is an independent student project. Names, geometry and architectural details have different levels of confidence; it is not an official university map or a surveyed digital twin.
 
@@ -46,6 +46,22 @@ The fullscreen scene opens at the Phase 1 gate. Use the floating building direct
 
 Click or tap clear ground to choose your next starting point. **Walk here** and **Drive here** begin there, with nearby adjustments when a selected point is obstructed. Leaving either mode returns to a close view of your current location.
 
+### First-time student & visitor guided tour
+
+The **Guided Campus Tour** offers an automated, 10-stop cinematic journey across all three campus phases:
+1. **Phase 1 Main Gate & Keke Mini-Park** · Entry arches, security post & student shuttle hub
+2. **Phase 1 Sports Field & Mini Stadium** · Full regulation football pitch, covered pavilion, basketball & volleyball courts
+3. **Phase 1 Main Auditorium & Arts Complex** · Major assembly hall and Faculty of Arts & Education
+4. **University Library & Academic Commons** · Central campus study commons and reference library
+5. **Phase 2 Main Gate & Faculty of Law** · Falex Road ceremonial entrance arch and Law faculty complex
+6. **Central Administration Block** · Vice Chancellor's lodge, bursary and landscaped park
+7. **New Senate Building** · Multi-storey campus administrative tower
+8. **Faculty of Science & 3-in-1 Laboratories** · Science lecture halls and complex
+9. **Faculty of Management Sciences** · Signature columned portico and green compound courtyard
+10. **Phase 3 Student Hostels & Health Sciences** · Residential halls and Basic Medical & Social Sciences
+
+Each stop features smooth parabolic camera flights, auto-play progression, an interactive stop rail, and **Fresher & Visitor Notes** with practical campus advice. You can jump directly from any tour stop straight into **Walk here** or **Drive here**.
+
 ### Walk, drive and deliver
 
 Explore on foot with running, jumping and mouse-look, or take a car into free drive. **Campus Courier** adds timed deliveries: follow the gold guide, slow down inside the destination ring and earn points and extra time. Your best score stays in the browser.
@@ -54,7 +70,7 @@ Switch to **Night** for illuminated windows, lamps, stars and a vehicle headligh
 
 ### Recognizable buildings and grounds
 
-The visual pass adds distinct treatments to Management Sciences, the boys’ hostel and Central Administration using saved contributor photos. Other refinements include the Phase 1 sports complex (featuring a regulation East-West football pitch, running track, basketball and volleyball courts, floodlight towers, and spectator bleachers), the Phase 1 auditorium, varied nearby tree crowns, separate observed lawn patches, roof details, window reveals and park/path edging.
+The visual pass adds distinct treatments to Management Sciences, the boys’ hostel, Faculty of Law, Central Administration, and the **Phase 1 Central Mosque** (featuring an emerald-green central dome, twin minarets, and covered ablution courtyard). Other refinements include the Phase 1 sports complex (featuring a regulation East-West football pitch, running track, basketball and volleyball courts, floodlight towers, and spectator bleachers), Phase 1 and Phase 2 **Keke Napep & Taxi mini-parks** with passenger shuttles, the Phase 1 auditorium, varied nearby tree crowns, separate observed lawn patches, roof details, window reveals and park/path edging.
 
 <details>
 <summary><strong>View the Management Sciences model</strong></summary>
@@ -117,11 +133,23 @@ No API keys or environment file are needed for the bundled explorer. After the i
 | Focus a building | Click the building or directory entry | Tap the building or directory entry |
 | Center view and set starting point | Click open ground to fly camera and pin start | Tap open ground to center view and pin start |
 | Start immediately under the cursor | Hover over ground, then press **W** or **D** | Use the ground-point actions |
+| Start guided campus tour | Click **Guided tour** or press **T** | Tap **Start Guided Campus Tour** banner |
 | Fit the campus | **Full view** | **Full view** |
 | Return to the entrance | **Main gate · Phase 1** in the directory | Same |
 | Switch lighting | **Night** / **Day** | Same |
 
 A pinned starting point also applies to the top **Walk** and **Drive** controls. Dragging the orbit view or focusing another building clears the pin. Blocked positions move to nearby safe ground, with extra clearance for the car.
+
+### Guided tour
+
+| Action | Control / Desktop | Touch |
+| --- | --- | --- |
+| Next stop | **→** or **N**, or click **Next stop →** | Tap **Next stop →** or step badge |
+| Previous stop | **←** or **P**, or click **← Prev** | Tap **← Prev** or step badge |
+| Pause / Resume auto-play | **Space** or click **Pause** / **Auto-play** | Tap **Pause** / **Auto-play** |
+| Walk or drive at this stop | Click **Walk here** or **Drive here** | Tap **Walk here** or **Drive here** |
+| Jump to any stop | Click stop in top rail | Tap stop in top rail |
+| Leave tour | **Escape**, or click **Exit tour** | Tap **Exit tour** |
 
 ### Walking
 
@@ -152,7 +180,7 @@ Courier runs begin with **75 seconds**. Follow the gold arrow/beacon and slow do
 
 ## Campus coverage
 
-The 108 polygons include secondary wings and small supporting structures. The 62-entry building directory groups or excludes these supporting parts to keep navigation useful; the gate and sports complex are additional landmark entries.
+The 108 polygons include secondary wings and small supporting structures. The 62-entry building directory groups or excludes these supporting parts to keep navigation useful; the gate, sports complex, central mosque and transit parks are additional landmark entries.
 
 Current named destinations:
 
@@ -161,9 +189,10 @@ Current named destinations:
 | Faculty of Management Sciences | Central Administration |
 | Faculty of Science | New Senate Building |
 | Faculty of Education | Phase 1 Main Auditorium |
-| Faculty of Basic Medical Sciences | Phase 1 Sports Complex |
-| Faculty of Social Sciences | Boys’ hostel |
-| Theatre and Media Arts | Old girls’ hostel |
+| Faculty of Law | Phase 1 Sports Complex |
+| Faculty of Basic Medical Sciences | FUOYE Phase 1 Central Mosque |
+| Faculty of Social Sciences | Phase 1 & Phase 2 Transit Parks |
+| Theatre and Media Arts | Boys’ hostel & Girls’ hostel |
 
 Names are matched to Maps pins or visible compounds, with confidence and evidence recorded in the [campus inventory](research/oye-campus-inventory.json). Unknown buildings remain numbered. The modeled area is scene coverage, not an official property boundary.
 
@@ -178,6 +207,8 @@ The reconstruction keeps source geometry, visual observations and estimated deta
 | Architecture | Saved photos, satellite roof observations and procedural profiles | Most heights, window spacing, roof pitch and unseen facades |
 | Main entrance | Satellite alignment, a wide entrance photo and user confirmation of the Phase 1 location | Dimensions, sculpture details and ground grading |
 | Sports complex | Observed satellite layout, regulation pitch and court dimensions | Surface wear, track lane markings, and exact spectator seating capacity |
+| Central Mosque | Ground observations, Islamic architectural elements and compound layout | Internal prayer hall layout, minaret interior and ornamental tilework |
+| Transit parks | Observed turnaround bays, lay-bys and campus shuttle operations | Exact fleet sizes and passenger queue barriers |
 | Roads and paths | OSM lines plus documented local observations | Widths, markings, kerbs and street furniture |
 | Terrain | Mapzen Terrain Tiles / USGS elevation data | Source resolution, smoothing and estimated foundation grading |
 | Vegetation | ESA WorldCover 2021 and observed planted areas | Individual tree positions, species, heights and hedge placement |
@@ -303,7 +334,7 @@ $env:BASE_URL = "http://127.0.0.1:5174/"
 npm run test:landscape
 ```
 
-Screenshots and reports are written to ignored `output/`. At the last implementation checkpoint, **28 unit tests**, the production build, landscape checks, desktop/mobile gameplay, transitions, routes and entrance checks passed. This is a dated checkpoint, not a live CI badge.
+Screenshots and reports are written to ignored `output/`. At the last implementation checkpoint, **30 unit tests**, the production build, landscape checks, desktop/mobile gameplay, transitions, routes and entrance checks passed. This is a dated checkpoint, not a live CI badge.
 
 The route audit permits off-road travel and does not replace driving complete deliveries by keyboard or touch. The reference inspection script is a research aid rather than a required application test.
 
