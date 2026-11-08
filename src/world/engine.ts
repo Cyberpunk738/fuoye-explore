@@ -11,7 +11,7 @@ import { clipSegment, hashSeed, nearestPoint, pointInRing, projectPosition, rand
 import type { Point, TerrainGrid } from './math';
 import type { WorldProfile } from './profile';
 export interface BuildingAsset {id:string;name:string;position:THREE.Vector3;ring:Point[];bounds:THREE.Box2;height:number;floors:number;style:string;entrance:THREE.Vector3;source:string;directory:boolean;named:boolean;placeId?:string;}
-export interface RoadSegment {a:Point;b:Point;width:number;length:number;surface:string;}
+export interface RoadSegment {a:Point;b:Point;width:number;length:number;surface:string;oneway?:boolean;}
 export function buildCampusWorld(features:Feature[],center:Position,notes:Notes,worldProfile:WorldProfile,grid?:TerrainGrid,cover?:LandCover) {
   const root=new THREE.Group(), batch=new GeometryBatch(), m=makeMaterials();
   const buildings:BuildingAsset[]=[],pickables:THREE.Mesh[]=[],roads:RoadSegment[]=[],lamps:THREE.Vector3[]=[],exclusions:THREE.Box2[]=[];
@@ -44,7 +44,7 @@ export function buildCampusWorld(features:Feature[],center:Position,notes:Notes,
   const paths:{a:Point;b:Point;width:number}[]=[];
   const reserved=(p:Point,padding=0)=>blocked(p,padding)||exclusions.some(b=>b.clone().expandByScalar(padding).containsPoint(new THREE.Vector2(p.x,p.z)))||paths.some(s=>{const q=nearestPoint(p,s.a,s.b);return Math.hypot(p.x-q.x,p.z-q.z)<s.width/2+padding;});
   for(const f of features){if(f.properties.kind!=='road'||f.geometry.type!=='LineString')continue;const width=Number(f.properties.tags.width)||(['footway','path','steps'].includes(f.properties.tags.highway)?2:f.properties.tags.highway==='service'?4.5:7);const surface=f.properties.tags.surface??(width<3?'ground':'asphalt');
-    for(let i=1;i<f.geometry.coordinates.length;i++){const start=project(f.geometry.coordinates[i-1]),end=project(f.geometry.coordinates[i]);const clipped=clipSegment(start,end,{x:worldBounds.min.x,z:worldBounds.min.y},{x:worldBounds.max.x,z:worldBounds.max.y});if(!clipped)continue;const [a,b]=clipped,length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.1)continue;roads.push({a,b,width,length,surface});}}
+    for(let i=1;i<f.geometry.coordinates.length;i++){const start=project(f.geometry.coordinates[i-1]),end=project(f.geometry.coordinates[i]);const clipped=clipSegment(start,end,{x:worldBounds.min.x,z:worldBounds.min.y},{x:worldBounds.max.x,z:worldBounds.max.y});if(!clipped)continue;const [a,b]=clipped,length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.1)continue;roads.push({a,b,width,length,surface,oneway:f.properties.tags.oneway==='yes'});}}
   const nearestRoad=(p:Point)=>{let best:Point|undefined,distance=Infinity;for(const s of roads){const q=nearestPoint(p,s.a,s.b),d=Math.hypot(q.x-p.x,q.z-p.z);if(d<distance){distance=d;best=q;}}return {point:best,distance};};
   const onRoad=(p:Point,pad=0)=>roads.some(s=>{const q=nearestPoint(p,s.a,s.b);return Math.hypot(p.x-q.x,p.z-q.z)<s.width/2+pad;});
   const surfaceHeight=(x:number,z:number)=>{const p={x,z};let offset=0;for(const s of roads){const q=nearestPoint(p,s.a,s.b);if(Math.hypot(p.x-q.x,p.z-q.z)<s.width/2)offset=Math.max(offset,s.surface==='asphalt'?.4:.13);}for(const site of groundSites)if(pointInRing(p,site.ring))offset=Math.max(offset,.08);for(const pad of pavedPads)if(pad.bounds.containsPoint(new THREE.Vector2(x,z)))offset=Math.max(offset,pad.offset);for(const path of paths){const q=nearestPoint(p,path.a,path.b);if(Math.hypot(q.x-x,q.z-z)<path.width/2)offset=Math.max(offset,.13);}return height(x,z)+offset;};
@@ -178,7 +178,7 @@ export function buildCampusWorld(features:Feature[],center:Position,notes:Notes,
   let roadDistance=0;
   for(const s of roads){if(s.surface!=='asphalt'){ribbon(s.a,s.b,s.width,s.surface==='paving_stones'?m.pavers:m.soil,.12);
       if(s.surface==='paving_stones'){const nx=-(s.b.z-s.a.z)/s.length,nz=(s.b.x-s.a.x)/s.length;for(const side of [-1,1])ribbon({x:s.a.x+nx*side*(s.width/2+.08),z:s.a.z+nz*side*(s.width/2+.08)},{x:s.b.x+nx*side*(s.width/2+.08),z:s.b.z+nz*side*(s.width/2+.08)},.16,m.base,.17);}continue;}ribbon(s.a,s.b,s.width+1,m.pavers,.16);ribbon(s.a,s.b,s.width,m.asphalt,.38);if(s.width>4){const dx=(s.b.x-s.a.x)/s.length,dz=(s.b.z-s.a.z)/s.length;
-      for(let t=2;t<s.length;t+=11){const a={x:s.a.x+dx*t,z:s.a.z+dz*t},b={x:s.a.x+dx*Math.min(t+3,s.length),z:s.a.z+dz*Math.min(t+3,s.length)};ribbon(a,b,.12,m.white,.47);}
+      if(!s.oneway)for(let t=2;t<s.length;t+=11){const a={x:s.a.x+dx*t,z:s.a.z+dz*t},b={x:s.a.x+dx*Math.min(t+3,s.length),z:s.a.z+dz*Math.min(t+3,s.length)};ribbon(a,b,.12,m.white,.47);}
       for(let t=0;t<s.length;t+=4){for(const side of[-1,1]){const a={x:s.a.x+dx*t-dz*side*(s.width/2+.2),z:s.a.z+dz*t+dx*side*(s.width/2+.2)},b={x:s.a.x+dx*Math.min(t+4,s.length)-dz*side*(s.width/2+.2),z:s.a.z+dz*Math.min(t+4,s.length)+dx*side*(s.width/2+.2)};ribbon(a,b,.3,Math.floor(t/4)%2===0?m.white:m.steel,.47);}}
       for(let t=12;t<s.length;t+=100){const p={x:s.a.x+dx*t-dz*(s.width/2+1.1),z:s.a.z+dz*t+dx*(s.width/2+1.1)};if(!blocked(p,2))lamp(p);}
       if(s.length>45&&roadDistance%3===0){const p={x:(s.a.x+s.b.x)/2-dz*1.7,z:(s.a.z+s.b.z)/2+dx*1.7};if(!blocked(p))car(p,Math.atan2(dx,dz),roadDistance);}

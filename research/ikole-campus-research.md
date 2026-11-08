@@ -6,7 +6,7 @@ Updated 8 November 2026. Ikole is now available through `/?campus=ikole` and the
 
 The user's supplied link, https://maps.app.goo.gl/2Gt5Y47yTNwXkimb6, resolves to Fuoye Campus at **7.8055315 N, 5.4952357 E**. It is an internal campus reference point, not the main entrance.
 
-The southern approach connects to Ifaki–Ikole–Omuo Road. Gatehouse roofs crossing that approach were inspected at closer scale, and the map coordinate readout gives the central passage at approximately **7.801126 N, 5.496065 E**. The frontage now follows [Samuel Ajala’s labelled Ikole photograph, published November 2021](https://campusreporter.africa/ekiti-communities-sue-for-peace-despite-controversies-surrounding-the-establishment-of-fuoye/): twin arches, sloping cream wings, yellow piers, green/white gates, central green-roof booth and sculpture silhouette. Dimensions, sculpture details and current condition remain unverified. The recorded entrance coordinate aligns with the open lane; both leaves there swing inward for walking and driving. No photograph is redistributed. Two OSM roof footprints crossing the passage are replaced by the open procedural gatehouse assembly so they do not become solid collision walls.
+The southern approach connects to Ifaki–Ikole–Omuo Road. Gatehouse roofs crossing that approach were inspected at closer scale, and the map coordinate readout gives the central passage at approximately **7.801126 N, 5.496065 E**. The frontage now follows [Samuel Ajala’s labelled Ikole photograph, published November 2021](https://campusreporter.africa/ekiti-communities-sue-for-peace-despite-controversies-surrounding-the-establishment-of-fuoye/): twin arches, sloping cream wings, yellow piers, green/white gates, central green-roof booth and sculpture silhouette. Dimensions, sculpture details and current condition remain unverified. The recorded entrance coordinate aligns with the open lane; all four gate leaves swing inward for walking and driving. No photograph is redistributed. Two OSM roof footprints crossing the passage are replaced by the open procedural gatehouse assembly so they do not become solid collision walls.
 
 The exact source URLs, coordinates, match types, notes and observation calibration are retained in [the canonical record](ikole-site-observations.json). The published [inventory](../public/data/ikole/campus-places.json) exposes those limitations to visitors.
 
@@ -31,7 +31,7 @@ FUOYE's own sites establish institutional context, not precise footprint assignm
 
 ## Current scope
 
-The prepared dataset contains **47 building outlines**, **13 road records**, **one sports-ground surface** and **six named compound records**. The 3D scene adds the gate, Engineering monument and a selectable sports landmark. The guided tour contains eight stops: entrance, Engineering, Library, Hostel, New Faculty Building, Agriculture, Sports and Environmental.
+The prepared dataset contains **47 building outlines**, **16 road records**, **one sports-ground surface** and **six named compound records**. The 3D scene adds the gate, Engineering monument and a selectable sports landmark. The guided tour contains eight stops: entrance, Engineering, Library, Hostel, New Faculty Building, Agriculture, Sports and Environmental.
 
 The established walking, driving, courier, lighting and tour systems are reused. Campus selection loads only the selected scenery, cancels obsolete requests and releases the previous experience. Notes and scores remain separate; old Oye keys are preserved. No fresher missions, new search/navigation feature or discovery passport was added.
 
@@ -47,4 +47,6 @@ Further accuracy work can improve individual facades and update compound identit
 
 ## Entrance lane correction
 
-The approach trace is connected to the mapped public highway. Its central 50 m follows the gate bearing through the open arch; farther inside campus it rejoins the approximate observed trace. The front-facing school nameplate is an owner-requested addition. These are scene corrections, not surveyed road geometry. Road surfaces and markings are clipped to the terrain triangles to avoid intersections on uneven ground.
+The entrance has separate six-metre entry and exit lanes through the two arches, with all four gate leaves open. Both lanes share an outside junction with the highway approach and an inside junction with the campus road. Opposite direction arrows identify the lanes; the central booth and sculpture remain between them. The first recorded entrance coordinate still marks the entry arch.
+
+The split, merge and lane dimensions are requested scene corrections, not surveyed geometry. The front-facing school nameplate is an owner-requested addition. Road surfaces and markings follow the terrain triangles to avoid intersections on uneven ground.

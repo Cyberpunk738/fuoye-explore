@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {Raycaster,Vector3} from 'three';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createServer} from 'vite';
@@ -30,18 +31,24 @@ test('Ikole data has independent geography, valid attributed geometry and one pr
   assert.ok(Math.hypot(inventory.entrance.position[0]-inventory.suppliedPin.position[0],inventory.entrance.position[1]-inventory.suppliedPin.position[1])>.003);
 });
 
-test('Ikole approach meets the highway and stays aligned through the gate',()=>{
+test('Ikole has separate entry and exit lanes joined to the highway and campus approach',()=>{
   const data=read('../public/data/ikole/campus.geojson'),source=read('../public/data/ikole/campus-places.json');
-  const center:[number,number]=[5.4957,7.805];
-  const approach=data.features.find((f:any)=>f.id==='local/ikole-main-approach').geometry.coordinates.map((p:[number,number])=>projectPosition(p,center));
-  const entry=projectPosition(source.entrance.position,center),angle=source.entrance.bearing*Math.PI/180;
-  for(const p of approach.slice(1,4))assert.ok(Math.abs((p.x-entry.x)*Math.cos(angle)+(p.z-entry.z)*Math.sin(angle))<.002,'Keep the gate lane straight');
-  let distance=Infinity;
+  const feature=(id:string)=>data.features.find((f:any)=>f.id===id);
+  const entry=feature('local/ikole-gate-entry'),exit=feature('local/ikole-gate-exit');
+  for(const lane of [entry,exit]){assert.equal(lane.properties.tags.oneway,'yes');assert.equal(lane.properties.tags.lanes,'1');}
+  assert.deepEqual(entry.geometry.coordinates[0],exit.geometry.coordinates.at(-1));
+  assert.deepEqual(entry.geometry.coordinates.at(-1),exit.geometry.coordinates[0]);
+  assert.deepEqual(feature('local/ikole-highway-approach').geometry.coordinates.at(-1),entry.geometry.coordinates[0]);
+  assert.deepEqual(feature('local/ikole-main-approach').geometry.coordinates[0],entry.geometry.coordinates.at(-1));
+  const center:[number,number]=[5.4957,7.805],gate=projectPosition(source.entrance.position,center),angle=source.entrance.bearing*Math.PI/180;
+  const local=(p:[number,number])=>{const q=projectPosition(p,center);return {x:(q.x-gate.x)*Math.cos(angle)+(q.z-gate.z)*Math.sin(angle),z:(q.x-gate.x)*Math.sin(angle)-(q.z-gate.z)*Math.cos(angle)};};
+  for(const [lane,x]of [[entry,0],[exit,14]] as const)for(const p of lane.geometry.coordinates.map(local).filter((p:any)=>Math.abs(p.z)<=25.01))assert.ok(Math.abs(p.x-x)<.002,'Lane must run through its own arch');
+  let distance=Infinity;const start=projectPosition(feature('local/ikole-highway-approach').geometry.coordinates[0],center);
   for(const f of data.features.filter((f:any)=>f.properties.tags.highway==='primary')) {
     const points=f.geometry.coordinates.map((p:[number,number])=>projectPosition(p,center));
-    for(let i=1;i<points.length;i++){const q=nearestPoint(approach[0],points[i-1],points[i]);distance=Math.min(distance,Math.hypot(q.x-approach[0].x,q.z-approach[0].z));}
+    for(let i=1;i<points.length;i++){const q=nearestPoint(start,points[i-1],points[i]);distance=Math.min(distance,Math.hypot(q.x-start.x,q.z-start.z));}
   }
-  assert.ok(distance<.001,'Approach must reach the highway, without a grass gap');
+  assert.ok(distance<.001,'Highway approach must connect without a grass gap');
 });
 
 test('Ikole terrain and vegetation are complete, attributed and cover the campus',()=>{
@@ -67,6 +74,25 @@ test('Ikole builds without Oye scenery, has a passable entrance and provides rea
     assert.ok(Math.hypot(world.entrance.position.x-gate.x,world.entrance.position.z-gate.z)<.01);
     const angle=source.entrance.bearing*Math.PI/180;
     for(let t=-30;t<=35;t+=1)assert.equal(world.blocked({x:gate.x+Math.sin(angle)*t,z:gate.z-Math.cos(angle)*t},1.15),false,'Entrance blocked at '+t+' m');
+    // Check both complete branches, including split/merge bends, with car clearance.
+    for(const id of ['local/ikole-gate-entry','local/ikole-gate-exit']) {
+      const points=data.features.find((f:any)=>f.id===id).geometry.coordinates.map((p:[number,number])=>projectPosition(p,ikoleCampus.center));
+      for(let i=1;i<points.length;i++) {
+        const a=points[i-1],b=points[i],length=Math.hypot(b.x-a.x,b.z-a.z);
+        for(let t=0;t<=length;t+=.5) {
+          const p={x:a.x+(b.x-a.x)*t/length,z:a.z+(b.z-a.z)*t/length};
+          for(const side of [-.8,0,.8]){const q={x:p.x-(b.z-a.z)/length*side,z:p.z+(b.x-a.x)/length*side};assert.equal(world.blocked(q,1.15),false,id+' must have car clearance at '+JSON.stringify(q));}
+          assert.ok(world.roads.some((r:any)=>{const q=nearestPoint(p,r.a,r.b);return Math.hypot(q.x-p.x,q.z-p.z)<r.width/2;}),'Both routes need real road surfaces');
+        }
+      }
+    }
+    // A visually closed leaf must fail even if collision bounds were omitted.
+    world.root.updateMatrixWorld(true);
+    for(const lane of [0,14])for(const lateral of [-1,0,1]) {
+      const x=gate.x+Math.cos(angle)*(lane+lateral)-Math.sin(angle)*6,z=gate.z+Math.sin(angle)*(lane+lateral)+Math.cos(angle)*6;
+      const ray=new Raycaster(new Vector3(x,world.entrance.position.y+1.6,z),new Vector3(Math.sin(angle),0,-Math.cos(angle)),0,12);
+      assert.equal(ray.intersectObject(world.root,true).length,0,'Both arches must be visually open at car height');
+    }
     const tour=ikoleCampus.tour.buildStops(world);assert.equal(tour.length,8);assert.equal(tour[0].id,'ikole-main-gate');
     for(const stop of tour){
       assert.ok(Number.isFinite(stop.cameraPos.x+stop.cameraPos.y+stop.cameraPos.z));

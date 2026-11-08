@@ -93,7 +93,7 @@
     ],
     "bearing": 22,
     "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8012531,5.4958218,277m/data=!3m1!1e3!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
-    "evidence": "Map approach alignment with the open lane centred on the recorded coordinate. Frontage follows Samuel Ajala’s labelled 2021 Ikole photograph: twin arches, sloping cream wings, yellow piers, central green-roof booth and green/white gates. Dimensions and sculpture details are approximate.",
+    "evidence": "Map approach alignment with the entry lane centred on the recorded coordinate. Frontage follows Samuel Ajala’s labelled 2021 Ikole photograph: twin arches, sloping cream wings, yellow piers, central green-roof booth and green/white gates. Dimensions and sculpture details are approximate.",
     "facadeReference": {
       "url": "https://campusreporter.africa/ekiti-communities-sue-for-peace-despite-controversies-surrounding-the-establishment-of-fuoye/",
       "image": "https://campusreporter.africa/wp-content/uploads/2021/11/SA-2-1024x665.png",
@@ -101,6 +101,19 @@
       "published": "2021-11",
       "caption": "Entrance of Federal University of Oye-Ekiti, Ikole Campus.",
       "limitations": "Dated frontage reference; current condition and metre dimensions are unverified. Gate leaves are opened in the model for access."
+    },
+    "lanes": {
+      "entryFeature": "local/ikole-gate-entry",
+      "exitFeature": "local/ikole-gate-exit",
+      "outsideJunction": [
+        5.49589517,
+        7.80070955
+      ],
+      "insideJunction": [
+        5.496268796,
+        7.80162574
+      ],
+      "note": "Requested scene layout: both arches are open; split and merge dimensions are approximate."
     }
   },
   "calibration": {
@@ -121,7 +134,7 @@
   },
   "observations": [
     {
-      "id": "local/ikole-main-approach",
+      "id": "local/ikole-highway-approach",
       "kind": "road",
       "coordinates": [
         [
@@ -129,20 +142,112 @@
           7.800608806095857
         ],
         [
-          5.49598009,
-          7.80091778
+          5.49589517,
+          7.80070955
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "asphalt",
+        "width": "7",
+        "name": "Highway approach"
+      },
+      "appearance": null,
+      "sourceUrl": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
+      "evidence": "Owner-requested twin-lane scene correction. Entry and exit pass through separate arches and share junction coordinates with the main approach. Dimensions, split and merge positions are approximate, not surveyed.",
+      "accuracy": "Approximate visual trace, around 5–15 m; roof outlines are not surveyed walls. Heights, road widths and unseen facade details are estimated."
+    },
+    {
+      "id": "local/ikole-gate-entry",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.49589517,
+          7.80070955
+        ],
+        [
+          5.495980085,
+          7.800917775
         ],
         [
           5.496065,
           7.801126
         ],
         [
-          5.49614991,
-          7.80133422
+          5.496149915,
+          7.801334225
         ],
         [
-          5.4962688,
-          7.8016257
+          5.496268796,
+          7.80162574
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "asphalt",
+        "width": "6",
+        "name": "Ikole gate entry",
+        "oneway": "yes",
+        "lanes": "1"
+      },
+      "appearance": null,
+      "sourceUrl": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
+      "evidence": "Owner-requested twin-lane scene correction. Entry and exit pass through separate arches and share junction coordinates with the main approach. Dimensions, split and merge positions are approximate, not surveyed.",
+      "accuracy": "Approximate visual trace, around 5–15 m; roof outlines are not surveyed walls. Heights, road widths and unseen facade details are estimated."
+    },
+    {
+      "id": "local/ikole-gate-exit",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.496268796,
+          7.80162574
+        ],
+        [
+          5.496276695,
+          7.801477249
+        ],
+        [
+          5.496267611,
+          7.801287113
+        ],
+        [
+          5.496182696,
+          7.801078888
+        ],
+        [
+          5.496097781,
+          7.800870663
+        ],
+        [
+          5.495987984,
+          7.800769284
+        ],
+        [
+          5.49589517,
+          7.80070955
+        ]
+      ],
+      "tags": {
+        "highway": "service",
+        "surface": "asphalt",
+        "width": "6",
+        "name": "Ikole gate exit",
+        "oneway": "yes",
+        "lanes": "1"
+      },
+      "appearance": null,
+      "sourceUrl": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
+      "evidence": "Owner-requested twin-lane scene correction. Entry and exit pass through separate arches and share junction coordinates with the main approach. Dimensions, split and merge positions are approximate, not surveyed.",
+      "accuracy": "Approximate visual trace, around 5–15 m; roof outlines are not surveyed walls. Heights, road widths and unseen facade details are estimated."
+    },
+    {
+      "id": "local/ikole-main-approach",
+      "kind": "road",
+      "coordinates": [
+        [
+          5.496268796,
+          7.80162574
         ],
         [
           5.4966465,
@@ -169,7 +274,7 @@
       },
       "appearance": null,
       "sourceUrl": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
-      "evidence": "North-up satellite view inspected 8 November 2026; manually traced relative to the supplied campus pin and checked with map coordinate readout. Entrance correction: the approach joins the mapped public highway and stays tangent to the open gate lane for 25 m on either side. Connection and lane alignment are approximate scene corrections.",
+      "evidence": "Approximate observed campus approach beyond the twin-lane entrance. The model joins both gate lanes at the shared internal junction.",
       "accuracy": "Approximate visual trace, around 5–15 m; roof outlines are not surveyed walls. Heights, road widths and unseen facade details are estimated."
     },
     {
