@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {createServer} from 'vite';
 import {reachableDestinations} from './helpers/reachable.ts';
 import {textureCanvas} from './helpers/canvas.ts';
-import {pointInRing,projectPosition} from '../src/world/math.ts';
+import {pointInRing,projectPosition,nearestPoint} from '../src/world/math.ts';
 import {resolveWalkSpawn} from '../src/world/walk-spawn.ts';
 const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),'utf8'));
 
@@ -28,6 +28,20 @@ test('Ikole data has independent geography, valid attributed geometry and one pr
   }
   for(const id of inventory.replacedGateRoofs)assert.equal(features.has(id),false,'Gate roof footprints must not block the entry lane');
   assert.ok(Math.hypot(inventory.entrance.position[0]-inventory.suppliedPin.position[0],inventory.entrance.position[1]-inventory.suppliedPin.position[1])>.003);
+});
+
+test('Ikole approach meets the highway and stays aligned through the gate',()=>{
+  const data=read('../public/data/ikole/campus.geojson'),source=read('../public/data/ikole/campus-places.json');
+  const center:[number,number]=[5.4957,7.805];
+  const approach=data.features.find((f:any)=>f.id==='local/ikole-main-approach').geometry.coordinates.map((p:[number,number])=>projectPosition(p,center));
+  const entry=projectPosition(source.entrance.position,center),angle=source.entrance.bearing*Math.PI/180;
+  for(const p of approach.slice(1,4))assert.ok(Math.abs((p.x-entry.x)*Math.cos(angle)+(p.z-entry.z)*Math.sin(angle))<.002,'Keep the gate lane straight');
+  let distance=Infinity;
+  for(const f of data.features.filter((f:any)=>f.properties.tags.highway==='primary')) {
+    const points=f.geometry.coordinates.map((p:[number,number])=>projectPosition(p,center));
+    for(let i=1;i<points.length;i++){const q=nearestPoint(approach[0],points[i-1],points[i]);distance=Math.min(distance,Math.hypot(q.x-approach[0].x,q.z-approach[0].z));}
+  }
+  assert.ok(distance<.001,'Approach must reach the highway, without a grass gap');
 });
 
 test('Ikole terrain and vegetation are complete, attributed and cover the campus',()=>{
@@ -67,6 +81,8 @@ test('Ikole builds without Oye scenery, has a passable entrance and provides rea
     for(const stop of destinations)assert.equal(world.blocked(stop,2),false,stop.name);
     const reached=reachableDestinations(world,destinations);
     for(const stop of destinations)assert.ok(reached.has(stop.id),stop.name+' is unreachable from the entrance with vehicle clearance');
+    const roadMeshes=world.root.children.filter((mesh:any)=>mesh.material===world.materials.asphalt);assert.ok(roadMeshes.length);
+    for(const mesh of roadMeshes){const positions=mesh.geometry.attributes.position;for(let i=0;i<positions.count;i++)assert.ok(Math.abs(positions.getY(i)-world.height(positions.getX(i),positions.getZ(i))-.38)<.002,'Asphalt must stay above the terrain at every triangle vertex');}
     const pitch=world.root.getObjectByName('ikole-football-pitch');assert.ok(pitch,'Grass pitch should be built');
     const vertices=pitch.geometry.attributes.position,uv=pitch.geometry.attributes.uv;
     assert.equal(uv.count,vertices.count);
