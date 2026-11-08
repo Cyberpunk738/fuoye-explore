@@ -1,4 +1,5 @@
 import './explorer.css';
+import {loadCampusJson as loadJson,requireCampusFeatures} from './campuses/data';
 import { escapeHtml, readNotes } from './data';
 import type { Dataset } from './data';
 import type { TerrainGrid } from './world/math';
@@ -42,11 +43,6 @@ aboutButton.onclick=()=>about.showModal();
 about.querySelector<HTMLButtonElement>('.dialog-close')!.onclick=()=>about.close();
 about.onclick=event=>{if(event.target===about)about.close();};
 tourButton.onclick=()=>{scene?.startTour(0);closeDirectory();};
-async function loadJson<T>(path:string,signal:AbortSignal):Promise<T>{
-  const response=await fetch(path,{signal});
-  if(!response.ok)throw new Error(`Could not load ${path}`);
-  return response.json() as Promise<T>;
-}
 const session=createCampusSession(async(id,signal)=>{
   const campus=await loadCampus(id as CampusId);
   signal.throwIfAborted();
@@ -56,6 +52,7 @@ const session=createCampusSession(async(id,signal)=>{
     campus.data.landcover?loadJson<LandCover>(campus.data.landcover,signal).catch(error=>{signal.throwIfAborted();return undefined;}):undefined,
     import('./explorer-scene'),
   ]);
+  requireCampusFeatures(dataset,campus.data.requiredFeatures);
   if(dataset.metadata.campusId&&dataset.metadata.campusId!==id)throw new Error('Campus data does not match the selected campus.');
   return {campus,dataset,terrain,cover,module};
 },async(id,{campus,dataset,terrain,cover,module},signal)=>{

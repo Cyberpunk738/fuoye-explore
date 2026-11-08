@@ -8,7 +8,7 @@ export interface CampusDefinition {
   name: string;
   location: string;
   center: Position;
-  data: { buildings: string; terrain?: string; landcover?: string };
+  data: { buildings: string; terrain?: string; landcover?: string; requiredFeatures?: string[] };
   world: WorldProfile;
   tour: { summary: string; buildStops: (world: World) => TourStop[] };
   landmarks: { id: 'main' | 'phase2'; label: string; position?:Position }[];

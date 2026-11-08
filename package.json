@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "data": "python scripts/prepare_data.py",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test:build-data": "node scripts/check-campus-build.mjs",
     "test:browser": "node scripts/explorer-smoke.cjs",
     "data:campus": "python scripts/prepare_campus.py",
     "test:review": "node scripts/review-smoke.cjs",

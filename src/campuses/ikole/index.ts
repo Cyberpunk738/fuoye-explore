@@ -4,7 +4,7 @@ import { buildIkoleTourStops } from './tour';
 
 export const ikoleCampus: CampusDefinition = {
   id:'ikole',name:'Ikole campus',location:'Ikole-Ekiti, Nigeria',center:[5.4957,7.805],
-  data:{buildings:'/data/ikole/campus.geojson',terrain:'/data/ikole/terrain.json',landcover:'/data/ikole/landcover.json'},
+  data:{buildings:'/data/ikole/campus.geojson',terrain:'/data/ikole/terrain.json',landcover:'/data/ikole/landcover.json',requiredFeatures:['local/ikole-gate-entry','local/ikole-gate-exit']},
   world:ikoleWorldProfile,
   tour:{summary:'Entrance · Engineering · Library · Agriculture · Sports · Environmental',buildStops:buildIkoleTourStops},
   landmarks:[{id:'main',label:'Ikole campus entrance',position:ikoleGate}],

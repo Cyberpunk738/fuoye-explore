@@ -432,3 +432,5 @@ Additional university and photographic references are retained in the research r
 [Back to top](#fuoye-explore)
 
 </div>
+
+Campus map files are copied to content-addressed asset names during `npm run build`, and the matching URLs are embedded in the app bundle. This prevents older cached `/data/` files from being combined with updated scenery. Run `npm run test:build-data` after building to verify the six emitted files, bundle references and both Ikole gate roads.

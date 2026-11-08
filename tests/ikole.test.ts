@@ -93,6 +93,13 @@ test('Ikole builds without Oye scenery, has a passable entrance and provides rea
       const ray=new Raycaster(new Vector3(x,world.entrance.position.y+1.6,z),new Vector3(Math.sin(angle),0,-Math.cos(angle)),0,12);
       assert.equal(ray.intersectObject(world.root,true).length,0,'Both arches must be visually open at car height');
     }
+    // Check the actual rendered asphalt, not just logical road segments.
+    for(const lane of [0,14])for(const t of [-20,-10,0,10,20])for(const side of [-1,0,1]) {
+      const x=gate.x+Math.cos(angle)*(lane+side)+Math.sin(angle)*t,z=gate.z+Math.sin(angle)*(lane+side)-Math.cos(angle)*t;
+      const ray=new Raycaster(new Vector3(x,world.height(x,z)+2,z),new Vector3(0,-1,0),0,4);
+      const hit=ray.intersectObject(world.root,true)[0];assert.ok(hit,'Road mesh must exist under both arches');
+      assert.equal((hit.object as any).material,world.materials.asphalt,'Asphalt must be the visible ground surface in both lanes');
+    }
     const tour=ikoleCampus.tour.buildStops(world);assert.equal(tour.length,8);assert.equal(tour[0].id,'ikole-main-gate');
     for(const stop of tour){
       assert.ok(Number.isFinite(stop.cameraPos.x+stop.cameraPos.y+stop.cameraPos.z));
