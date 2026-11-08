@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import type { Feature, Position } from '../data';
-import type { Point } from './math';
-import { projectPosition, pointInRing, randomFrom } from './math';
-import type { GeometryBatch } from './batch';
-import type { Materials } from './materials';
+import type { Feature, Position } from '../../data';
+import type { Point } from '../../world/math';
+import { projectPosition, pointInRing, randomFrom } from '../../world/math';
+import type { GeometryBatch } from '../../world/batch';
+import type { Materials } from '../../world/materials';
 
 /** Planting extents follow the saved satellite view; kerbs/species are estimates.
  * See research/phase1-visual-pass.md. Keep the actual loop and approaches clear. */

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { escapeHtml } from './data';
 import type { Feature, Notes, Position } from './data';
-import { buildWorld } from './world/build';
+import { buildCampusWorld } from './world/engine';
 import type { BuildingAsset } from './world/build';
 import { nearestDriveRoad, campusDeliveryStops } from './world/routes';
 import type { Point, TerrainGrid } from './world/math';
@@ -13,17 +13,21 @@ import { chooseDelivery, formatTime, startCourier, tickCourier } from './world/c
 import type { CourierRun, DeliveryStop } from './world/courier';
 import { stepCar, stepJump } from './world/motion';
 import { resolveWalkSpawn } from './world/walk-spawn';
-import { buildGuidedTourStops, evaluateTourFlight } from './world/tour';
+import { evaluateTourFlight } from './world/tour';
 import type { TourFlightState, TourStop } from './world/tour';
+import type { CampusDefinition } from './campuses/types';
+import { graphicsSettings } from './world/graphics';
+import type { GraphicsQuality } from './world/graphics';
+import { courierScoreKey } from './campuses/storage';
 
-export function createExplorerScene(host:HTMLElement,features:Feature[],center:Position,notes:Notes,onSelect:(id:string)=>void,terrain?:TerrainGrid,cover?:LandCover) {
+export function createExplorerScene(host:HTMLElement,features:Feature[],center:Position,notes:Notes,onSelect:(id:string)=>void,campus:CampusDefinition,terrain?:TerrainGrid,cover?:LandCover) {
   const app=host.closest<HTMLElement>('.app')!;
   const coarse=matchMedia('(pointer: coarse)').matches,reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let loop:ReturnType<typeof createRenderLoop>|undefined;
   const request=()=>loop?.invalidate();
   const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});
   renderer.domElement.className='world';renderer.domElement.tabIndex=0;
-  renderer.domElement.setAttribute('aria-label','3D model of Federal University Oye-Ekiti, Oye campus');
+  renderer.domElement.setAttribute('aria-label',`3D model of Federal University Oye-Ekiti, ${campus.name}`);
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.shadowMap.autoUpdate=false;
   host.appendChild(renderer.domElement);
@@ -32,8 +36,8 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   skyGeometry.setAttribute('color',new THREE.BufferAttribute(skyColors,3));
   const sky=new THREE.Mesh(skyGeometry,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false}));sky.frustumCulled=false;sky.renderOrder=-10;scene.add(sky);
   function paintSky(dark:boolean){const top=new THREE.Color(dark?'#0c152b':'#81b5cf'),horizon=new THREE.Color(dark?'#273749':'#d4ded7'),color=new THREE.Color();for(let i=0;i<skyGeometry.attributes.position.count;i++){const elevation=skyGeometry.attributes.position.getY(i)/4500,t=Math.pow(Math.max(0,elevation),.55);color.copy(horizon).lerp(top,t);skyColors.set([color.r,color.g,color.b],i*3);}skyGeometry.attributes.color.needsUpdate=true;}paintSky(false);
-  const world=buildWorld(features,center,notes,terrain,cover);scene.add(world.root);
-  const tourStops:TourStop[]=buildGuidedTourStops(world);
+  const world=buildCampusWorld(features,center,notes,campus.world,terrain,cover);scene.add(world.root);
+  const tourStops:TourStop[]=campus.tour.buildStops(world);
   const camera=new THREE.PerspectiveCamera(38,1,.15,8000);
   const labels=document.createElement('div');labels.className='building-labels';host.appendChild(labels);
   const buildingLabels=world.buildings.filter(b=>b.named&&b.directory).map(building=>{const element=document.createElement('span');element.className='building-label';element.dataset.label=building.id;element.textContent=building.name;element.hidden=true;labels.appendChild(element);return {building,element};});
@@ -79,25 +83,25 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   const arrow=new THREE.Mesh(new THREE.ExtrudeGeometry(arrowShape,{depth:.12,bevelEnabled:false}),new THREE.MeshBasicMaterial({color:'#e0b64a'}));arrow.geometry.rotateX(Math.PI/2);arrow.rotation.order='YXZ';arrow.rotation.x=-.6;arrow.visible=false;scene.add(arrow);
 
   const tools=document.createElement('div');tools.className='tools';
-  tools.innerHTML='<button type="button" class="tour">Guided tour</button><button type="button" class="drive">Drive</button><button type="button" class="walk">Walk</button><button type="button" class="night" aria-pressed="false">Night</button><button type="button" class="full-view">Full view</button>';host.appendChild(tools);
+  tools.innerHTML='<button type="button" class="tour">Guided tour</button><button type="button" class="drive">Drive</button><button type="button" class="walk">Walk</button><button type="button" class="night" aria-pressed="false">Night</button><button type="button" class="full-view">Full view</button><select class="graphics" aria-label="Graphics quality"><option value="auto">Auto graphics</option><option value="low">Low graphics</option><option value="high">High graphics</option></select>';host.appendChild(tools);
   const tip=document.createElement('div');tip.className='tip';tip.hidden=true;host.appendChild(tip);
-  const fps=document.createElement('output');fps.className='fps';fps.textContent='0 fps';fps.title='Renders on demand; navigation is capped at 24 fps';host.appendChild(fps);
+  const fps=document.createElement('output');fps.className='fps';fps.textContent='0 fps';fps.title='Renders on demand; navigation is capped at 24 fps';fps.dataset.graphics='auto';host.appendChild(fps);
   const driveHud=document.createElement('div');driveHud.className='hud drive-hud';driveHud.hidden=true;
   driveHud.innerHTML=`<div class="objective"><span class="job">Campus Courier</span><span class="dist"></span></div><div class="stats"><div><small>Time</small><output class="time">1:15</output></div><div><small>Score</small><output class="score">0</output></div></div><output class="speed"><b>0</b> km/h</output><p class="toast" role="status" hidden></p><p class="keys">WASD or arrows to drive · Space to drift · R to reset · Esc to exit</p><div class="card"></div><div class="drive-touch"><div><button data-key="a" aria-label="Steer left">←</button><button data-key="d" aria-label="Steer right">→</button></div><div><button data-key=" " aria-label="Handbrake">⏸</button><button data-key="s" aria-label="Reverse">↓</button><button data-key="w" aria-label="Accelerate">↑</button><button data-exit aria-label="Exit driving">×</button></div></div>`;host.appendChild(driveHud);
   const walkHud=document.createElement('div');walkHud.className='hud walk-hud';walkHud.hidden=true;
-  walkHud.innerHTML=`<div class="objective"><b>FUOYE Oye campus</b></div><span class="crosshair" aria-hidden="true"></span><p class="prompt">${coarse?'Left thumb to walk, right thumb to look':'Click to look around'}</p><div class="stick" hidden><span></span></div><button class="exit" type="button">Exit walk</button><p class="keys">WASD to walk · Shift to run · Space to jump · Esc to exit</p>`;host.appendChild(walkHud);
+  walkHud.innerHTML=`<div class="objective"><b>FUOYE ${escapeHtml(campus.name)}</b></div><span class="crosshair" aria-hidden="true"></span><p class="prompt">${coarse?'Left thumb to walk, right thumb to look':'Click to look around'}</p><div class="stick" hidden><span></span></div><button class="exit" type="button">Exit walk</button><p class="keys">WASD to walk · Shift to run · Space to jump · Esc to exit</p>`;host.appendChild(walkHud);
 
   const tourHud=document.createElement('div');tourHud.className='hud tour-hud';tourHud.hidden=true;
   tourHud.innerHTML=`
     <button class="exit tour-exit" type="button">Exit tour</button>
     <nav class="tour-rail" aria-label="Guided tour stops">
-      ${tourStops.map((s,idx)=>`<button type="button" class="tour-step-btn" data-tour-index="${idx}" title="${escapeHtml(s.title)}"><span class="tour-step-num">${String(s.stepNumber).padStart(2,'0')}</span><span class="tour-step-label">${escapeHtml(s.title.split(' & ')[0].replace('Phase 1 ','P1 ').replace('Phase 2 ','P2 ').replace('Phase 3 · ','P3 ').replace('Faculty of ',''))}</span></button>`).join('')}
+      ${tourStops.map((s,idx)=>`<button type="button" class="tour-step-btn" data-tour-index="${idx}" title="${escapeHtml(s.title)}"><span class="tour-step-num">${String(s.stepNumber).padStart(2,'0')}</span><span class="tour-step-label">${escapeHtml(s.railLabel??s.title)}</span></button>`).join('')}
     </nav>
     <article class="tour-card" aria-live="polite">
       <div class="tour-meta">
         <span class="tour-counter">STOP 01 OF ${String(tourStops.length).padStart(2,'0')}</span>
         <span aria-hidden="true">·</span>
-        <span class="tour-phase">Phase 1</span>
+        <span class="tour-phase"></span>
         <span aria-hidden="true">·</span>
         <span class="tour-category">Gateway</span>
       </div>
@@ -133,6 +137,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   const TOUR_DWELL_SECONDS=9.0;
   let yaw=0,pitch=0,speed=0,lateral=0,jumpHeight=0,jumpVelocity=0,jumpQueued=false,bobTime=0,elapsed=0;
   let run:CourierRun|undefined,courierAt=performance.now(),toastUntil=0,hidden=document.hidden,onScreen=true,renderCount=0,lowFrames=0,renderScale=1;
+  let quality:GraphicsQuality='auto';
   const player=new THREE.Vector3(),keys=new Set<string>(),stickInput=new THREE.Vector2();
   type Flight={from:THREE.Vector3;to:THREE.Vector3;targetFrom:THREE.Vector3;targetTo:THREE.Vector3;t:number};
   let flight:Flight|undefined,hovered:THREE.Mesh|undefined;
@@ -155,7 +160,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   }
   const removers:(()=>void)[]=[];
   function listen(target:EventTarget,type:string,handler:EventListener,options?:AddEventListenerOptions){target.addEventListener(type,handler,options);removers.push(()=>target.removeEventListener(type,handler,options));}
-  function resize(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;camera.aspect=width/height;renderer.setPixelRatio(Math.min(renderScale,1280/width,720/height));renderer.setSize(width,height,false);if(width>640&&mode==='orbit')camera.setViewOffset(width,height,-165,0,width,height);else camera.clearViewOffset();camera.updateProjectionMatrix();request();}
+  function resize(){const {width,height}=host.getBoundingClientRect();if(!width||!height)return;camera.aspect=width/height;const graphics=graphicsSettings(quality);renderer.setPixelRatio(Math.min(graphics.pixelRatio,renderScale,graphics.width/width,graphics.height/height));renderer.setSize(width,height,false);if(width>640&&mode==='orbit')camera.setViewOffset(width,height,-165,0,width,height);else camera.clearViewOffset();camera.updateProjectionMatrix();request();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);
   function fly(to:THREE.Vector3,target:THREE.Vector3){clearStartPoint();flight={from:camera.position.clone(),to,targetFrom:controls.target.clone(),targetTo:target,t:0};request();}
   const highlightMaterial=new THREE.MeshLambertMaterial({color:'#f0dfae'});
@@ -278,18 +283,19 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
     fitShadow(player,220);const hud=next==='walk'?walkHud:driveHud;hud.dataset.spawnAdjusted=String(Math.hypot(position.x-requested.x,position.z-requested.z)>.05);hud.dataset.requestedX=String(requested.x);hud.dataset.requestedZ=String(requested.z);
     return true;
   }
-  function getBest(){try{const n=Number(localStorage.getItem('fuoye-courier-best'));return Number.isFinite(n)&&n>0?n:0;}catch{return 0;}}
+  function getBest(){try{const n=Number(localStorage.getItem(courierScoreKey(campus.id)));return Number.isFinite(n)&&n>0?n:0;}catch{return 0;}}
   function showCard(title:string,text:string,actions:[string,()=>void][]){card.replaceChildren();const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=text;const row=document.createElement('div');row.className='actions';actions.forEach(([name,action],i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;if(i===0)b.className='primary';b.onclick=action;row.appendChild(b);});card.append(h,p,row);card.hidden=false;row.querySelector('button')?.focus();request();}
   function notify(text:string){toast.textContent=text;toast.hidden=false;toastUntil=elapsed+1.8;request();}
   function positionTarget(){if(!run?.target)return;const p=run.target;beacon.position.set(p.x,world.surfaceHeight(p.x,p.z),p.z);beacon.visible=arrow.visible=true;job.innerHTML=`Deliver to <b>${escapeHtml(p.name)}</b>`;}
   function startDrive(state:'run'|'free'){driveState=state;courierAt=performance.now();driveHud.dataset.state=state;card.hidden=true;speed=lateral=0;keys.clear();updateVehicle(0,true);renderer.domElement.focus();if(state==='run'){run=startCourier(stops,player);positionTarget();timeOutput.textContent='1:15';scoreOutput.textContent='0';notify('Go!');if(run.over)finishRun();}else{run=undefined;job.textContent='Free drive';distanceOutput.textContent='';beacon.visible=arrow.visible=false;}request();}
-  function finishRun(){toast.hidden=true;driveState='over';driveHud.dataset.state='over';beacon.visible=arrow.visible=false;speed=lateral=0;keys.clear();const best=getBest(),score=run?.score??0;if(score>best){try{localStorage.setItem('fuoye-courier-best',String(score));}catch{/* Gameplay works when storage is unavailable. */}}showCard("Time's up",`${run?.deliveries??0} deliveries, ${score.toLocaleString()} points. ${score>best?'New best!':`Best: ${best.toLocaleString()}.`}`,[['Drive again',()=>startDrive('run')],['Free drive',()=>startDrive('free')],['Exit',exitMode]]);}
+  function finishRun(){toast.hidden=true;driveState='over';driveHud.dataset.state='over';beacon.visible=arrow.visible=false;speed=lateral=0;keys.clear();const best=getBest(),score=run?.score??0;if(score>best){try{localStorage.setItem(courierScoreKey(campus.id),String(score));}catch{/* Gameplay works when storage is unavailable. */}}showCard("Time's up",`${run?.deliveries??0} deliveries, ${score.toLocaleString()} points. ${score>best?'New best!':`Best: ${best.toLocaleString()}.`}`,[['Drive again',()=>startDrive('run')],['Free drive',()=>startDrive('free')],['Exit',exitMode]]);}
   function openDrive(){if(mode==='drive'||!startAtPoint('drive'))return;updateVehicle(0,true);driveState='menu';driveHud.dataset.state='menu';job.textContent='Campus Courier';distanceOutput.textContent='';const best=getBest();showCard('Campus Courier',`Deliver to as many campus buildings as you can before time runs out. Each drop adds time. Stop inside the gold ring to deliver.${best?` Best: ${best.toLocaleString()}.`:''}`,[['Start',()=>startDrive('run')],['Free drive',()=>startDrive('free')],['Exit',exitMode]]);}
   function openWalk(){
     if(mode==='walk'||!startAtPoint('walk'))return;
     walkHud.dataset.jumpPeak='0';prompt.hidden=false;updateWalker(0);request();
   }
   function toggleNight(){night=!night;paintSky(night);app.dataset.night=String(night);const b=tools.querySelector<HTMLButtonElement>('.night')!;b.textContent=night?'Day':'Night';b.setAttribute('aria-pressed',String(night));hemi.intensity=night?.55:1.35;hemi.color.set(night?'#8aa1ca':'#e9f3f6');sun.intensity=night?.48:1.45;sun.color.set(night?'#a4b9e2':'#fff1dc');stars.visible=night;lampGlows.visible=night;headlights.visible=night&&mode==='drive';scene.background=new THREE.Color(night?'#111e32':'#cbdfe4');(scene.fog as THREE.Fog).color.copy(scene.background);for(const material of [world.materials.windows,world.materials.louvres,world.materials.adminWindows])material.emissiveIntensity=night?1.2:0;world.materials.glow.emissiveIntensity=night?2:0;request();}
+  tools.querySelector<HTMLSelectElement>('.graphics')!.onchange=event=>{quality=(event.target as HTMLSelectElement).value as GraphicsQuality;renderScale=graphicsSettings(quality).pixelRatio;lowFrames=0;renderer.shadowMap.enabled=graphicsSettings(quality).shadows;renderer.shadowMap.needsUpdate=true;fps.dataset.graphics=quality;resize();};
   tools.querySelector<HTMLButtonElement>('.tour')!.onclick=()=>startTour(0);
   tools.querySelector<HTMLButtonElement>('.drive')!.onclick=openDrive;
   tools.querySelector<HTMLButtonElement>('.walk')!.onclick=openWalk;
@@ -310,7 +316,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   function treeBlocked(p:Point,padding:number){const cx=Math.floor(p.x/12),cz=Math.floor(p.z/12);for(let x=cx-1;x<=cx+1;x++)for(let z=cz-1;z<=cz+1;z++)if(trunkCells.get(`${x},${z}`)?.some(t=>Math.hypot(p.x-t.x,p.z-t.z)<padding+.3))return true;return false;}
   function move(dx:number,dz:number,padding:number){const next={x:player.x+dx,z:player.z+dz};const allowed=(p:Point)=>world.bounds.containsPoint(new THREE.Vector2(p.x,p.z))&&!world.blocked(p,padding)&&!treeBlocked(p,padding);if(allowed(next)){player.x=next.x;player.z=next.z;return false;}if(allowed({x:next.x,z:player.z}))player.x=next.x;if(allowed({x:player.x,z:next.z}))player.z=next.z;return true;}
   function updateVehicle(dt:number,immediate=false){vehicle.position.copy(player);const s=Math.sin(yaw),c=Math.cos(yaw),front=world.height(player.x+s*1.4,player.z+c*1.4),back=world.height(player.x-s*1.4,player.z-c*1.4),right=world.height(player.x+c*.9,player.z-s*.9),left=world.height(player.x-c*.9,player.z+s*.9);vehicle.rotation.set(-Math.atan2(front-back,2.8),yaw,Math.atan2(right-left,1.8),'YXZ');const follow=8.5+Math.abs(speed)*.08;let clear=follow;for(let d=1.5;d<follow;d+=.75){if(world.blocked({x:player.x-s*d,z:player.z-c*d},.3)){clear=Math.max(1.5,d-.75);break;}}const ideal=new THREE.Vector3(player.x-s*clear,player.y+3.4+Math.abs(speed)*.02,player.z-c*clear);ideal.y=Math.max(ideal.y,world.surfaceHeight(ideal.x,ideal.z)+1.6);if(immediate)camera.position.copy(ideal);else camera.position.lerp(ideal,1-Math.exp(-dt*6));camera.lookAt(player.x+s*5,player.y+1.1,player.z+c*5);speedOutput.innerHTML=`<b>${Math.round(Math.hypot(speed,lateral)*3.6)}</b> km/h`;}
-  function updateWalker(dt:number){const input=movementInput(),forward=Number(input.forward)-Number(input.back)+stickInput.y,side=Number(input.right)-Number(input.left)+stickInput.x,norm=Math.max(1,Math.hypot(forward,side)),travel=(input.run||stickInput.length()>.95?8:3.2)*dt;const dx=(Math.sin(yaw)*forward-Math.cos(yaw)*side)*travel/norm,dz=(Math.cos(yaw)*forward+Math.sin(yaw)*side)*travel/norm;move(dx,dz,.35);player.y=world.surfaceHeight(player.x,player.z);const jump=stepJump(jumpHeight,jumpVelocity,jumpQueued,dt);jumpHeight=jump.height;jumpVelocity=jump.velocity;jumpQueued=false;bobTime+=Math.hypot(dx,dz)*2.2;const bob=reduced||jumpHeight>0?0:Math.sin(bobTime)*.025*Math.min(1,Math.hypot(forward,side));camera.position.set(player.x,player.y+1.65+jumpHeight+bob,player.z);camera.rotation.set(-pitch,yaw+Math.PI,0,'YXZ');const nearby=world.buildings.reduce<BuildingAsset|undefined>((best,b)=>b.bounds.distanceToPoint(new THREE.Vector2(player.x,player.z))<14&&(!best||b.position.distanceToSquared(player)<best.position.distanceToSquared(player))?b:best,undefined);walkHud.querySelector('.objective b')!.textContent=nearby?.name??'FUOYE Oye campus';walkHud.dataset.jump=String(jumpHeight);walkHud.dataset.jumpPeak=String(Math.max(Number(walkHud.dataset.jumpPeak)||0,jumpHeight));}
+  function updateWalker(dt:number){const input=movementInput(),forward=Number(input.forward)-Number(input.back)+stickInput.y,side=Number(input.right)-Number(input.left)+stickInput.x,norm=Math.max(1,Math.hypot(forward,side)),travel=(input.run||stickInput.length()>.95?8:3.2)*dt;const dx=(Math.sin(yaw)*forward-Math.cos(yaw)*side)*travel/norm,dz=(Math.cos(yaw)*forward+Math.sin(yaw)*side)*travel/norm;move(dx,dz,.35);player.y=world.surfaceHeight(player.x,player.z);const jump=stepJump(jumpHeight,jumpVelocity,jumpQueued,dt);jumpHeight=jump.height;jumpVelocity=jump.velocity;jumpQueued=false;bobTime+=Math.hypot(dx,dz)*2.2;const bob=reduced||jumpHeight>0?0:Math.sin(bobTime)*.025*Math.min(1,Math.hypot(forward,side));camera.position.set(player.x,player.y+1.65+jumpHeight+bob,player.z);camera.rotation.set(-pitch,yaw+Math.PI,0,'YXZ');const nearby=world.buildings.reduce<BuildingAsset|undefined>((best,b)=>b.bounds.distanceToPoint(new THREE.Vector2(player.x,player.z))<14&&(!best||b.position.distanceToSquared(player)<best.position.distanceToSquared(player))?b:best,undefined);walkHud.querySelector('.objective b')!.textContent=nearby?.name??`FUOYE ${campus.name}`;walkHud.dataset.jump=String(jumpHeight);walkHud.dataset.jumpPeak=String(Math.max(Number(walkHud.dataset.jumpPeak)||0,jumpHeight));}
   function key(e:KeyboardEvent){if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;const k=e.key.toLowerCase();if(mode==='orbit'){if(e.type==='keydown'&&!e.repeat){if(k==='escape')clearStartPoint();if(k==='t'){e.preventDefault();startTour(0);}if(k==='w'&&walkPoint){e.preventDefault();openWalk();}if(k==='d'&&walkPoint){e.preventDefault();openDrive();}}return;}if(mode==='tour'){if(e.type==='keydown'&&!e.repeat){if(k==='escape'){e.preventDefault();exitMode();}else if(k==='arrowright'||k==='n'){e.preventDefault();nextTourStop();}else if(k==='arrowleft'||k==='p'){e.preventDefault();prevTourStop();}else if(k===' '){e.preventDefault();toggleTourPlay();}}return;}if((mode==='walk'||driveState==='run'||driveState==='free')&&['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift',' '].includes(k)){e.preventDefault();if(e.type==='keydown')keys.add(k);else keys.delete(k);if(k===' '&&e.type==='keydown'&&!e.repeat&&mode==='walk')jumpQueued=true;request();}if(e.type==='keydown'&&k==='escape'){exitMode();}if(e.type==='keydown'&&k==='r'&&mode==='drive'&&(driveState==='run'||driveState==='free')){const s=closestRoad(player);player.set(s.point.x,world.surfaceHeight(s.point.x,s.point.z),s.point.z);yaw=s.heading;speed=lateral=0;updateVehicle(0,true);notify('Back on the road');}}
   listen(window,'keydown',key as EventListener);listen(window,'keyup',key as EventListener);
   function clearInput(){keys.clear();stickInput.set(0,0);speed=lateral=0;stick.hidden=true;request();}
@@ -413,7 +419,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
     driveHud.dataset.x=walkHud.dataset.x=String(player.x);driveHud.dataset.z=walkHud.dataset.z=String(player.z);
     if(world.updateVegetation(camera.position))renderer.shadowMap.needsUpdate=true;updateLabels();updateStartMarker();fps.dataset.cameraX=String(camera.position.x);fps.dataset.cameraY=String(camera.position.y);fps.dataset.cameraZ=String(camera.position.z);fps.dataset.orbitX=String(controls.target.x);fps.dataset.orbitZ=String(controls.target.z);fps.dataset.cameraGroundHeight=String(camera.position.y-world.surfaceHeight(camera.position.x,camera.position.z));sky.position.copy(camera.position);const started=performance.now();renderer.render(scene,camera);const cost=performance.now()-started;
     if(renderCount>10&&cost>70)lowFrames++;else lowFrames=Math.max(0,lowFrames-1);
-    if(lowFrames>8&&renderScale> .75){renderScale=.75;renderer.shadowMap.enabled=false;resize();lowFrames=0;}
+    if(quality==='auto'&&lowFrames>8&&renderScale> .75){renderScale=.75;renderer.shadowMap.enabled=false;resize();lowFrames=0;}
     const moving=!!flight||(mode==='tour'&&(!!tourFlight||tourAutoPlay||!reduced))||(mode==='walk'&&(keys.size>0||stickInput.lengthSq()>.001||jumpHeight>0||jumpQueued))||(mode==='drive'&&(driveState==='run'||driveState==='free'&&(keys.size>0||Math.abs(speed)>.02||Math.abs(lateral)>.02)))||!toast.hidden;
     if(!moving&&mode==='drive')speed=lateral=0;
     fps.textContent=moving?`${Math.min(24,Math.round(1/Math.max(dt,.001)))} fps`:'0 fps';fps.dataset.slow=String(moving&&cost>60);fps.dataset.renderCount=String(++renderCount);fps.dataset.triangles=String(renderer.info.render.triangles);fps.dataset.drawCalls=String(renderer.info.render.calls);fps.dataset.idle=String(!moving);fps.dataset.nameplates=String(world.signageCount);fps.dataset.detailedTrees=String(world.vegetationDetail());
@@ -421,7 +427,7 @@ export function createExplorerScene(host:HTMLElement,features:Feature[],center:P
   },24);
   function gateView(which:'main'|'phase2'='main'){
     orbit();highlight();tip.hidden=true;
-    const gate=which==='phase2'?world.phase2Entrance:world.entrance;
+    const gate=which==='phase2'?(world.phase2Entrance??world.entrance):world.entrance;
     const target=gate.position.clone().add(new THREE.Vector3(0,4.5,0));
     fitShadow(target,220);
     fly(gate.approach.clone().add(new THREE.Vector3(10,14,10)),target);

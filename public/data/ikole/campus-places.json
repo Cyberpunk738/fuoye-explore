@@ -1,0 +1,225 @@
+{
+  "checkedOn": "2026-11-08",
+  "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
+  "suppliedPin": {
+    "url": "https://maps.app.goo.gl/2Gt5Y47yTNwXkimb6",
+    "position": [
+      5.4952357,
+      7.8055315
+    ],
+    "role": "campus reference, not the gate"
+  },
+  "sceneCenter": [
+    5.4957,
+    7.805
+  ],
+  "terrainBbox": [
+    5.4895,
+    7.799,
+    5.502,
+    7.81
+  ],
+  "areaOfInterest": [
+    [
+      5.4920975,
+      7.808901
+    ],
+    [
+      5.4963032,
+      7.8095919
+    ],
+    [
+      5.4984168,
+      7.80939
+    ],
+    [
+      5.4999403,
+      7.8075298
+    ],
+    [
+      5.4996721,
+      7.8056909
+    ],
+    [
+      5.4985455,
+      7.8035225
+    ],
+    [
+      5.4977087,
+      7.8031186
+    ],
+    [
+      5.4968397,
+      7.8014391
+    ],
+    [
+      5.4963783,
+      7.8004931
+    ],
+    [
+      5.4954878,
+      7.8007163
+    ],
+    [
+      5.4957239,
+      7.801471
+    ],
+    [
+      5.4945222,
+      7.8015029
+    ],
+    [
+      5.4918078,
+      7.8020876
+    ],
+    [
+      5.4919366,
+      7.8034481
+    ],
+    [
+      5.4926554,
+      7.8050107
+    ],
+    [
+      5.4924838,
+      7.8065838
+    ]
+  ],
+  "scope": "Ikole academic core and southern approach. Imagery-guided scene coverage, not an official property boundary.",
+  "entrance": {
+    "position": [
+      5.496065,
+      7.801126
+    ],
+    "bearing": 22,
+    "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8012531,5.4958218,277m/data=!3m1!1e3!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
+    "evidence": "Gatehouse roofs span the approach north of the highway. Coordinate read from the map at the central opening. Ground facade, heights, lettering and opening widths are illustrative."
+  },
+  "calibration": {
+    "viewport": [
+      1363,
+      936
+    ],
+    "pixelAnchor": [
+      681.5,
+      468
+    ],
+    "anchor": [
+      5.4952357,
+      7.8055315
+    ],
+    "zoom": 17,
+    "notes": "North-up Mercator overview. Conversion checked against map right-click readout at [1000,700]: lat 7.803065, lon 5.498653. Pixel traces include visual uncertainty."
+  },
+  "places": [
+    {
+      "id": "ikole-engineering",
+      "name": "Faculty of Engineering",
+      "featureIds": [
+        "local/ikole-engineering-main",
+        "local/ikole-engineering-west-wing",
+        "local/ikole-engineering-hall"
+      ],
+      "pin": [
+        5.4936205,
+        7.807681
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/Fuoye+Engineering+Faculty/data=!4m7!3m6!1s0x10487799ecc0d2a7:0xe681735db6807acd!8m2!3d7.807681!4d5.4936205!16s%2Fg%2F11gmcdbfyd!19sChIJp9LA7Jl3SBARzXqAtl1zgeY?authuser=0&hl=en&g_ep=EgoyMDI2MTEwMy4wIJJjKgBIAVAD&rclk=1",
+      "note": "Maps pin identifies the compound. Assigning the name to the primary wing is a compound-level inference. The monument/photo provides facade evidence, not surveyed placement.",
+      "checkedOn": "2026-11-08",
+      "phase": 0
+    },
+    {
+      "id": "ikole-library",
+      "name": "Central Library Building",
+      "featureIds": [
+        "local/ikole-central-library"
+      ],
+      "pin": [
+        5.494875,
+        7.8063426
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Central+Library+Building/@7.8055315,5.4952357,1106m/data=!3m1!1e3!4m14!1m7!3m6!1s0x104877376c65bcbd:0xcc306a3134528c5f!2sFuoye+Campus!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh!3m5!1s0x104877000a1a3247:0xb34deee9e961f752!8m2!3d7.8063426!4d5.494875!16s%2Fg%2F11w28rqxp6",
+      "note": "Maps label matched to the roof beneath the pin; footprint traced approximately. Current services and opening hours are not verified.",
+      "checkedOn": "2026-11-08",
+      "phase": 0
+    },
+    {
+      "id": "ikole-agriculture",
+      "name": "Faculty of Agriculture",
+      "featureIds": [
+        "way/1498901894"
+      ],
+      "pin": [
+        5.4970948,
+        7.8037736
+      ],
+      "match": "pin-inside",
+      "source": "https://www.google.com/maps/place/Fuoye+Agriculture+Faculty/data=!4m7!3m6!1s0x1048778d978982e5:0xf96847a09bc187bc!8m2!3d7.8037736!4d5.4970948!16s%2Fg%2F11fl989y2v!19sChIJ5YKJl413SBARvIfBm6BHaPk?authuser=0&hl=en&g_ep=EgoyMDI2MTEwMy4wIJJjKgBIAVAD&rclk=1",
+      "note": "Maps pin lies on the mapped U-shaped compound. Facades and floors are estimated.",
+      "checkedOn": "2026-11-08",
+      "phase": 0
+    },
+    {
+      "id": "ikole-environmental",
+      "name": "Environmental Faculty Building",
+      "featureIds": [
+        "local/ikole-environmental-main",
+        "local/ikole-environmental-east-wing",
+        "local/ikole-environmental-annex"
+      ],
+      "pin": [
+        5.4926019,
+        7.8026275
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/Faculty+of+Environmental+Building+FUOYE,+Ikole+Campus/data=!4m7!3m6!1s0x1048770e02e9a93b:0x15e441c920b962f1!8m2!3d7.8026275!4d5.4926019!16s%2Fg%2F11r9vxvfdp!19sChIJO6npAg53SBAR8WK5IMlB5BU?authuser=0&hl=en&g_ep=EgoyMDI2MTEwMy4wIJJjKgBIAVAD&rclk=1",
+      "note": "Maps compound label and blue roof cluster; supporting-wing ownership is inferred.",
+      "checkedOn": "2026-11-08",
+      "phase": 0
+    },
+    {
+      "id": "ikole-hostel",
+      "name": "Student Hostel Complex",
+      "featureIds": [
+        "way/1498901740",
+        "way/1498901180",
+        "way/1498902145",
+        "way/1498902468"
+      ],
+      "pin": [
+        5.4990141,
+        7.8077063
+      ],
+      "match": "compound-match",
+      "source": "https://www.google.com/maps/place/Fuoye+School+Hostel+Ikole/data=!4m7!3m6!1s0x1048775ca899ec45:0x55d4300d87028272!8m2!3d7.8077063!4d5.4990141!16s%2Fg%2F11flbsx5ph!19sChIJReyZqFx3SBARcoIChw0w1FU?authuser=0&hl=en&g_ep=EgoyMDI2MTEwMy4wIJJjKgBIAVAD&rclk=1",
+      "note": "Maps hostel compound label. No gender allocation or hostel name has been assigned without evidence.",
+      "checkedOn": "2026-11-08",
+      "phase": 0
+    },
+    {
+      "id": "ikole-new-faculty",
+      "name": "New Faculty Building",
+      "featureIds": [
+        "way/1498902461"
+      ],
+      "match": "visual-label",
+      "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
+      "note": "Visible map label matched to the roof cluster. Faculty identity and current use have not been independently confirmed.",
+      "checkedOn": "2026-11-08",
+      "phase": 0
+    }
+  ],
+  "monument": {
+    "photoDate": "2022-02",
+    "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055202,5.4953906,3a,75y,90t/data=!3m8!1e2!3m6!1sCIHM0ogKEICAgIC2yo3m1wE!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fgps-cs-s%2FANWiy9QsYKyXVjog-tiC8ysv8eL3h0SyF_9rSG03ikexiDQV8M13YiGnsi1jpwspC32PCsO-N-E8gZNsFoOLPVP0lyOftgXTAHuNiTypDN0VNRiMof6xZSS2lf_p8RF0R2BQhZ5L5TbV%3Dw203-h270-k-no!7i2448!8i3264!4m7!3m6!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!10e5!16s%2Fg%2F11fjbp7ysh",
+    "evidence": "Yellow upright gear with green open-ended wrench on turquoise plinth, Faculty of Engineering lettering. Cream building behind it has tall white frontage columns. Procedural approximation; exact dimensions and placement are estimated."
+  },
+  "replacedGateRoofs": [
+    "way/1498901626",
+    "way/1498910997"
+  ],
+  "limitations": "Scene extent is not a property boundary. Maps labels do not certify current occupancy. Road traces and roof outlines are approximate. Most heights, floors, facades, individual trees and gate elevations are estimates."
+}

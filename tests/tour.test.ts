@@ -8,7 +8,7 @@ import type { World, BuildingAsset } from '../src/world/build.ts';
 
 const read = (p: string) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
 
-test('guided tour builds 10 ordered stops from Phase 1 Main Gate across Admin, Management Sciences, Library, Hostels, Phase 2 & 3', () => {
+test('guided tour builds 10 ordered stops from Phase 1 Main Gate across Admin, Management Sciences, academic commons, Hostels, Phase 2 & 3', () => {
   const dataset = read('../public/data/campus.geojson');
   const center: [number, number] = [5.3163, 7.7772];
 
@@ -57,7 +57,11 @@ test('guided tour builds 10 ordered stops from Phase 1 Main Gate across Admin, M
   const ids = stops.map(s => s.id);
   assert.ok(ids.includes('central-admin'), 'Tour must include Admin Block');
   assert.ok(ids.includes('management-sciences'), 'Tour must include Management Sciences');
-  assert.ok(ids.includes('phase1-library'), 'Tour must include Library');
+  const academicStop = stops.find(s => s.id === 'phase1-library')!;
+  assert.ok(academicStop);
+  assert.match(academicStop.subtitle, /unconfirmed/);
+  assert.doesNotMatch(academicStop.title, /library/i);
+  assert.match(academicStop.description, /not yet been matched to a verified footprint/);
   assert.ok(ids.includes('phase3-hostels-faculties'), 'Tour must include Hostels & Phase 3');
   assert.ok(ids.includes('phase2-gate-law'), 'Tour must include Phase 2 Gate');
 

@@ -2,11 +2,11 @@
 
 # FUOYE Explore
 
-### Oye campus, in three dimensions.
+### Oye and Ikole, in three dimensions.
 
 Walk through the main gate. Explore familiar places. Drive across campus.
 
-**Federal University Oye-Ekiti · Oye-Ekiti, Nigeria**
+**Federal University Oye-Ekiti · Ekiti State, Nigeria**
 
 [Get started](#get-started) · [Explore the features](#the-experience) · [Controls](#controls) · [Data and accuracy](#data-and-accuracy) · [Contribute](#contributing)
 
@@ -14,13 +14,16 @@ Walk through the main gate. Explore familiar places. Drive across campus.
 
 ![FUOYE Explore opening view showing the Phase 1 main gate, campus directory and exploration controls](docs/images/main-gate.png)
 
-**FUOYE Explore** is an interactive browser reconstruction of FUOYE’s Oye campus. It combines mapped building footprints, terrain elevations and documented visual observations with walking, driving and a campus delivery game.
+**FUOYE Explore** is an interactive browser reconstruction of FUOYE’s Oye and Ikole campuses. It combines mapped building footprints, terrain elevations and documented visual observations with walking, driving and a campus delivery game.
 
-The project starts at the **main entrance beside Phase 1** and covers Phases 1, 2 and 3. Its layout and interactions take inspiration from [Mount Allison in 3D](https://mount-alison-3d.vercel.app/), with original implementation, procedural materials and FUOYE-specific campus geometry.
+Choose **Oye** or **Ikole** in the campus selector. Oye starts at the main entrance beside Phase 1 and covers Phases 1, 2 and 3. Ikole starts at its southern highway approach and covers the academic core, sports ground and Environmental building cluster. Its layout and interactions take inspiration from [Mount Allison in 3D](https://mount-alison-3d.vercel.app/), with original implementation, procedural materials and FUOYE-specific campus geometry.
 
-| Campus coverage | Named places | Building directory | Ways to explore |
-| :---: | :---: | :---: | :---: |
-| **108** building polygons | **14** matched places | **62** building entries | **Orbit · Walk · Drive · Tour** |
+| Campus | Prepared building footprints | Named compound records | Guided tour |
+| --- | ---: | ---: | ---: |
+| **Oye** | 126 | 16 | 10 stops |
+| **Ikole** | 47 | 6 | 8 stops |
+
+Procedural landmarks such as gates and sports grounds are additional scene assets. Outlines, named records and directory entries count different things. The README images above and below show Oye; they are not Ikole screenshots.
 
 > **Project status:** a working reconstruction under active refinement. This is an independent student project. Names, geometry and architectural details have different levels of confidence; it is not an official university map or a surveyed digital twin.
 
@@ -40,6 +43,14 @@ The project starts at the **main entrance beside Phase 1** and covers Phases 1, 
 
 ## The experience
 
+### Two campuses, one explorer
+
+Use the campus selector or open `/?campus=oye` and `/?campus=ikole`. Switching cancels obsolete loads and releases the previous scene before creating another. Browser Back/Forward restores the selected campus. Notes and courier scores stay separate; existing Oye keys are preserved.
+
+Ikole includes its southern entrance, Engineering compound and gear-and-wrench monument, Central Library, Agriculture compound, hostel cluster, New Faculty Building, bare-earth sports ground and Environmental building cluster. Its **eight-stop tour** follows the same walking, driving, day/night and camera system as Oye. Engineering's monument and columns use a 2022 photo reference; most building dimensions and gate elevations are estimates. See [Ikole research and limitations](research/ikole-campus-research.md).
+
+**Auto / Low / High graphics** let visitors trade image resolution and shadows for rendering cost. The default Auto mode retains the existing render-on-demand loop and slow-frame adjustment. Mobile controls use larger targets and account for screen safe areas. If WebGL creation fails, a bundled-data map opens for the selected campus; 3D-only controls are hidden and visitors can retry 3D. This fallback loads no external map tiles.
+
 ### Explore at your own pace
 
 The fullscreen scene opens at the Phase 1 gate. Use the floating building directory to focus a destination, orbit around its architecture or switch to **Full view** to understand the campus layout. Named buildings have frontage signs and nearby labels; phase markers help with orientation.
@@ -48,11 +59,11 @@ Click or tap clear ground to choose your next starting point. **Walk here** and 
 
 ### First-time student & visitor guided tour
 
-The **Guided Campus Tour** offers an automated, 10-stop cinematic journey across all three campus phases:
+The **Oye Guided Campus Tour** offers an automated, 10-stop cinematic journey across all three campus phases:
 1. **Phase 1 Main Gate & Keke Mini-Park** · Entry arches, security post & student shuttle hub
 2. **Phase 1 Sports Field & Mini Stadium** · Full regulation football pitch, covered pavilion, basketball & volleyball courts
 3. **Phase 1 Main Auditorium & Arts Complex** · Major assembly hall and Faculty of Arts & Education
-4. **University Library & Academic Commons** · Central campus study commons and reference library
+4. **Phase 1 Academic Commons** · Mapped academic block; current use and library identity await verification
 5. **Phase 2 Main Gate & Faculty of Law** · Falex Road ceremonial entrance arch and Law faculty complex
 6. **Central Administration Block** · Vice Chancellor's lodge, bursary and landscaped park
 7. **New Senate Building** · Multi-storey campus administrative tower
@@ -92,7 +103,7 @@ Notes and scores are stored locally in the browser. No account or backend is req
 ### Requirements
 
 - **Node.js 22.12 or newer** and npm. This supports the Vite build and the TypeScript unit-test command used by this repository.
-- A browser with **WebGL support** for the 3D explorer.
+- A browser with **WebGL support** for the 3D explorer. Browsers unable to create a WebGL context receive a campus-specific map fallback.
 - **Google Chrome** for the optional Playwright browser checks.
 
 Python is only needed when regenerating prepared data. The runtime datasets are already included.
@@ -180,7 +191,9 @@ Courier runs begin with **75 seconds**. Follow the gold arrow/beacon and slow do
 
 ## Campus coverage
 
-The 108 polygons include secondary wings and small supporting structures. The 62-entry building directory groups or excludes these supporting parts to keep navigation useful; the gate, sports complex, central mosque and transit parks are additional landmark entries.
+The detailed phase inventory below describes **Oye**. Ikole has a separate [building inventory](public/data/ikole/campus-places.json), [prepared dataset](public/data/ikole/campus.geojson) and [canonical observation record](research/ikole-site-observations.json). Neither scene extent is an official boundary.
+
+The Oye polygons include secondary wings and small supporting structures. The building directory groups or excludes supporting parts to keep navigation useful; the gate, sports complex, central mosque and transit parks are additional landmark entries.
 
 Current named destinations:
 
@@ -256,6 +269,23 @@ The full-view checks enforce fewer than **350,000 triangles** and **250 draw cal
 
 ## Development guide
 
+### Campus expansion
+
+Both campuses use the same engine. Campus definitions, lazy-loaded scenery and tours are separate from scene orchestration.
+
+- `src/world/engine.ts`: shared terrain, buildings, roads and vegetation construction. Requires a `WorldProfile` and has no Oye runtime import.
+- `src/world/profile.ts`: terrain, appearance, signage, scenery and planting hooks for each campus.
+- `src/campuses/types.ts`: campus identity, data URLs, entrances, source notes and tour contract.
+- `src/campuses/oye/`: Oye definition, entrances, sports grounds, mosque, transit parks, planting and tour stops.
+- `src/campuses/ikole/`: Ikole definition, entrance, Engineering landmark, sports ground and tour.
+- `src/campuses/registry.ts` and `session.ts`: URL selection, lazy loading, cancellation and scene disposal.
+- `src/campus-map.ts`: local-data fallback when WebGL is unavailable.
+- `src/campuses/storage.ts`: campus-specific notes and courier score keys, retaining legacy Oye keys.
+- `src/world/build.ts` and `src/world/tour.ts`: compatibility entry points for existing Oye tools and tests.
+
+Read [the Ikole research checkpoint](research/ikole-campus-research.md) before preparing new campus data. Unconfirmed building identities must remain explicit; the former library tour stop is now labelled Academic Commons until its use is verified.
+
+
 ### Stack
 
 | Tool | Role |
@@ -289,6 +319,23 @@ fuoye-explore/
 
 ### Updating campus data
 
+For Ikole, edit `research/ikole-site-observations.json` and retain its OSM extract in `research/data/ikole-area.osm`, then run:
+
+```sh
+python scripts/prepare_ikole.py
+```
+
+To refresh its terrain or land cover (network access required):
+
+```sh
+python scripts/prepare_terrain.py --campus ikole
+python scripts/prepare_landcover.py --campus ikole
+```
+
+The elevation helper needs Pillow; land cover needs rasterio and certifi. `--python-http` uses Python's verified HTTPS range reader when GDAL/libcurl cannot use the host's CA installation; it requests bounded blocks rather than downloading the full WorldCover tile. The commands default to Oye when `--campus` is omitted. Runtime visitors need none of these dependencies or network APIs.
+
+For Oye:
+
 Edit the canonical [inventory](research/oye-campus-inventory.json) and [site observations](research/oye-site-observations.json), then regenerate:
 
 ```sh
@@ -317,7 +364,7 @@ Browser checks use installed Google Chrome and a running **Vite dev server**, no
 
 | Command | Coverage |
 | --- | --- |
-| `npm test` | Notes, geometry, elevation, render scheduling, physics, delivery rules and data provenance |
+| `npm test` | Notes, geometry, elevation, render scheduling, physics, deliveries, campus-switch cancellation, Ikole source/terrain checks and collision reachability |
 | `npm run build` | TypeScript checking and production build |
 | `npm run test:browser` | Directory focus, driving, walking/jumping, day/night, mobile interaction, review routing and render budgets |
 | `npm run test:review` | Footprints, evidence links, note persistence and no external requests in the default view |

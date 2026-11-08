@@ -1,9 +1,12 @@
-"""Download and sample Mapzen Terrarium elevation for the Oye study area."""
-import io,json,math,urllib.request
+"""Download and sample Mapzen Terrarium elevation for the selected campus study area."""
+import io,json,math,urllib.request,argparse,datetime
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-BBOX=[5.304,7.768,5.325,7.787]
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--campus',choices=['oye','ikole'],default='oye')
+args=parser.parse_args()
+BBOX=json.loads((ROOT/'research/ikole-site-observations.json').read_text())['terrainBbox'] if args.campus=='ikole' else [5.304,7.768,5.325,7.787]
 ZOOM=14
 N=97
 cache={}
@@ -28,7 +31,9 @@ for row in range(N):
  for col in range(N):
   lon=BBOX[0]+(BBOX[2]-BBOX[0])*col/(N-1)
   values.append(round(elevation(lon,lat),2))
-result={'bbox':BBOX,'width':N,'height':N,'values':values,'metadata':{'source':'Mapzen Terrain Tiles','url':'https://registry.opendata.aws/terrain-tiles/','tileUrls':urls,'attribution':'Global terrain data courtesy of the U.S. Geological Survey; Mapzen Terrain Tiles','retrievedOn':'2026-10-08','notes':'Interpolated elevation grid; source resolution varies. Not a campus survey. No vertical exaggeration.'}}
-(ROOT/'public/data/terrain.json').write_text(json.dumps(result,separators=(',',':')),encoding='utf-8')
+result={'bbox':BBOX,'width':N,'height':N,'values':values,'metadata':{'source':'Mapzen Terrain Tiles','url':'https://registry.opendata.aws/terrain-tiles/','tileUrls':urls,'attribution':'Global terrain data courtesy of the U.S. Geological Survey; Mapzen Terrain Tiles','retrievedOn':datetime.date.today().isoformat(),'notes':'Interpolated elevation grid; source resolution varies. Not a campus survey. No vertical exaggeration.'}}
+destination=ROOT/('public/data/ikole/terrain.json' if args.campus=='ikole' else 'public/data/terrain.json')
+destination.parent.mkdir(parents=True,exist_ok=True)
+destination.write_text(json.dumps(result,separators=(',',':')),encoding='utf-8')
 print('Height range',min(values),max(values))
 
