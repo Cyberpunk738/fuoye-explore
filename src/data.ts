@@ -1,3 +1,4 @@
+import { reviewNotesKey } from './campuses/storage.ts';
 export type Position = [number, number];
 export interface CampusProfile {
   id?:string; name?:string; phase:number; directory:boolean; identity:string; primaryId?:string;
@@ -9,7 +10,7 @@ export interface Feature {
   geometry: { type: 'Polygon'; coordinates: Position[][] } | { type: 'LineString'; coordinates: Position[] };
   properties: { osmId: string; source: 'osm' | 'microsoft' | 'observation'; kind: 'building' | 'road' | 'land'; tags: Record<string, string>; sources: string[]; center: Position; area: number; campus?:CampusProfile };
 }
-export interface Dataset { type: 'FeatureCollection'; features: Feature[]; metadata: { summary: Record<string, number>; bbox: number[]; scope: string } }
+export interface Dataset { type: 'FeatureCollection'; features: Feature[]; metadata: { campusId?:string; summary: Record<string, number>; bbox: number[]; scope: string } }
 export interface Note { name: string; status: 'candidate' | 'identified'; evidence: string; updatedAt: string }
 export type Notes = Record<string, Note>;
 export const namingSource = 'https://news.fuoye.edu.ng/vc-fasina-inaugurates-national-recognition-scheme-in-fuoye/';
@@ -29,9 +30,8 @@ export const landmarks = [
   { name: 'Old boys hostel', alias: 'Michael Opeyemi Bamidele Hall', clue: 'University announcement explicitly places this hostel at Oye; match its footprint.', source: namingSource },
 ];
 export function escapeHtml(value: string): string { return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]!)); }
-const KEY = 'fuoye-oye-review-v1';
-export function readNotes(): Notes {
-  try { return validateNotes(JSON.parse(localStorage.getItem(KEY) ?? '{}')); } catch { return {}; }
+export function readNotes(campusId = 'oye'): Notes {
+  try { return validateNotes(JSON.parse(localStorage.getItem(reviewNotesKey(campusId)) ?? '{}')); } catch { return {}; }
 }
 export function validateNotes(value: unknown): Notes {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected a notes object.');
@@ -45,7 +45,7 @@ export function validateNotes(value: unknown): Notes {
   }
   return result;
 }
-export function persistNotes(notes: Notes): void { localStorage.setItem(KEY, JSON.stringify(notes)); }
+export function persistNotes(notes: Notes, campusId = 'oye'): void { localStorage.setItem(reviewNotesKey(campusId), JSON.stringify(notes)); }
 /** Overlay the reviewed campus records on the wider Oye extract without duplicating
  * shared polygons. Original IDs remain valid for existing localStorage notes. */
 export function mergeCampusDataset(area:Dataset,campus:Dataset):Dataset {

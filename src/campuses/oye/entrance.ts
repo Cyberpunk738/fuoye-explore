@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import type { Position } from '../data';
-import { projectPosition } from './math';
-import { groundPolygon } from './architecture';
-import type { GeometryBatch } from './batch';
-import type { Materials } from './materials';
-import type { createSignage } from './signage';
+import type { Position } from '../../data';
+import { projectPosition } from '../../world/math';
+import { groundPolygon } from '../../world/architecture';
+import type { GeometryBatch } from '../../world/batch';
+import type { Materials } from '../../world/materials';
+import type { createSignage } from '../../world/signage';
 
 // Phase 1 entrance, visually located on Maps satellite, 11 Oct 2026.
 // See research/entrance-and-identification.md for evidence and limitations.

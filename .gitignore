@@ -7,3 +7,6 @@ research/reference/
 
 # Device-only project continuation notes
 /PROJECT_HANDOFF.md
+
+# Python data-preparation caches
+__pycache__/

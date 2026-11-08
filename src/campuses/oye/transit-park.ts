@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import type { Point } from './math';
-import type { GeometryBatch } from './batch';
-import type { Materials } from './materials';
-import type { createSignage } from './signage';
-import type { BuildingAsset } from './build';
+import type { Point } from '../../world/math';
+import type { GeometryBatch } from '../../world/batch';
+import type { Materials } from '../../world/materials';
+import type { createSignage } from '../../world/signage';
+import type { BuildingAsset } from '../../world/build';
 
 export interface TransitParksResult {
   obstacles: THREE.Box2[];

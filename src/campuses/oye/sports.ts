@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import type { Position } from '../data';
-import type { Point } from './math';
-import type { GeometryBatch } from './batch';
-import type { Materials } from './materials';
+import type { Position } from '../../data';
+import type { Point } from '../../world/math';
+import type { GeometryBatch } from '../../world/batch';
+import type { Materials } from '../../world/materials';
 
 export interface SportsComplexResult {
   obstacles: THREE.Box2[];
