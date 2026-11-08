@@ -14,7 +14,7 @@ export function createCampusMap(host:HTMLElement,dataset:Dataset,campus:CampusDe
   const names=new Map(directory.map(b=>[b.id,b.name]));
   const overview=L.latLngBounds([]);
   const geometry=L.geoJSON(dataset as Parameters<typeof L.geoJSON>[0],{
-    style:feature=>feature?.properties.kind==='road'?{color:'#c4b389',weight:feature.properties.tags.highway==='primary'?6:3,opacity:.9}:feature?.properties.kind==='land'?{color:'#b29b79',fillColor:'#c8b48d',fillOpacity:.6,weight:1}:{color:'#466b60',fillColor:feature?.properties.campus?.id?'#467e69':'#a6b9ab',fillOpacity:.85,weight:1},
+    style:feature=>feature?.properties.kind==='road'?{color:'#c4b389',weight:feature.properties.tags.highway==='primary'?6:3,opacity:.9}:feature?.properties.kind==='land'?{color:feature.properties.tags['render:surface']==='grass'?'#437837':'#b29b79',fillColor:feature.properties.tags['render:surface']==='grass'?'#4d853e':'#c8b48d',fillOpacity:.6,weight:1}:{color:'#466b60',fillColor:feature?.properties.campus?.id?'#467e69':'#a6b9ab',fillOpacity:.85,weight:1},
     onEachFeature:(feature,layer)=>{
       layers.set(String(feature.id),layer);
       if(feature.properties.kind!=='building')return;

@@ -76,7 +76,7 @@ def main():
     (dest/'campus.geojson').write_text(json.dumps(dataset,separators=(',',':'),ensure_ascii=False)+'\n')
     inventory={k:v for k,v in observed.items() if k!='observations'}
     inventory['replacedGateRoofs']=['way/'+identity for identity in sorted(gate_roofs)]
-    inventory['limitations']='Scene extent is not a property boundary. Maps labels do not certify current occupancy. Road traces and roof outlines are approximate. Most heights, floors, facades, individual trees and gate elevations are estimates.'
+    inventory['limitations']='Scene extent is not a property boundary. Maps labels do not certify current occupancy. Road traces and roof outlines are approximate. Most heights, floors, facades, individual trees and gate dimensions are estimates. Gate frontage follows a labelled 2021 photograph. Sports grass is a requested visual treatment, not an observed surface.'
     (dest/'campus-places.json').write_text(json.dumps(inventory,indent=2,ensure_ascii=False)+'\n')
     print(json.dumps({'summary':summary,'namedPlaces':len(observed['places']),'bytes':(dest/'campus.geojson').stat().st_size}))
 
