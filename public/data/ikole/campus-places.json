@@ -93,7 +93,15 @@
     ],
     "bearing": 22,
     "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8012531,5.4958218,277m/data=!3m1!1e3!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
-    "evidence": "Gatehouse roofs span the approach north of the highway. Coordinate read from the map at the central opening. Ground facade, heights, lettering and opening widths are illustrative."
+    "evidence": "Map approach alignment with the open lane centred on the recorded coordinate. Frontage follows Samuel Ajala’s labelled 2021 Ikole photograph: twin arches, sloping cream wings, yellow piers, central green-roof booth and green/white gates. Dimensions and sculpture details are approximate.",
+    "facadeReference": {
+      "url": "https://campusreporter.africa/ekiti-communities-sue-for-peace-despite-controversies-surrounding-the-establishment-of-fuoye/",
+      "image": "https://campusreporter.africa/wp-content/uploads/2021/11/SA-2-1024x665.png",
+      "credit": "Samuel Ajala",
+      "published": "2021-11",
+      "caption": "Entrance of Federal University of Oye-Ekiti, Ikole Campus.",
+      "limitations": "Dated frontage reference; current condition and metre dimensions are unverified. Gate leaves are opened in the model for access."
+    }
   },
   "calibration": {
     "viewport": [
@@ -221,5 +229,5 @@
     "way/1498901626",
     "way/1498910997"
   ],
-  "limitations": "Scene extent is not a property boundary. Maps labels do not certify current occupancy. Road traces and roof outlines are approximate. Most heights, floors, facades, individual trees and gate elevations are estimates."
+  "limitations": "Scene extent is not a property boundary. Maps labels do not certify current occupancy. Road traces and roof outlines are approximate. Most heights, floors, facades, individual trees and gate dimensions are estimates. Gate frontage follows a labelled 2021 photograph. Sports grass is a requested visual treatment, not an observed surface."
 }

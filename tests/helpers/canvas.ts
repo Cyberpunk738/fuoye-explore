@@ -3,7 +3,7 @@
 export function textureCanvas() {
   const context = {
     fillRect() {}, strokeRect() {}, beginPath() {}, moveTo() {}, lineTo() {},
-    stroke() {}, ellipse() {}, fill() {}, save() {}, restore() {}, translate() {}, scale() {}, fillText() {},
+    stroke() {}, arc() {}, ellipse() {}, fill() {}, save() {}, restore() {}, translate() {}, scale() {}, fillText() {},
     measureText: (text: string) => ({width: text.length * 10}),
     createLinearGradient: () => ({addColorStop() {}}),
   };

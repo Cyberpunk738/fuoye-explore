@@ -36,6 +36,7 @@ export interface CampusWorldContext {
 /** Campus-specific scenery is injected into the shared terrain/building engine. */
 export interface WorldProfile {
   focusPlaceId?: string;
+  customGroundFeatures?: string[];
   appearance: (feature: Feature) => { facade?: string; roof?: string };
   grade: (context: {
     project: (position: Position) => Point;

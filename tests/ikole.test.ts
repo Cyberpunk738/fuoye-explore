@@ -67,7 +67,15 @@ test('Ikole builds without Oye scenery, has a passable entrance and provides rea
     for(const stop of destinations)assert.equal(world.blocked(stop,2),false,stop.name);
     const reached=reachableDestinations(world,destinations);
     for(const stop of destinations)assert.ok(reached.has(stop.id),stop.name+' is unreachable from the entrance with vehicle clearance');
-    assert.ok(world.root.children.length>0);world.dispose();assert.equal(world.root.children.length,0);world=undefined;
+    const pitch=world.root.getObjectByName('ikole-football-pitch');assert.ok(pitch,'Grass pitch should be built');
+    const vertices=pitch.geometry.attributes.position,uv=pitch.geometry.attributes.uv;
+    assert.equal(uv.count,vertices.count);
+    for(let i=0;i<vertices.count;i++) {
+      assert.ok(Math.abs(vertices.getY(i)-world.height(vertices.getX(i),vertices.getZ(i))-.08)<.002,'Pitch must follow the terrain without sinking or floating');
+      assert.ok(Number.isFinite(uv.getX(i)+uv.getY(i)));
+    }
+    let textureDisposed=false;pitch.material.map.addEventListener('dispose',()=>{textureDisposed=true;});
+    assert.ok(world.root.children.length>0);world.dispose();assert.equal(textureDisposed,true,'Campus switch must release the pitch texture');assert.equal(world.root.children.length,0);world=undefined;
   } finally {
     world?.dispose();await server.close();if(previous)Object.defineProperty(globalThis,'document',previous);else Reflect.deleteProperty(globalThis,'document');
   }
