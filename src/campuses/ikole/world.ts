@@ -29,7 +29,7 @@ export const ikoleWorldProfile: WorldProfile = {
     {key:'ikole-sports',lines:['IKOLE SPORTS GROUND'],footer:'CAMPUS EXPLORER',background:'#174838',color:'#fff7de'},
   ],
   decorate(context) {
-    const {batch,m,project,height,structureBounds,signs}=context;
+    const {batch,m,project,height,structureBounds,signs,ribbon}=context;
     const gate=project(ikoleGate), y=height(gate.x,gate.z);
     const right={x:Math.cos(gateBearing),z:Math.sin(gateBearing)};
     const forward={x:Math.sin(gateBearing),z:-Math.cos(gateBearing)};
@@ -73,8 +73,8 @@ export const ikoleWorldProfile: WorldProfile = {
     const vertex=(x:number,yy:number,z:number)=>{const p=local(x,z);return [p.x,y+yy,p.z];};
     for(const points of [[[4.9,3.6,-1.5],[9.1,3.6,-1.5],[9.1,4.6,1]],[[4.9,3.6,-1.5],[9.1,4.6,1],[4.9,4.6,1]],[[9.1,3.6,3.5],[4.9,3.6,3.5],[4.9,4.6,1]],[[9.1,3.6,3.5],[4.9,4.6,1],[9.1,4.6,1]]])for(const [x,yy,z]of points)vertices.push(...vertex(x,yy,z));
     roof.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));roof.computeVertexNormals();batch.add(roof,m.roofs[0]);
-    // Green gate leaves with white pickets and diagonal motifs. Both left-lane
-    // leaves are swung inward so the existing walking/driving start stays clear.
+    // Green gate leaves with white pickets and diagonal motifs. All four
+    // leaves are swung inward, clearing the separate entry and exit lanes.
     const leaf=(hinge:number,side:number,open:boolean)=>{
       const angle=open?Math.PI/2:0,span=4.8;
       const leafPoint=(u:number,v:number)=>local(hinge+side*u*Math.cos(angle),.15+u*Math.sin(angle)+v);
@@ -87,7 +87,7 @@ export const ikoleWorldProfile: WorldProfile = {
       if(!open)reserve(hinge+side*span/2,0,span,.2);
       else reserve(hinge,span/2,.2,span);
     };
-    leaf(-4.9,1,true);leaf(4.9,-1,true);leaf(9.1,1,false);leaf(18.9,-1,false);
+    leaf(-4.9,1,true);leaf(4.9,-1,true);leaf(9.1,1,true);leaf(18.9,-1,true);
     // Sculpture silhouette in front of the booth: a figure lifting a globe.
     box(2.1,.65,1.7,7,.325,-3,m.stone);reserve(7,-3,2.1,1.7);
     for(const x of [6.75,7.25]){const p=local(x,-3);batch.cylinder(.12,.14,1.5,p.x,y+1.4,p.z,m.steel,8);}
@@ -98,6 +98,12 @@ export const ikoleWorldProfile: WorldProfile = {
     box(16,1.25,.12,7,8.2,-.8,m.green);
     const nameplate=local(7,-.88);
     signs.add(batch,'ikole-gate',15.8,1.15,new THREE.Vector3(nameplate.x,y+8.2,nameplate.z),-gateBearing);
+    for(const [lane,direction]of [[0,1],[14,-1]])for(const z of [-15,15]) {
+      const p=(x:number,t:number)=>local(lane+x,z+direction*t);
+      ribbon(p(0,-2),p(0,2),.22,m.white,.47);
+      ribbon(p(-.9,.7),p(0,2),.22,m.white,.47);
+      ribbon(p(.9,.7),p(0,2),.22,m.white,.47);
+    }
     const approach=local(0,-24);
     addEngineeringLandmark(context);
     addSportsGround(context);

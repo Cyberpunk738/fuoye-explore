@@ -20,7 +20,7 @@ export function buildIkoleTourStops(world: World): TourStop[] {
   const result:TourStop[]=[{
     id:'ikole-main-gate',stepNumber:1,phaseBadge:'Ikole · South entrance',category:'Gateway',title:'Ikole Campus Entrance',railLabel:'Entrance',
     subtitle:'The approach from Ifaki–Ikole–Omuo Road',
-    description:'Enter the campus from the highway along the southern approach. The twin arches, sloping cream wings, yellow pillars and green gates follow a labelled 2021 Ikole photograph. One lane stays open for walking and driving.',
+    description:'Enter the campus from the highway along the southern approach. The twin arches, sloping cream wings, yellow pillars and green gates follow a labelled 2021 Ikole photograph. Separate entry and exit lanes pass through both open arches and join the main approach on either side.',
     studentTip:'The frontage reference is from 2021. Dimensions and sculpture details are approximate. This is an independent reconstruction, not an official navigation map.',
     highlights:['Southern campus approach','Open gatehouse passage'],cameraPos:position,targetPos:target,
     walkSpawn:{x:gate.approach.x,z:gate.approach.z},orbitRadius:position.distanceTo(target),orbitHeight:position.y-target.y,baseAzimuth:Math.atan2(position.x-target.x,position.z-target.z),

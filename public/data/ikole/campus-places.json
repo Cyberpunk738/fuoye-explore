@@ -93,7 +93,7 @@
     ],
     "bearing": 22,
     "source": "https://www.google.com/maps/place/Fuoye+Campus/@7.8012531,5.4958218,277m/data=!3m1!1e3!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
-    "evidence": "Map approach alignment with the open lane centred on the recorded coordinate. Frontage follows Samuel Ajala’s labelled 2021 Ikole photograph: twin arches, sloping cream wings, yellow piers, central green-roof booth and green/white gates. Dimensions and sculpture details are approximate.",
+    "evidence": "Map approach alignment with the entry lane centred on the recorded coordinate. Frontage follows Samuel Ajala’s labelled 2021 Ikole photograph: twin arches, sloping cream wings, yellow piers, central green-roof booth and green/white gates. Dimensions and sculpture details are approximate.",
     "facadeReference": {
       "url": "https://campusreporter.africa/ekiti-communities-sue-for-peace-despite-controversies-surrounding-the-establishment-of-fuoye/",
       "image": "https://campusreporter.africa/wp-content/uploads/2021/11/SA-2-1024x665.png",
@@ -101,6 +101,19 @@
       "published": "2021-11",
       "caption": "Entrance of Federal University of Oye-Ekiti, Ikole Campus.",
       "limitations": "Dated frontage reference; current condition and metre dimensions are unverified. Gate leaves are opened in the model for access."
+    },
+    "lanes": {
+      "entryFeature": "local/ikole-gate-entry",
+      "exitFeature": "local/ikole-gate-exit",
+      "outsideJunction": [
+        5.49589517,
+        7.80070955
+      ],
+      "insideJunction": [
+        5.496268796,
+        7.80162574
+      ],
+      "note": "Requested scene layout: both arches are open; split and merge dimensions are approximate."
     }
   },
   "calibration": {
