@@ -24,7 +24,7 @@ export const ikoleWorldProfile: WorldProfile = {
     };
   },
   signs: [
-    {key:'ikole-gate',lines:['FEDERAL UNIVERSITY OYE-EKITI'],footer:'IKOLE CAMPUS',background:'#174838',color:'#fff7de',stretch:1.5},
+    {key:'ikole-gate',lines:['FEDERAL UNIVERSITY','OYE-EKITI'],footer:'IKOLE CAMPUS',background:'#174838',color:'#fff7de',stretch:1.5},
     {key:'ikole-engineering-monument',lines:['FACULTY OF ENGINEERING'],background:'#80bfb0',color:'#174b36',stretch:2},
     {key:'ikole-sports',lines:['IKOLE SPORTS GROUND'],footer:'CAMPUS EXPLORER',background:'#174838',color:'#fff7de'},
   ],
@@ -94,6 +94,10 @@ export const ikoleWorldProfile: WorldProfile = {
     box(.65,1,.4,7,2.5,-3,m.steel);
     for(const [x,yy,r]of [[7,3.25,.27],[7.7,4.1,.65]]){const p=local(x,-3);const geo=new THREE.IcosahedronGeometry(r,1);geo.translate(p.x,y+yy,p.z);batch.add(geo,m.steel);}
     for(const x of [6.8,7.2]){const p=local(x,-3);batch.cylinder(.1,.1,1.3,p.x,y+3.5,p.z,m.steel,6);}
+    // Mount the name on the approach-facing side, clear of the facade thickness.
+    box(16,1.25,.12,7,8.2,-.8,m.green);
+    const nameplate=local(7,-.88);
+    signs.add(batch,'ikole-gate',15.8,1.15,new THREE.Vector3(nameplate.x,y+8.2,nameplate.z),-gateBearing);
     const approach=local(0,-24);
     addEngineeringLandmark(context);
     addSportsGround(context);

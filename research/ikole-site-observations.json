@@ -125,12 +125,20 @@
       "kind": "road",
       "coordinates": [
         [
-          5.495799,
-          7.800727
+          5.495867418322637,
+          7.800608806095857
+        ],
+        [
+          5.49598009,
+          7.80091778
         ],
         [
           5.496065,
           7.801126
+        ],
+        [
+          5.49614991,
+          7.80133422
         ],
         [
           5.4962688,
@@ -161,7 +169,7 @@
       },
       "appearance": null,
       "sourceUrl": "https://www.google.com/maps/place/Fuoye+Campus/@7.8055315,5.4952357,1106m/data=!3m2!1e3!4b1!4m6!3m5!1s0x104877376c65bcbd:0xcc306a3134528c5f!8m2!3d7.8055315!4d5.4952357!16s%2Fg%2F11fjbp7ysh",
-      "evidence": "North-up satellite view inspected 8 November 2026; manually traced relative to the supplied campus pin and checked with map coordinate readout.",
+      "evidence": "North-up satellite view inspected 8 November 2026; manually traced relative to the supplied campus pin and checked with map coordinate readout. Entrance correction: the approach joins the mapped public highway and stays tangent to the open gate lane for 25 m on either side. Connection and lane alignment are approximate scene corrections.",
       "accuracy": "Approximate visual trace, around 5–15 m; roof outlines are not surveyed walls. Heights, road widths and unseen facade details are estimated."
     },
     {

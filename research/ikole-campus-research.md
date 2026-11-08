@@ -44,3 +44,7 @@ The established walking, driving, courier, lighting and tour systems are reused.
 - The cloud browser cannot create a WebGL context. It correctly opens the campus-specific map fallback. **3D appearance, touch walking/driving and graphics-quality controls still require visual/device verification in a WebGL-capable browser.** Geometry tests paint stub textures and do not establish rendered appearance.
 
 Further accuracy work can improve individual facades and update compound identities as current photos or university-confirmed plans become available.
+
+## Entrance lane correction
+
+The approach trace is connected to the mapped public highway. Its central 50 m follows the gate bearing through the open arch; farther inside campus it rejoins the approximate observed trace. The front-facing school nameplate is an owner-requested addition. These are scene corrections, not surveyed road geometry. Road surfaces and markings are clipped to the terrain triangles to avoid intersections on uneven ground.
